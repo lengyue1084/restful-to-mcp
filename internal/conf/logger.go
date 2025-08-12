@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-//var Logger *zap.Logger
-
 type Logger struct {
 	*zap.Logger
 }
@@ -32,7 +30,7 @@ func NewZapLogger(conf *Conf) *Logger {
 
 	// 2. 配置日志轮转
 	fileWriter := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "./logs/app.log",
+		Filename:   "./logs/log.log",
 		MaxSize:    100, // MB
 		MaxBackups: 30,
 		MaxAge:     30, // days
