@@ -22,8 +22,11 @@ func NewApp(
 	//gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
 	//	log.Printf("endpoint %v %v %v %v\n", httpMethod, absolutePath, handlerName, nuHandlers)
 	//}
-	r.Use(middleware.Cors(), middleware.TraceId(),
-		middleware.ZapLogger(log), middleware.Recovery())
+	r.Use(
+		middleware.Cors(),
+		middleware.TraceId(),
+		middleware.ZapLogger(log),
+		middleware.Recovery())
 	return &App{
 		app: r,
 	}
