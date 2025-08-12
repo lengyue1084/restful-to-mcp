@@ -1,0 +1,46 @@
+# Go 编译输出
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.o
+*.a
+
+# Go 工作区和模块
+go.work
+go.work.sum
+
+# 依赖和构建目录
+vendor/
+bin/
+dist/
+build/
+
+# 开发工具
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统相关
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 项目特定文件
+*.cert
+*.key
+*.log
+/log/*
+*.pid
+*.cursor
+
+# Emacs
+\#*\#
