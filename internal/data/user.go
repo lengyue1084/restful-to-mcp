@@ -3,6 +3,7 @@ package data
 import (
 	"flow-bridge-mcp/api/user"
 	"flow-bridge-mcp/internal/biz"
+	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data/model"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -11,11 +12,13 @@ import (
 
 type userRepo struct {
 	UserData *UserData
+	log      *conf.Logger
 }
 
-func NewUserRepo(d *UserData) biz.UserRepo {
+func NewUserRepo(d *UserData, log *conf.Logger) biz.UserRepo {
 	return &userRepo{
 		UserData: d,
+		log:      log,
 	}
 }
 

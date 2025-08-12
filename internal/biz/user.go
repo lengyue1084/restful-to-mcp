@@ -2,8 +2,8 @@ package biz
 
 import (
 	"flow-bridge-mcp/api/user"
+	"flow-bridge-mcp/internal/conf"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type UserRepo interface {
@@ -12,10 +12,10 @@ type UserRepo interface {
 
 type UserUseCase struct {
 	repo UserRepo
-	log  *zap.Logger
+	log  *conf.Logger
 }
 
-func NewUserUseCase(repo UserRepo, log *zap.Logger) *UserUseCase {
+func NewUserUseCase(repo UserRepo, log *conf.Logger) *UserUseCase {
 	return &UserUseCase{repo: repo, log: log}
 }
 

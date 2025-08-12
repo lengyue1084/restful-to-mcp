@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package cmd
+package main
 
 import (
 	"flow-bridge-mcp/internal/biz"
@@ -14,16 +14,15 @@ import (
 	"flow-bridge-mcp/middleware"
 	"flow-bridge-mcp/router"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:
 
 // initApp init gin application.
-func initApp(config *conf.Conf, log *zap.Logger) (*gin.Engine, func(), error) {
+func initApp(config *conf.Conf, log *conf.Logger) (*gin.Engine, func(), error) {
 	middlewareMiddleware := middleware.NewMiddleware()
-	app := router.NewApp(middlewareMiddleware, config)
-	db, cleanup, err := data.NewGormClient(config)
+	app := router.NewApp(middlewareMiddleware, config, log)
+	db, cleanup, err := data.NewGormClient(config, log)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -32,13 +31,13 @@ func initApp(config *conf.Conf, log *zap.Logger) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	userData, cleanup3, err := data.NewUserData(db, client, log)
+	userData, cleanup3, err := data.NewUserData(db, client)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	userRepo := data.NewUserRepo(userData)
+	userRepo := data.NewUserRepo(userData, log)
 	userUseCase := biz.NewUserUseCase(userRepo, log)
 	userService := service.NewUserService(userUseCase, log)
 	homeService := service.NewHome(log)

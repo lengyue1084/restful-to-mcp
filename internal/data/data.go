@@ -22,13 +22,12 @@ var ProviderSet = wire.NewSet(
 )
 
 type UserData struct {
-	// TODO warpped database client
 	db    *gorm.DB
 	redis *redis.Client
 	log   *zap.Logger
 }
 
-func NewGormClient(config *conf.Conf) (*gorm.DB, func(), error) {
+func NewGormClient(config *conf.Conf, log *conf.Logger) (*gorm.DB, func(), error) {
 	dsn := config.Conf.GetString("data.database.source")
 	mysqlConfig := mysql.Config{
 		DSN:                       dsn,   // DSN data source name
@@ -40,10 +39,12 @@ func NewGormClient(config *conf.Conf) (*gorm.DB, func(), error) {
 	}
 	dbOpen, err := gorm.Open(mysql.New(mysqlConfig))
 	if err != nil {
+		log.Error("open mysql error:%+v", zap.Error(err))
 		panic(err)
 	}
 	db, err := dbOpen.DB()
 	if err != nil {
+		log.Error("open mysql error:%+v", zap.Error(err))
 		panic(err)
 	}
 	db.SetMaxIdleConns(config.Conf.GetInt("data.database.max_idle_conn"))
@@ -54,23 +55,22 @@ func NewGormClient(config *conf.Conf) (*gorm.DB, func(), error) {
 	}
 	cleanup := func() {
 		if err := db.Close(); err != nil {
-			log.Println("close mysql err:", err)
+			//log.Println("close mysql err:", err)
 		}
-		log.Println("close mysql success")
+		//log.Println("close mysql success")
 	}
-	log.Println("open mysql success")
+	//log.Println("open mysql success")
 	return dbOpen, cleanup, nil
 }
 
 func NewUserData(
 	db *gorm.DB,
 	redis *redis.Client,
-	log *zap.Logger,
 ) (*UserData, func(), error) {
 	cleanup := func() {
-		log.Info("closing the data resources")
+		log.Printf("closing the data resources")
 	}
-	return &UserData{db: db, redis: redis, log: log}, cleanup, nil
+	return &UserData{db: db, redis: redis}, cleanup, nil
 }
 
 func NewRedisClient(config *conf.Conf) (*redis.Client, func(), error) {

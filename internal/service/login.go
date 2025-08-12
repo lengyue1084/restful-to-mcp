@@ -2,16 +2,16 @@ package service
 
 import (
 	"flow-bridge-mcp/api/user"
+	"flow-bridge-mcp/internal/conf"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 )
 
 type LoginService struct {
-	log *zap.Logger
+	log *conf.Logger
 }
 
-func NewLoginService(log *zap.Logger) *LoginService {
+func NewLoginService(log *conf.Logger) *LoginService {
 	return &LoginService{
 		log: log,
 	}

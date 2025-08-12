@@ -20,5 +20,6 @@ func NewRouter(
 		router.GET("/login", UserServer.Login)
 		router.POST("/user/login", LoginService.Login)
 	}
+
 	return app.app
 }

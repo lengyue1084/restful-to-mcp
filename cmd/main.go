@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"flag"
@@ -12,7 +12,7 @@ import (
 var (
 	flagConf string
 	id, _    = os.Hostname()
-	logger   *zap.Logger
+	//logger   *zap.Logger
 )
 
 func init() {
@@ -21,17 +21,21 @@ func init() {
 func main() {
 	flag.Parse()
 	config := conf.NewConf(flagConf)
-	logger = conf.NewZap(config)
+	logger := conf.NewZapLogger(config)
+
 	app, cleanup, err := initApp(config, logger)
 	if err != nil {
+		logger.Error("init app failed", zap.Error(err))
 		panic(err)
 	}
 	defer cleanup()
+	logger.Info("start http server")
 	// 启动服务
 	if err := app.Run(
 		fmt.Sprintf("%s:%s", config.Conf.GetString("server.http.addr"),
 			config.Conf.GetString("server.http.port")),
 	); err != nil {
+		logger.Error("server run failed", zap.Error(err))
 		panic(err)
 	}
 }

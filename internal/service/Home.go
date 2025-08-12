@@ -1,15 +1,15 @@
 package service
 
 import (
+	"flow-bridge-mcp/internal/conf"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type HomeService struct {
-	log *zap.Logger
+	log *conf.Logger
 }
 
-func NewHome(log *zap.Logger) *HomeService {
+func NewHome(log *conf.Logger) *HomeService {
 	return &HomeService{
 		log: log,
 	}

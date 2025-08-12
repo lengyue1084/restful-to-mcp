@@ -13,6 +13,7 @@ type App struct {
 func NewApp(
 	middleware *middleware.Middleware,
 	conf *conf.Conf,
+	log *conf.Logger,
 ) *App {
 	if !conf.Conf.GetBool("server.dev") {
 		gin.SetMode(gin.ReleaseMode)
@@ -21,7 +22,8 @@ func NewApp(
 	//gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
 	//	log.Printf("endpoint %v %v %v %v\n", httpMethod, absolutePath, handlerName, nuHandlers)
 	//}
-	r.Use(middleware.Cors(), middleware.Logger(), middleware.Recovery())
+	r.Use(middleware.Cors(), middleware.TraceId(),
+		middleware.ZapLogger(log), middleware.Recovery())
 	return &App{
 		app: r,
 	}
