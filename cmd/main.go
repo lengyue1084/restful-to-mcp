@@ -10,9 +10,9 @@ import (
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	flagConf string
-	id, _    = os.Hostname()
-	//logger   *zap.Logger
+	flagConf    string
+	hostname, _ = os.Hostname()
+	logger      *conf.Logger
 )
 
 func init() {
@@ -21,7 +21,12 @@ func init() {
 func main() {
 	flag.Parse()
 	config := conf.NewConf(flagConf)
-	logger := conf.NewZapLogger(config)
+	logger = conf.NewZapLogger(config)
+	logger = &conf.Logger{
+		Logger: logger.With(
+			zap.String("Service", "flow-bridge-mcp"),
+		),
+	}
 
 	app, cleanup, err := initApp(config, logger)
 	if err != nil {

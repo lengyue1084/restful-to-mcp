@@ -58,7 +58,6 @@ func (m *Middleware) ZapLogger(logger *conf.Logger) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		traceId := c.GetString("traceId")
-
 		// 创建带有请求上下文的logger
 		requestLogger := logger.With(
 			zap.String("trace_id", traceId),
