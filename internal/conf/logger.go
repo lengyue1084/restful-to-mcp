@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -11,6 +12,71 @@ import (
 type Logger struct {
 	//*zap.Logger
 	*zap.SugaredLogger
+}
+
+func (l *Logger) WithContext(ctx *gin.Context) *Logger {
+	l.SugaredLogger = l.SugaredLogger.With(
+		zap.String("traceId", ctx.GetString("traceId")),
+		zap.String("spanId", ctx.GetString("spanId")),
+	)
+	return l
+}
+
+func (l *Logger) With(args ...interface{}) *zap.SugaredLogger {
+	return l.SugaredLogger.With(args...)
+}
+func (l *Logger) Error(args ...interface{}) {
+	l.SugaredLogger.Error(args...)
+}
+func (l *Logger) Info(args ...interface{}) {
+	l.SugaredLogger.Info(args...)
+}
+func (l *Logger) Warn(args ...interface{}) {
+	l.SugaredLogger.Warn(args...)
+}
+func (l *Logger) Debug(args ...interface{}) {
+	l.SugaredLogger.Debug(args...)
+}
+func (l *Logger) Fatal(args ...interface{}) {
+	l.SugaredLogger.Fatal(args...)
+}
+func (l *Logger) Panic(args ...interface{}) {
+	l.SugaredLogger.Panic(args...)
+}
+func (l *Logger) WithError(err error) *Logger {
+	l.SugaredLogger = l.SugaredLogger.With("error", err)
+	return l
+}
+func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+	l.SugaredLogger = l.SugaredLogger.With(fields)
+	return l
+}
+func (l *Logger) WithFields2(fields ...interface{}) *Logger {
+	l.SugaredLogger = l.SugaredLogger.With(fields...)
+	return l
+}
+func (l *Logger) WithField(key string, value interface{}) *Logger {
+	l.SugaredLogger = l.SugaredLogger.With(key, value)
+
+	return l
+}
+func (l *Logger) InfoF(template string, args ...interface{}) {
+	l.SugaredLogger.Infof(template, args...)
+}
+func (l *Logger) ErrorF(template string, args ...interface{}) {
+	l.SugaredLogger.Errorf(template, args...)
+}
+func (l *Logger) WarnF(template string, args ...interface{}) {
+	l.SugaredLogger.Warnf(template, args...)
+}
+func (l *Logger) DebugF(template string, args ...interface{}) {
+	l.SugaredLogger.Debugf(template, args...)
+}
+func (l *Logger) FatalF(template string, args ...interface{}) {
+	l.SugaredLogger.Fatalf(template, args...)
+}
+func (l *Logger) PanicF(template string, args ...interface{}) {
+	l.SugaredLogger.Panicf(template, args...)
 }
 
 // NewZapLogger 生产环境推荐配置

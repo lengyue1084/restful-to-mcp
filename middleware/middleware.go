@@ -16,9 +16,9 @@ var ProviderSet = wire.NewSet(NewMiddleware)
 
 type middleware interface {
 	Cors() gin.HandlerFunc
-	Logger() gin.HandlerFunc
+	Logger(logger *conf.Logger) gin.HandlerFunc
 	Recovery() gin.HandlerFunc
-	ZapLogger(logger *conf.Logger) gin.HandlerFunc
+	//ZapLogger(logger *conf.Logger) gin.HandlerFunc
 	TraceId() gin.HandlerFunc
 }
 
@@ -46,9 +46,9 @@ func (m *Middleware) Cors() gin.HandlerFunc {
 	}
 }
 
-func (m *Middleware) Logger() gin.HandlerFunc {
-	return gin.Logger()
-}
+//func (m *Middleware) Logger() gin.HandlerFunc {
+//	return gin.Logger()
+//}
 
 func (m *Middleware) Recovery() gin.HandlerFunc {
 	return gin.Recovery()
@@ -64,12 +64,11 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
-func (m *Middleware) ZapLogger(logger *conf.Logger) gin.HandlerFunc {
+func (m *Middleware) Logger(logger *conf.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
-		traceId := c.GetString("traceId")
 
 		// 条件性读取请求体（避免记录敏感信息）
 		var requestBody string
@@ -81,20 +80,22 @@ func (m *Middleware) ZapLogger(logger *conf.Logger) gin.HandlerFunc {
 
 		// 创建基础日志字段
 		baseFields := []zap.Field{
-			zap.String("trace_id", traceId),
+			zap.String("traceId", c.GetString("traceId")),
+			zap.String("spanId", c.GetString("spanId")),
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),
 			zap.String("query", query),
 			zap.String("ip", c.ClientIP()),
+			zap.String("requestBody", requestBody),
 		}
 
 		// 根据需要添加请求体
-		if len(requestBody) != 0 {
-			baseFields = append(baseFields, zap.String("request_body", requestBody))
-		}
+		//if requestBody != "" {
+		//	baseFields = append(baseFields, zap.String("request_body", requestBody))
+		//}
 
-		requestLogger := logger.With(baseFields)
-		c.Set("logger", requestLogger)
+		//requestLogger := logger.With(baseFields)
+		//c.Set("logger", requestLogger)
 
 		// 包装ResponseWriter
 		var responseBody bytes.Buffer
@@ -112,21 +113,25 @@ func (m *Middleware) ZapLogger(logger *conf.Logger) gin.HandlerFunc {
 		responseFields := []zap.Field{
 			zap.Int("status", status),
 			zap.Duration("latency", latency),
-			zap.Int("body_size", c.Writer.Size()),
+			zap.Int("bodySize", c.Writer.Size()),
+			zap.String("responseBody", responseBody.String()),
 		}
 
+		baseFields = append(baseFields, responseFields...)
+
 		// 条件性记录响应体
-		if shouldLogBody(path) && status >= 400 {
-			responseFields = append(responseFields, zap.String("response_body", responseBody.String()))
-		}
+		//if shouldLogBody(path) && status >= 400 {
+		//	responseFields = append(responseFields, zap.String("response_body", responseBody.String()))
+		//}
+		//responseFields = append(baseFields, zap.String("response_body", responseBody.String()))
 
 		// 根据状态码记录不同级别的日志
 		if status >= 500 {
-			requestLogger.Errorf("server error:%+v", responseFields)
+			logger.Errorf("server error:%+v", baseFields)
 		} else if status >= 400 {
-			requestLogger.Warnf("client error:%+v", responseFields)
+			logger.Warnf("client error:%+v", baseFields)
 		} else {
-			requestLogger.Infof("request completed:%+v", responseFields)
+			logger.Infof("request completed:%+v", baseFields)
 		}
 	}
 }
@@ -146,8 +151,10 @@ func shouldLogBody(path string) bool {
 func (m *Middleware) TraceId() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceId := c.Request.Header.Get("traceId")
+		spanId := uuid.New().String()
+		c.Set("spanId", spanId) // 为当前请求生成新的spanId
 		if traceId == "" {
-			traceId = uuid.New().String()
+			traceId = spanId // 如果没有traceId，则使用spanId作为traceId
 		}
 		c.Set("traceId", traceId)
 		c.Writer.Header().Set("traceId", traceId)

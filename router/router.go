@@ -14,18 +14,21 @@ func NewRouter(
 	HomeServer *service.HomeService,
 	LoginService *service.LoginService,
 ) *gin.Engine {
-	router := app.app.Group("/")
-	{
-		router.GET("/", HomeServer.Index)
-		router.GET("/login", UserServer.Login)
-		router.POST("/user/login", LoginService.Login)
-	}
 
-	router = router.Group("/")
+	router := app.app.Group("/")
 	{
 		router.GET("/sse", HomeServer.Index)
 		router.POST("/message", UserServer.Login)
 		router.POST("/mcp", LoginService.Login)
+
+	}
+
+	// 作为mcp服务对外提供服务
+	router = router.Group("/v1")
+	{
+		router.GET("/", HomeServer.Index)
+		router.GET("/login", UserServer.Login)
+		router.POST("/user/login", LoginService.Login)
 	}
 
 	return app.app

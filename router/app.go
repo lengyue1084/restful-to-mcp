@@ -35,7 +35,7 @@ func NewApp(
 	r.Use(
 		middleware.Cors(),
 		middleware.TraceId(),
-		middleware.ZapLogger(log),
+		middleware.Logger(log),
 		middleware.Recovery())
 	return &App{
 		app: r,
