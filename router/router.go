@@ -21,5 +21,12 @@ func NewRouter(
 		router.POST("/user/login", LoginService.Login)
 	}
 
+	router = router.Group("/")
+	{
+		router.GET("/sse", HomeServer.Index)
+		router.POST("/message", UserServer.Login)
+		router.POST("/mcp", LoginService.Login)
+	}
+
 	return app.app
 }
