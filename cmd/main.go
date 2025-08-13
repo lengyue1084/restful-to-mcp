@@ -21,25 +21,18 @@ func init() {
 func main() {
 	flag.Parse()
 	config := conf.NewConf(flagConf)
-	logger = conf.NewZapLogger(config)
-	logger = &conf.Logger{
-		Logger: logger.With(
-			zap.String("Service", "flow-bridge-mcp"),
-		),
-	}
 
-	app, cleanup, err := initApp(config, logger)
+	app, cleanup, err := initApp(config)
 	if err != nil {
-		logger.Error("init app failed", zap.Error(err))
 		panic(err)
 	}
 	defer cleanup()
-	logger.Info("start http server")
 	// 启动服务
-	if err := app.Run(
+	err = app.Run(
 		fmt.Sprintf("%s:%s", config.Conf.GetString("server.http.addr"),
 			config.Conf.GetString("server.http.port")),
-	); err != nil {
+	)
+	if err != nil {
 		logger.Error("server run failed", zap.Error(err))
 		panic(err)
 	}
