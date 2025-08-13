@@ -10,6 +10,8 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
+	"flow-bridge-mcp/internal/data/cache"
+	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
 	"flow-bridge-mcp/router"
@@ -19,29 +21,30 @@ import (
 // Injectors from wire.go:
 
 // initApp init gin application.
-func initApp(config *conf.Conf, log *conf.Logger) (*gin.Engine, func(), error) {
+func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	middlewareMiddleware := middleware.NewMiddleware()
-	app := router.NewApp(middlewareMiddleware, config, log)
-	db, cleanup, err := data.NewGormClient(config, log)
+	logger := conf.NewZapLogger(config)
+	app := router.NewApp(middlewareMiddleware, config, logger)
+	db, cleanup, err := database.NewPgClient(config, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	client, cleanup2, err := data.NewRedisClient(config)
+	client, cleanup2, err := cache.NewRedisClient(config, logger)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	userData, cleanup3, err := data.NewUserData(db, client)
+	dataData, cleanup3, err := data.NewData(db, client, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	userRepo := data.NewUserRepo(userData, log)
-	userUseCase := biz.NewUserUseCase(userRepo, log)
-	userService := service.NewUserService(userUseCase, log)
-	homeService := service.NewHome(log)
-	loginService := service.NewLoginService(log)
+	userRepo := data.NewUserRepo(dataData, logger)
+	userUseCase := biz.NewUserUseCase(userRepo, logger)
+	userService := service.NewUserService(userUseCase, logger)
+	homeService := service.NewHome(logger)
+	loginService := service.NewLoginService(logger)
 	engine := router.NewRouter(app, userService, homeService, loginService)
 	return engine, func() {
 		cleanup3()

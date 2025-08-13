@@ -17,12 +17,13 @@ import (
 )
 
 // initApp init gin application.
-func initApp(config *conf.Conf, log *conf.Logger) (*gin.Engine, func(), error) {
+func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	panic(wire.Build(
 		middleware.ProviderSet,
 		data.ProviderSet,
 		biz.ProviderSet,
 		service.ProviderSet,
 		router.ProviderSet,
+		conf.ProviderSet,
 	))
 }

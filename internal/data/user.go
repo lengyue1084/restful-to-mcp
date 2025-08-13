@@ -11,11 +11,11 @@ import (
 )
 
 type userRepo struct {
-	UserData *UserData
+	UserData *Data
 	log      *conf.Logger
 }
 
-func NewUserRepo(d *UserData, log *conf.Logger) biz.UserRepo {
+func NewUserRepo(d *Data, log *conf.Logger) biz.UserRepo {
 	return &userRepo{
 		UserData: d,
 		log:      log,
