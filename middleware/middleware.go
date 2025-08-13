@@ -80,11 +80,11 @@ func (m *Middleware) ZapLogger(logger *conf.Logger) gin.HandlerFunc {
 			zap.Int("body_size", c.Writer.Size()),
 		}
 		if status >= 500 {
-			requestLogger.Error("server error", fields...)
+			requestLogger.Errorf("server error:%+v", fields)
 		} else if status >= 400 {
-			requestLogger.Warn("client error", fields...)
+			requestLogger.Warnf("client error%+v", fields)
 		} else {
-			requestLogger.Info("request completed", fields...)
+			requestLogger.Infof("request completed:%+v", fields)
 		}
 	}
 }
