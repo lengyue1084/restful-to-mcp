@@ -5,14 +5,13 @@ import (
 	"flow-bridge-mcp/internal/conf"
 	"fmt"
 	"go.uber.org/zap"
-	"os"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
-	flagConf    string
-	hostname, _ = os.Hostname()
-	logger      *conf.Logger
+	flagConf string
+	//hostname, _ = os.Hostname()
+	logger *conf.Logger
 )
 
 func init() {
