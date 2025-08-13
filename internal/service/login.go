@@ -24,7 +24,8 @@ func (l *LoginService) Login(ctx *gin.Context) {
 		return
 	}
 	//l.log.Info(json.Username + json.Password)
-	l.log.WithContext(ctx).InfoF("username: %s, password: %s", json.Username, json.Password)
+	//l.log.WithContext(ctx).InfoF("username: %s, password: %s", json.Username, json.Password)
+	l.log.InfoWithContext(ctx, "username: %+v", json)
 
 	ctx.JSON(http.StatusOK, json)
 }

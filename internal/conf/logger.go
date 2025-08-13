@@ -57,25 +57,49 @@ func (l *Logger) WithFields2(fields ...interface{}) *Logger {
 }
 func (l *Logger) WithField(key string, value interface{}) *Logger {
 	l.SugaredLogger = l.SugaredLogger.With(key, value)
-
 	return l
 }
 func (l *Logger) InfoF(template string, args ...interface{}) {
 	l.SugaredLogger.Infof(template, args...)
 }
+func (l *Logger) InfoWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
+	l.SugaredLogger.Infof(template, args...)
+}
 func (l *Logger) ErrorF(template string, args ...interface{}) {
 	l.SugaredLogger.Errorf(template, args...)
 }
+func (l *Logger) ErrorWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
+	l.SugaredLogger.Errorf(template, args...)
+}
+
 func (l *Logger) WarnF(template string, args ...interface{}) {
+	l.SugaredLogger.Warnf(template, args...)
+}
+func (l *Logger) WarnWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
 	l.SugaredLogger.Warnf(template, args...)
 }
 func (l *Logger) DebugF(template string, args ...interface{}) {
 	l.SugaredLogger.Debugf(template, args...)
 }
+func (l *Logger) DebugWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
+	l.SugaredLogger.Debugf(template, args...)
+}
 func (l *Logger) FatalF(template string, args ...interface{}) {
 	l.SugaredLogger.Fatalf(template, args...)
 }
+func (l *Logger) FatalWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
+	l.SugaredLogger.Fatalf(template, args...)
+}
 func (l *Logger) PanicF(template string, args ...interface{}) {
+	l.SugaredLogger.Panicf(template, args...)
+}
+func (l *Logger) PanicWithContext(ctx *gin.Context, template string, args ...interface{}) {
+	l.WithContext(ctx)
 	l.SugaredLogger.Panicf(template, args...)
 }
 
