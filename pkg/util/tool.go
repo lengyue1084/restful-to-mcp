@@ -5,16 +5,28 @@ import (
 	"time"
 )
 
-// PathExists 返回true则不存在，返回err具体分析
-func PathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
+// FileExists 检查文件是否存在
+func FileExists(filename string) (bool, error) {
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
-		return false, nil
+		return false, err
 	}
-	return false, err
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// DirExists 检查目录是否存在
+func DirExists(dirname string) bool {
+	info, err := os.Stat(dirname)
+	if os.IsNotExist(err) {
+		return false
+	}
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 // Date 格式化日期
