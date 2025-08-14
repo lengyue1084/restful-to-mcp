@@ -74,16 +74,21 @@ func WithData(data interface{}) OptFunc {
 	}
 }
 
-// Fail 创建失败响应
-func Fail(message string, data interface{}) *Response {
+// Error 创建失败响应
+func Error(message string, opts ...OptFunc) *Response {
 	if message == "" {
 		message = GetMessage(FailCode)
 	}
-	return &Response{
+	// 应用选项
+	resp := &Response{
 		Code:    FailCode,
 		Message: message,
-		Data:    data,
+		Data:    nil,
 	}
+	for _, opt := range opts {
+		opt(resp)
+	}
+	return resp
 }
 
 // NewResponse 创建自定义响应
@@ -126,9 +131,9 @@ func SuccessJSON(c *gin.Context, message string, opts ...OptFunc) {
 }
 
 // ErrorJSON 返回错误响应
-func ErrorJSON(c *gin.Context, resp *Response) {
-	statusCode := getHTTPStatusCode(resp.Code)
-	c.JSON(statusCode, resp)
+func ErrorJSON(c *gin.Context, message string, opts ...OptFunc) {
+	resp := Error(message, opts...)
+	c.JSON(http.StatusOK, resp)
 }
 
 // AbortWithJSON 中断请求并返回JSON响应
@@ -144,99 +149,13 @@ func getHTTPStatusCode(code int) int {
 		return http.StatusOK
 	case code >= 400 && code < 500:
 		return http.StatusBadRequest
-	case code >= 500:
-		return http.StatusInternalServerError
 	case code >= 10000:
 		return http.StatusBadRequest
+	case code >= 500:
+		return http.StatusInternalServerError
 	default:
 		return http.StatusOK
 	}
-}
-
-// 便捷函数创建特定错误并直接返回给客户端
-func ClientNotSupportJSON(c *gin.Context, message string) {
-	resp := ClientNotSupport(message)
-	ErrorJSON(c, resp)
-}
-
-func ServerNotSupportJSON(c *gin.Context, message string) {
-	resp := ServerNotSupport(message)
-	ErrorJSON(c, resp)
-}
-
-func RequestInvalidJSON(c *gin.Context, message string) {
-	resp := RequestInvalid(message)
-	ErrorJSON(c, resp)
-}
-
-func MethodNotSupportJSON(c *gin.Context, message string) {
-	resp := MethodNotSupport(message)
-	ErrorJSON(c, resp)
-}
-
-func JSONUnmarshalErrorJSON(c *gin.Context, message string) {
-	resp := JSONUnmarshalError(message)
-	ErrorJSON(c, resp)
-}
-
-func SessionNotInitializedJSON(c *gin.Context, message string) {
-	resp := SessionNotInitialized(message)
-	ErrorJSON(c, resp)
-}
-
-func SessionClosedJSON(c *gin.Context, message string) {
-	resp := SessionClosed(message)
-	ErrorJSON(c, resp)
-}
-
-// ClientNotSupport 便捷函数创建特定错误
-func ClientNotSupport(message string) *Response {
-	if message == "" {
-		message = GetMessage(ClientNotSupportCode)
-	}
-	return NewResponse(ClientNotSupportCode, message, nil)
-}
-
-func ServerNotSupport(message string) *Response {
-	if message == "" {
-		message = GetMessage(ServerNotSupportCode)
-	}
-	return NewResponse(ServerNotSupportCode, message, nil)
-}
-
-func RequestInvalid(message string) *Response {
-	if message == "" {
-		message = GetMessage(RequestInvalidCode)
-	}
-	return NewResponse(RequestInvalidCode, message, nil)
-}
-
-func MethodNotSupport(message string) *Response {
-	if message == "" {
-		message = GetMessage(MethodNotSupportCode)
-	}
-	return NewResponse(MethodNotSupportCode, message, nil)
-}
-
-func JSONUnmarshalError(message string) *Response {
-	if message == "" {
-		message = GetMessage(JSONUnmarshalErrorCode)
-	}
-	return NewResponse(JSONUnmarshalErrorCode, message, nil)
-}
-
-func SessionNotInitialized(message string) *Response {
-	if message == "" {
-		message = GetMessage(SessionNotInitializedCode)
-	}
-	return NewResponse(SessionNotInitializedCode, message, nil)
-}
-
-func SessionClosed(message string) *Response {
-	if message == "" {
-		message = GetMessage(SessionClosedCode)
-	}
-	return NewResponse(SessionClosedCode, message, nil)
 }
 
 // IsSuccess 判断是否为成功响应
