@@ -10,8 +10,8 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
-	"flow-bridge-mcp/internal/data/cache"
-	"flow-bridge-mcp/internal/data/database"
+	"flow-bridge-mcp/internal/pkg/cache"
+	"flow-bridge-mcp/internal/pkg/database"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
 	"flow-bridge-mcp/pkg/logger"
@@ -46,7 +46,10 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	userService := service.NewUserService(userUseCase, loggerLogger)
 	homeService := service.NewHome(loggerLogger)
 	loginService := service.NewLoginService(loggerLogger)
-	engine := router.NewRouter(app, userService, homeService, loginService)
+	openapiRepo := data.NewOpenapiRepo(dataData, loggerLogger)
+	openapiUseCase := biz.NewOpenapiUserCase(openapiRepo, loggerLogger)
+	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
+	engine := router.NewRouter(app, userService, homeService, loginService, openapiService)
 	return engine, func() {
 		cleanup3()
 		cleanup2()

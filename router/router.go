@@ -13,6 +13,7 @@ func NewRouter(
 	UserServer *service.UserService,
 	HomeServer *service.HomeService,
 	LoginService *service.LoginService,
+	OpenapiService *service.OpenapiService,
 ) *gin.Engine {
 
 	// 作为mcp服务对外提供服务
@@ -25,8 +26,8 @@ func NewRouter(
 	// 作为api服务对外提供服务
 	router = router.Group("/v1")
 	{
-		router.GET("/", HomeServer.Index)
-		router.GET("/login", UserServer.Login)
+		//router.GET("/", HomeServer.Index)
+		router.POST("/openapi", OpenapiService.Create)
 		router.POST("/user/login", LoginService.Login)
 	}
 

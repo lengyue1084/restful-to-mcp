@@ -1,7 +1,7 @@
 package service
 
 import (
-	"flow-bridge-mcp/api/user"
+	http2 "flow-bridge-mcp/api"
 	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -18,7 +18,7 @@ func NewLoginService(log *logger.Logger) *LoginService {
 }
 
 func (l *LoginService) Login(ctx *gin.Context) {
-	var json user.UserLoginReq
+	var json http2.UserLoginReq
 	if err := ctx.ShouldBindJSON(&json); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

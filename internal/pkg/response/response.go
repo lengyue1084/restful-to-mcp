@@ -2,6 +2,9 @@ package response
 
 import (
 	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 定义错误代码枚举
@@ -19,7 +22,6 @@ const (
 	SessionNotInitializedCode = 10006
 	SessionClosedCode         = 10007
 	SendEOFCode               = 10008
-	RateLimitExceededCode     = 10009
 )
 
 // 预定义错误消息
@@ -50,12 +52,22 @@ func Success(message string, opts ...OptFunc) *Response {
 	if message == "" {
 		message = GetMessage(SuccessCode)
 	}
-	return &Response{
+
+	resp := &Response{
 		Code:    SuccessCode,
 		Message: message,
-		Data:    "",
+		Data:    nil,
 	}
+
+	// 应用选项
+	for _, opt := range opts {
+		opt(resp)
+	}
+
+	return resp
 }
+
+// WithData 设置响应数据
 func WithData(data interface{}) OptFunc {
 	return func(r *Response) {
 		r.Data = data
@@ -97,6 +109,84 @@ func GetMessage(code int) string {
 		return msg
 	}
 	return "unknown error"
+}
+
+// Gin 集成函数
+
+// JSON 返回标准JSON响应
+func JSON(c *gin.Context, resp *Response) {
+	statusCode := getHTTPStatusCode(resp.Code)
+	c.JSON(statusCode, resp)
+}
+
+// SuccessJSON 返回成功响应
+func SuccessJSON(c *gin.Context, message string, opts ...OptFunc) {
+	resp := Success(message, opts...)
+	c.JSON(http.StatusOK, resp)
+}
+
+// ErrorJSON 返回错误响应
+func ErrorJSON(c *gin.Context, resp *Response) {
+	statusCode := getHTTPStatusCode(resp.Code)
+	c.JSON(statusCode, resp)
+}
+
+// AbortWithJSON 中断请求并返回JSON响应
+func AbortWithJSON(c *gin.Context, resp *Response) {
+	statusCode := getHTTPStatusCode(resp.Code)
+	c.AbortWithStatusJSON(statusCode, resp)
+}
+
+// 根据错误代码获取HTTP状态码
+func getHTTPStatusCode(code int) int {
+	switch {
+	case code == SuccessCode:
+		return http.StatusOK
+	case code >= 400 && code < 500:
+		return http.StatusBadRequest
+	case code >= 500:
+		return http.StatusInternalServerError
+	case code >= 10000:
+		return http.StatusBadRequest
+	default:
+		return http.StatusOK
+	}
+}
+
+// 便捷函数创建特定错误并直接返回给客户端
+func ClientNotSupportJSON(c *gin.Context, message string) {
+	resp := ClientNotSupport(message)
+	ErrorJSON(c, resp)
+}
+
+func ServerNotSupportJSON(c *gin.Context, message string) {
+	resp := ServerNotSupport(message)
+	ErrorJSON(c, resp)
+}
+
+func RequestInvalidJSON(c *gin.Context, message string) {
+	resp := RequestInvalid(message)
+	ErrorJSON(c, resp)
+}
+
+func MethodNotSupportJSON(c *gin.Context, message string) {
+	resp := MethodNotSupport(message)
+	ErrorJSON(c, resp)
+}
+
+func JSONUnmarshalErrorJSON(c *gin.Context, message string) {
+	resp := JSONUnmarshalError(message)
+	ErrorJSON(c, resp)
+}
+
+func SessionNotInitializedJSON(c *gin.Context, message string) {
+	resp := SessionNotInitialized(message)
+	ErrorJSON(c, resp)
+}
+
+func SessionClosedJSON(c *gin.Context, message string) {
+	resp := SessionClosed(message)
+	ErrorJSON(c, resp)
 }
 
 // ClientNotSupport 便捷函数创建特定错误
@@ -147,13 +237,6 @@ func SessionClosed(message string) *Response {
 		message = GetMessage(SessionClosedCode)
 	}
 	return NewResponse(SessionClosedCode, message, nil)
-}
-
-func RateLimitExceeded(message string) *Response {
-	if message == "" {
-		message = GetMessage(RateLimitExceededCode)
-	}
-	return NewResponse(RateLimitExceededCode, message, nil)
 }
 
 // IsSuccess 判断是否为成功响应

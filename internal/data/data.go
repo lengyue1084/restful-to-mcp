@@ -1,8 +1,8 @@
 package data
 
 import (
-	"flow-bridge-mcp/internal/data/cache"
-	"flow-bridge-mcp/internal/data/database"
+	"flow-bridge-mcp/internal/pkg/cache"
+	"flow-bridge-mcp/internal/pkg/database"
 	"flow-bridge-mcp/pkg/logger"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
@@ -16,6 +16,7 @@ var ProviderSet = wire.NewSet(
 	//NewMysqlClient,
 	cache.NewRedisClient,
 	database.NewPgClient,
+	NewOpenapiRepo,
 )
 
 type Data struct {

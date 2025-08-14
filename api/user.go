@@ -1,4 +1,4 @@
-package user
+package api
 
 type LoginReq struct {
 	Username string
@@ -6,8 +6,6 @@ type LoginReq struct {
 }
 
 type LoginReplay struct {
-	Code int
+	Code    int
 	Message string
 }
-
-

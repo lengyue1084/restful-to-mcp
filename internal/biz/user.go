@@ -1,13 +1,13 @@
 package biz
 
 import (
-	"flow-bridge-mcp/api/user"
+	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
 type UserRepo interface {
-	Login(ctx *gin.Context) (*user.LoginReplay, error)
+	Login(ctx *gin.Context) (*api.LoginReplay, error)
 }
 
 type UserUseCase struct {
@@ -19,7 +19,7 @@ func NewUserUseCase(repo UserRepo, log *logger.Logger) *UserUseCase {
 	return &UserUseCase{repo: repo, log: log}
 }
 
-func (u *UserUseCase) UserLogin(ctx *gin.Context) (*user.LoginReplay, error) {
+func (u *UserUseCase) UserLogin(ctx *gin.Context) (*api.LoginReplay, error) {
 	u.log.Info("biz 示例")
 	return u.repo.Login(ctx)
 }

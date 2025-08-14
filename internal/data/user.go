@@ -1,7 +1,7 @@
 package data
 
 import (
-	"flow-bridge-mcp/api/user"
+	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
@@ -22,7 +22,7 @@ func NewUserRepo(d *Data, log *logger.Logger) biz.UserRepo {
 	}
 }
 
-func (u *userRepo) Login(ctx *gin.Context) (*user.LoginReplay, error) {
+func (u *userRepo) Login(ctx *gin.Context) (*api.LoginReplay, error) {
 	userMode := &model.User{
 		Name: "WQ",
 		Age:  18,
@@ -35,7 +35,7 @@ func (u *userRepo) Login(ctx *gin.Context) (*user.LoginReplay, error) {
 		zap.String("第一条数据的name值", userList[0].Name),
 		zap.Uint8("第二条数据的age值", userList[1].Age),
 	)
-	var list = user.LoginReplay{
+	var list = api.LoginReplay{
 		Code:    0,
 		Message: "success",
 	}
