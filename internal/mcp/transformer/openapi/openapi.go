@@ -5,6 +5,8 @@ package openapi
 // 导入必要的包
 import (
 	"encoding/json"
+	"flow-bridge-mcp/internal/mcp/config"
+	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"strings"
 	"time"
@@ -76,7 +78,7 @@ func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
 	}
 
 	// 生成一个 4 位的随机字符串
-	rs := lol.RandomString(4)
+	rs := tool.RandStringByLen(4)
 
 	// 创建基础的 MCP 配置
 	mcpConfig := &config.MCPConfig{
@@ -138,7 +140,7 @@ func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
 			// 创建工具配置
 			tool := config.ToolConfig{
 				Name:         operation.OperationID,
-				Description:  utils.FirstNonEmpty(operation.Description, operation.Summary),
+				Description:  tool.FirstNonEmpty(operation.Description, operation.Summary),
 				Method:       method,
 				Endpoint:     fmt.Sprintf("{{.Config.url}}%s", path),
 				Headers:      make(map[string]string),
@@ -382,14 +384,14 @@ func (c *Converter) ConvertWithOptions(specData []byte, tenant, prefix string) (
 		config.Tenant = cleanTenant
 		if len(config.Routers) > 0 {
 			// 生成一个 4 位的随机字符串
-			rs := lol.RandomString(4)
+			rs := tool.RandStringByLen(4)
 			config.Routers[0].Prefix = "/" + cleanTenant + "/" + cleanPrefix + "/" + rs
 		}
 	} else if tenant != "" {
 		config.Tenant = cleanTenant
 		if len(config.Routers) > 0 {
 			// 自动生成前缀，逻辑与默认逻辑相同
-			rs := lol.RandomString(4)
+			rs := tool.RandStringByLen(4)
 			config.Routers[0].Prefix = "/" + cleanTenant + "/" + rs
 		}
 	}

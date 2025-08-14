@@ -56,7 +56,7 @@ func NewPgClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), error
 	}
 
 	// 自动迁移 schema
-	if err := dbOpen.AutoMigrate(model.User{}); err != nil {
+	if err := dbOpen.AutoMigrate(model.McpServer{}); err != nil {
 		log.Error("auto migrate postgresql error:%+v", zap.Error(err))
 		return nil, nil, err
 	}

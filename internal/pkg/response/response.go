@@ -1,7 +1,6 @@
 package response
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,67 +44,63 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-type OptFunc func(*Response)
-
-// Success 创建成功响应
-func Success(message string, opts ...OptFunc) *Response {
+// Success 创建并返回成功响应
+func Success(ctx *gin.Context, message string, data interface{}) {
 	if message == "" {
 		message = GetMessage(SuccessCode)
 	}
-
 	resp := &Response{
 		Code:    SuccessCode,
 		Message: message,
-		Data:    nil,
+		Data:    data,
 	}
-
-	// 应用选项
-	for _, opt := range opts {
-		opt(resp)
-	}
-
-	return resp
+	ctx.JSON(http.StatusOK, resp)
 }
 
-// WithData 设置响应数据
-func WithData(data interface{}) OptFunc {
-	return func(r *Response) {
-		r.Data = data
-	}
-}
-
-// Error 创建失败响应
-func Error(message string, opts ...OptFunc) *Response {
+// Error 创建并返回错误响应
+func Error(ctx *gin.Context, message string, data interface{}) {
 	if message == "" {
 		message = GetMessage(FailCode)
 	}
-	// 应用选项
 	resp := &Response{
 		Code:    FailCode,
 		Message: message,
-		Data:    nil,
+		Data:    data,
 	}
-	for _, opt := range opts {
-		opt(resp)
-	}
-	return resp
+	//statusCode := getHTTPStatusCode(FailCode)
+	ctx.JSON(http.StatusOK, resp)
 }
 
-// NewResponse 创建自定义响应
-func NewResponse(code int, message string, data interface{}) *Response {
+// CustomError 创建并返回自定义错误响应
+func CustomError(ctx *gin.Context, code int, message string, data interface{}) {
 	if message == "" {
 		message = GetMessage(code)
 	}
-	return &Response{
+
+	resp := &Response{
 		Code:    code,
 		Message: message,
 		Data:    data,
 	}
+
+	statusCode := getHTTPStatusCode(code)
+	ctx.JSON(statusCode, resp)
 }
 
-// Error 实现 error 接口
-func (r *Response) Error() string {
-	return fmt.Sprintf("code=%d message=%s data=%+v", r.Code, r.Message, r.Data)
+// AbortWithErrorResponse 中断请求并返回错误响应
+func AbortWithErrorResponse(ctx *gin.Context, code int, message string, data interface{}) {
+	if message == "" {
+		message = GetMessage(code)
+	}
+
+	resp := &Response{
+		Code:    code,
+		Message: message,
+		Data:    data,
+	}
+
+	statusCode := getHTTPStatusCode(code)
+	ctx.AbortWithStatusJSON(statusCode, resp)
 }
 
 // GetMessage 获取错误代码对应的消息
@@ -114,32 +109,6 @@ func GetMessage(code int) string {
 		return msg
 	}
 	return "unknown error"
-}
-
-// Gin 集成函数
-
-// JSON 返回标准JSON响应
-func JSON(c *gin.Context, resp *Response) {
-	statusCode := getHTTPStatusCode(resp.Code)
-	c.JSON(statusCode, resp)
-}
-
-// SuccessJSON 返回成功响应
-func SuccessJSON(c *gin.Context, message string, opts ...OptFunc) {
-	resp := Success(message, opts...)
-	c.JSON(http.StatusOK, resp)
-}
-
-// ErrorJSON 返回错误响应
-func ErrorJSON(c *gin.Context, message string, opts ...OptFunc) {
-	resp := Error(message, opts...)
-	c.JSON(http.StatusOK, resp)
-}
-
-// AbortWithJSON 中断请求并返回JSON响应
-func AbortWithJSON(c *gin.Context, resp *Response) {
-	statusCode := getHTTPStatusCode(resp.Code)
-	c.AbortWithStatusJSON(statusCode, resp)
 }
 
 // 根据错误代码获取HTTP状态码
@@ -156,6 +125,57 @@ func getHTTPStatusCode(code int) int {
 	default:
 		return http.StatusOK
 	}
+}
+
+// 便捷函数 - 直接返回特定错误
+
+func ClientNotSupport(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(ClientNotSupportCode)
+	}
+	CustomError(ctx, ClientNotSupportCode, message, nil)
+}
+
+func ServerNotSupport(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(ServerNotSupportCode)
+	}
+	CustomError(ctx, ServerNotSupportCode, message, nil)
+}
+
+func RequestInvalid(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(RequestInvalidCode)
+	}
+	CustomError(ctx, RequestInvalidCode, message, nil)
+}
+
+func MethodNotSupport(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(MethodNotSupportCode)
+	}
+	CustomError(ctx, MethodNotSupportCode, message, nil)
+}
+
+func JSONUnmarshalError(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(JSONUnmarshalErrorCode)
+	}
+	CustomError(ctx, JSONUnmarshalErrorCode, message, nil)
+}
+
+func SessionNotInitialized(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(SessionNotInitializedCode)
+	}
+	CustomError(ctx, SessionNotInitializedCode, message, nil)
+}
+
+func SessionClosed(ctx *gin.Context, message string) {
+	if message == "" {
+		message = GetMessage(SessionClosedCode)
+	}
+	CustomError(ctx, SessionClosedCode, message, nil)
 }
 
 // IsSuccess 判断是否为成功响应

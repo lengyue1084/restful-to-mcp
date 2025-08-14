@@ -10,25 +10,21 @@ var ProviderSet = wire.NewSet(NewApp, NewRouter)
 
 func NewRouter(
 	app *App,
-	UserServer *service.UserService,
-	HomeServer *service.HomeService,
-	LoginService *service.LoginService,
 	OpenapiService *service.OpenapiService,
 ) *gin.Engine {
 
 	// 作为mcp服务对外提供服务
 	router := app.app.Group("/")
 	{
-		router.GET("/sse", HomeServer.Index)
-		router.POST("/message", UserServer.Login)
-		router.POST("/mcp", LoginService.Login)
+		router.GET("/sse", OpenapiService.Create)
+		router.POST("/message", OpenapiService.Create)
+		router.POST("/mcp", OpenapiService.Create)
 	}
 	// 作为api服务对外提供服务
 	router = router.Group("/v1")
 	{
 		//router.GET("/", HomeServer.Index)
 		router.POST("/openapi", OpenapiService.Create)
-		router.POST("/user/login", LoginService.Login)
 	}
 
 	return app.app

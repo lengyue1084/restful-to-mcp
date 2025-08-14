@@ -2,7 +2,6 @@ package database
 
 import (
 	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -33,9 +32,9 @@ func NewMysqlClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), er
 	db.SetMaxIdleConns(config.Conf.GetInt("data.database.max_idle_conn"))
 	db.SetMaxOpenConns(config.Conf.GetInt("data.database.max_open_conn"))
 	// 迁移 schema
-	if err := dbOpen.AutoMigrate(model.User{}); err != nil {
-		panic(err)
-	}
+	//if err := dbOpen.AutoMigrate(model.User{}); err != nil {
+	//	panic(err)
+	//}
 	cleanup := func() {
 		if err := db.Close(); err != nil {
 			//log.Println("close mysql err:", err)

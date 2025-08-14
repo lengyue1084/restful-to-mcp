@@ -41,15 +41,10 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	userRepo := data.NewUserRepo(dataData, loggerLogger)
-	userUseCase := biz.NewUserUseCase(userRepo, loggerLogger)
-	userService := service.NewUserService(userUseCase, loggerLogger)
-	homeService := service.NewHome(loggerLogger)
-	loginService := service.NewLoginService(loggerLogger)
 	openapiRepo := data.NewOpenapiRepo(dataData, loggerLogger)
 	openapiUseCase := biz.NewOpenapiUserCase(openapiRepo, loggerLogger)
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
-	engine := router.NewRouter(app, userService, homeService, loginService, openapiService)
+	engine := router.NewRouter(app, openapiService)
 	return engine, func() {
 		cleanup3()
 		cleanup2()

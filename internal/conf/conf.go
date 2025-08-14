@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"flow-bridge-mcp/pkg/util"
+	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -12,8 +12,8 @@ type Conf struct {
 }
 
 func NewConf(confFile string) *Conf {
-	if ok, err := util.FileExists(confFile); err != nil || !ok {
-		if ok, err = util.FileExists(fmt.Sprintf("%s%s", confFile, "/config.yaml")); err != nil || !ok {
+	if ok, err := tool.FileExists(confFile); err != nil || !ok {
+		if ok, err = tool.FileExists(fmt.Sprintf("%s%s", confFile, "/config.yaml")); err != nil || !ok {
 			panic("请检查配置文件" + confFile + "是否存在")
 		}
 	}
