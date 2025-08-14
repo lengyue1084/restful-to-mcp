@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"bytes"
-	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/google/wire"
@@ -16,7 +16,7 @@ var ProviderSet = wire.NewSet(NewMiddleware)
 
 type middleware interface {
 	Cors() gin.HandlerFunc
-	Logger(logger *conf.Logger) gin.HandlerFunc
+	Logger(logger *logger.Logger) gin.HandlerFunc
 	Recovery() gin.HandlerFunc
 	//ZapLogger(logger *conf.Logger) gin.HandlerFunc
 	TraceId() gin.HandlerFunc
@@ -64,7 +64,7 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
-func (m *Middleware) Logger(logger *conf.Logger) gin.HandlerFunc {
+func (m *Middleware) Logger(logger *logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path

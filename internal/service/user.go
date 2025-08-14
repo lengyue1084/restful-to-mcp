@@ -2,17 +2,17 @@ package service
 
 import (
 	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type UserService struct {
 	uc  *biz.UserUseCase
-	log *conf.Logger
+	log *logger.Logger
 }
 
-func NewUserService(uc *biz.UserUseCase, log *conf.Logger) *UserService {
+func NewUserService(uc *biz.UserUseCase, log *logger.Logger) *UserService {
 	return &UserService{
 		uc:  uc,
 		log: log,

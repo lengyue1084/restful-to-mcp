@@ -11,6 +11,7 @@ import (
 	"flow-bridge-mcp/internal/data"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
+	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/router"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -24,6 +25,6 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		biz.ProviderSet,
 		service.ProviderSet,
 		router.ProviderSet,
-		conf.ProviderSet,
+		logger.ProviderSet,
 	))
 }

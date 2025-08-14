@@ -2,7 +2,7 @@ package biz
 
 import (
 	"flow-bridge-mcp/api/user"
-	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,10 +12,10 @@ type UserRepo interface {
 
 type UserUseCase struct {
 	repo UserRepo
-	log  *conf.Logger
+	log  *logger.Logger
 }
 
-func NewUserUseCase(repo UserRepo, log *conf.Logger) *UserUseCase {
+func NewUserUseCase(repo UserRepo, log *logger.Logger) *UserUseCase {
 	return &UserUseCase{repo: repo, log: log}
 }
 

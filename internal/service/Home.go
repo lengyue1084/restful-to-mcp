@@ -1,15 +1,15 @@
 package service
 
 import (
-	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
 type HomeService struct {
-	log *conf.Logger
+	log *logger.Logger
 }
 
-func NewHome(log *conf.Logger) *HomeService {
+func NewHome(log *logger.Logger) *HomeService {
 	return &HomeService{
 		log: log,
 	}

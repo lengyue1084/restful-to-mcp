@@ -3,11 +3,12 @@ package cache
 import (
 	"context"
 	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 )
 
-func NewRedisClient(config *conf.Conf, log *conf.Logger) (*redis.Client, func(), error) {
+func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(), error) {
 	var ctx = context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         fmt.Sprintf("%s:%s", config.Conf.GetString("data.redis.addr"), config.Conf.GetString("data.redis.port")),

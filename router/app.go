@@ -3,6 +3,7 @@ package router
 import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/middleware"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +14,7 @@ type App struct {
 func NewApp(
 	middleware *middleware.Middleware,
 	conf *conf.Conf,
-	log *conf.Logger,
+	log *logger.Logger,
 ) *App {
 	if !conf.Conf.GetBool("server.dev") {
 		gin.SetMode(gin.ReleaseMode)

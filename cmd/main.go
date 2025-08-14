@@ -4,14 +4,14 @@ import (
 	"flag"
 	"flow-bridge-mcp/internal/conf"
 	"fmt"
-	"go.uber.org/zap"
+	//"gorm.io/gorm/logger"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	flagConf string
 	//hostname, _ = os.Hostname()
-	logger *conf.Logger
+	//logger *logger2.Logger
 )
 
 func init() {
@@ -32,7 +32,7 @@ func main() {
 			config.Conf.GetString("server.http.port")),
 	)
 	if err != nil {
-		logger.Error("server run failed", zap.Error(err))
+		//logger("server run failed", zap.Error(err))
 		panic(err)
 	}
 }

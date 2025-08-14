@@ -3,13 +3,14 @@ package database
 import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 // NewMysqlClient 创建 Mysql 数据库连接
-func NewMysqlClient(config *conf.Conf, log *conf.Logger) (*gorm.DB, func(), error) {
+func NewMysqlClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), error) {
 	dsn := config.Conf.GetString("data.database.source")
 	mysqlConfig := mysql.Config{
 		DSN:                       dsn,   // DSN data source name

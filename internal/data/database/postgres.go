@@ -4,13 +4,14 @@ import (
 	"context"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 // NewPgClient 创建 PostgreSQL 数据库连接
-func NewPgClient(config *conf.Conf, log *conf.Logger) (*gorm.DB, func(), error) {
+func NewPgClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), error) {
 	dsn := config.Conf.GetString("data.database.pg_source")
 
 	// PostgresSQL 配置

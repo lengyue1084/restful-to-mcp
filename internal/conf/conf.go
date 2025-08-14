@@ -4,11 +4,8 @@ import (
 	"flow-bridge-mcp/pkg/util"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"github.com/google/wire"
 	"github.com/spf13/viper"
 )
-
-var ProviderSet = wire.NewSet(NewZapLogger)
 
 type Conf struct {
 	Conf *viper.Viper
@@ -28,7 +25,7 @@ func NewConf(confFile string) *Conf {
 	//vip.AddConfigPath("$HOME/.appname") // call multiple times to add many search paths
 	configViper.AddConfigPath(".")    // optionally look for config in the working directory
 	err := configViper.ReadInConfig() // Find and read the config file
-	if err != nil {                   // Handle errors reading the config file
+	if err != nil {                   // Handle response reading the config file
 		panic(fmt.Errorf("Fatal error config file: %w \n", err))
 	}
 	configViper.WatchConfig()

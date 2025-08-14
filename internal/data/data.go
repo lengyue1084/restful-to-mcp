@@ -1,9 +1,9 @@
 package data
 
 import (
-	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data/cache"
 	"flow-bridge-mcp/internal/data/database"
+	"flow-bridge-mcp/pkg/logger"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -21,10 +21,10 @@ var ProviderSet = wire.NewSet(
 type Data struct {
 	db    *gorm.DB
 	redis *redis.Client
-	log   conf.Logger
+	log   logger.Logger
 }
 
-func NewData(db *gorm.DB, redis *redis.Client, log *conf.Logger) (*Data, func(), error) {
+func NewData(db *gorm.DB, redis *redis.Client, log *logger.Logger) (*Data, func(), error) {
 	cleanup := func() {
 		log.Info("closing the data resources")
 	}
