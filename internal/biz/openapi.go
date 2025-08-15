@@ -1,13 +1,13 @@
 package biz
 
 import (
-	"encoding/base64"
+	"context"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
-	openapi2 "flow-bridge-mcp/internal/mcp/transformer/openapi"
+	"flow-bridge-mcp/internal/mcp/transformer"
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
-	"github.com/gin-gonic/gin"
+	"fmt"
 )
 
 type OpenapiRepo interface {
@@ -16,25 +16,42 @@ type OpenapiRepo interface {
 type OpenapiUseCase struct {
 	OpenapiRepo OpenapiRepo
 	log         *logger.Logger
+	Transformer transformer.Transformer
 }
 
-func NewOpenapiUserCase(repo OpenapiRepo, log *logger.Logger) *OpenapiUseCase {
+func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, log *logger.Logger) *OpenapiUseCase {
 	return &OpenapiUseCase{
 		OpenapiRepo: repo,
 		log:         log,
+		Transformer: Transformer,
 	}
 }
 
-func (o *OpenapiUseCase) Create(ctx *gin.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
+func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
+	o.log.ErrorWithContext(ctx, "Base64解析失败，err:%+v", err)
+	// 清理Base64字符串
+	cleanedContent := tool.CleanBase64String(req.FileContent)
 
-	decodeString, err := base64.URLEncoding.DecodeString(req.FileContent)
-	if err != nil {
-		o.log.ErrorWithContext(ctx, "base64解析失败，err:%+v", err)
+	// 验证Base64字符串
+	if err := tool.ValidateBase64String(cleanedContent); err != nil {
+		o.log.ErrorWithContext(ctx, "Base64字符串验证失败: %+v", err)
 		return nil, err
 	}
-	req.FileContent = string(decodeString)
-	converter := openapi2.NewConverter()
-	mcpConfig, err := converter.Convert(decodeString)
+
+	// 尝试多种解码方式
+	decodeString, err := tool.TryMultipleBase64Decodings(cleanedContent)
+	if err != nil {
+		o.log.ErrorWithContext(ctx, "Base64解析失败，err:%+v", err)
+		return nil, fmt.Errorf("base64 decode failed: %w", err)
+	}
+	//req.FileContent = string(decodeString)
+
+	//converter := openapi.NewConverter()
+	mcpConfig, err := o.Transformer.Convert(ctx, decodeString)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//mcpConfig, err := converter.Convert(decodeString)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "数据转换错误，err:%+v", err)
 		return nil, err

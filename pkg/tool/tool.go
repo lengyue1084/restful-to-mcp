@@ -2,6 +2,7 @@ package tool
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -280,6 +281,60 @@ func GetString(m map[string]any, key string, defaultValue string) string {
 	return s
 }
 
+// 清理Base64字符串
+func CleanBase64String(content string) string {
+	// 移除空白字符
+	content = strings.ReplaceAll(content, " ", "")
+	content = strings.ReplaceAll(content, "\n", "")
+	content = strings.ReplaceAll(content, "\r", "")
+	content = strings.ReplaceAll(content, "\t", "")
+	return content
+}
+func ValidateBase64String(content string) error {
+	// Base64字符串长度必须是4的倍数
+	if len(content)%4 != 0 {
+		// 尝试添加填充
+		padding := 4 - len(content)%4
+		if padding != 4 {
+			for i := 0; i < padding; i++ {
+				content += "="
+			}
+		}
+	}
+
+	// 检查是否只包含合法的Base64字符
+	validBase64Regex := regexp.MustCompile(`^[A-Za-z0-9+/]*={0,2}$`)
+	if !validBase64Regex.MatchString(content) {
+		return fmt.Errorf("包含非法的Base64字符")
+	}
+
+	return nil
+}
+
+// 尝试多种Base64解码方式
+func TryMultipleBase64Decodings(content string) ([]byte, error) {
+	// 1. 标准Base64解码
+	if decoded, err := base64.StdEncoding.DecodeString(content); err == nil {
+		return decoded, nil
+	}
+
+	// 2. URL安全的Base64解码
+	if decoded, err := base64.URLEncoding.DecodeString(content); err == nil {
+		return decoded, nil
+	}
+
+	// 3. Raw标准Base64解码（无填充）
+	if decoded, err := base64.RawStdEncoding.DecodeString(content); err == nil {
+		return decoded, nil
+	}
+
+	// 4. Raw URL安全的Base64解码（无填充）
+	if decoded, err := base64.RawURLEncoding.DecodeString(content); err == nil {
+		return decoded, nil
+	}
+
+	return nil, fmt.Errorf("无法解码Base64字符串")
+}
 func SplitByMultipleDelimiters(s string, delimiters ...string) []string {
 	if len(delimiters) == 0 {
 		return []string{s}

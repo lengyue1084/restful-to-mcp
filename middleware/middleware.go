@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"flow-bridge-mcp/pkg/logger"
+	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/google/wire"
@@ -16,18 +17,22 @@ var ProviderSet = wire.NewSet(NewMiddleware)
 
 type middleware interface {
 	Cors() gin.HandlerFunc
-	Logger(logger *logger.Logger) gin.HandlerFunc
+	Logger() gin.HandlerFunc
 	Recovery() gin.HandlerFunc
-	//ZapLogger(logger *conf.Logger) gin.HandlerFunc
 	TraceId() gin.HandlerFunc
+	TimeoutMiddleware(s time.Duration) gin.HandlerFunc
 }
 
-type Middleware struct{}
+type Middleware struct {
+	log *logger.Logger
+}
 
 var _ middleware = (*Middleware)(nil)
 
-func NewMiddleware() *Middleware {
-	return &Middleware{}
+func NewMiddleware(log *logger.Logger) *Middleware {
+	return &Middleware{
+		log: log,
+	}
 }
 
 func (m *Middleware) Cors() gin.HandlerFunc {
@@ -46,10 +51,19 @@ func (m *Middleware) Cors() gin.HandlerFunc {
 	}
 }
 
-//func (m *Middleware) Logger() gin.HandlerFunc {
-//	return gin.Logger()
-//}
+func (m *Middleware) timeoutResponse(c *gin.Context) {
+	m.log.WithContext(c).Error("Request Timeout")
+	c.String(http.StatusRequestTimeout, "timeout")
+	c.Abort()
+}
 
+// TimeoutMiddleware Custom timeout middleware
+func (m *Middleware) TimeoutMiddleware(timeoutDuration time.Duration) gin.HandlerFunc {
+	return timeout.New(
+		timeout.WithTimeout(timeoutDuration),
+		timeout.WithResponse(m.timeoutResponse),
+	)
+}
 func (m *Middleware) Recovery() gin.HandlerFunc {
 	return gin.Recovery()
 }
@@ -64,7 +78,7 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
-func (m *Middleware) Logger(logger *logger.Logger) gin.HandlerFunc {
+func (m *Middleware) Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -127,11 +141,11 @@ func (m *Middleware) Logger(logger *logger.Logger) gin.HandlerFunc {
 
 		// 根据状态码记录不同级别的日志
 		if status >= 500 {
-			logger.Errorf("server error:%+v", baseFields)
+			m.log.Errorf("server error:%+v", baseFields)
 		} else if status >= 400 {
-			logger.Warnf("client error:%+v", baseFields)
+			m.log.Warnf("client error:%+v", baseFields)
 		} else {
-			logger.Infof("request completed:%+v", baseFields)
+			m.log.Infof("request completed:%+v", baseFields)
 		}
 	}
 }

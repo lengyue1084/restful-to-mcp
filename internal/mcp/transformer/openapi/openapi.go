@@ -4,10 +4,14 @@ package openapi
 
 // 导入必要的包
 import (
+	"context"
 	"encoding/json"
 	"flow-bridge-mcp/internal/mcp/config"
+	"flow-bridge-mcp/internal/mcp/transformer"
+	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
+	"github.com/google/wire"
 	"strings"
 	"time"
 
@@ -17,11 +21,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var ProviderSet = wire.NewSet(
+	NewConverter,
+)
+
 // Converter 结构体用于处理从 OpenAPI 规范到 MCP 配置的转换
 // 目前结构体为空，可根据需求添加必要的字段
 type Converter struct {
 	// Add any necessary fields here
+	log *logger.Logger
 }
+
+var _ transformer.Transformer = (*Converter)(nil)
 
 // 定义 OpenAPI 版本常量
 const (
@@ -35,16 +46,24 @@ const (
 
 // NewConverter 创建一个新的 Converter 实例
 // 返回一个指向 Converter 结构体的指针
-func NewConverter() *Converter {
-	return &Converter{}
+func NewConverter(log *logger.Logger) transformer.Transformer {
+	return &Converter{
+		log: log,
+	}
+}
+
+func (c *Converter) Validate(ctx context.Context, data []byte) error {
+
+	//todo 分离验证方法
+	return nil
 }
 
 // Convert 将 OpenAPI 规范数据转换为 MCP 配置
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
+func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
 	// 检测 OpenAPI 版本
-	version, err := detectOpenAPIVersion(specData)
+	version, err := c.DetectVersion(ctx, specData)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +71,7 @@ func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
 	// 根据 API 版本选择对应的处理逻辑
 	if strings.HasPrefix(version, OpenAPIVersion2) {
 		// 处理 Swagger 2.0 版本
-		return c.convertSwagger2(specData)
+		return c.convertSwagger2(ctx, specData)
 	}
 
 	// 处理 OpenAPI 3.x 版本
@@ -296,39 +315,10 @@ func (c *Converter) Convert(specData []byte) (*config.MCPConfig, error) {
 	return mcpConfig, nil
 }
 
-// convertSwagger2 将 Swagger 2.0 规范转换为 OpenAPI 3.0 规范，然后再转换为 MCP 配置
-// 参数 specData 为 Swagger 2.0 规范的字节数据
-// 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) convertSwagger2(specData []byte) (*config.MCPConfig, error) {
-	var swagger2Doc openapi2.T
-	// 尝试用 JSON 解析 Swagger 2.0 文档
-	if err := json.Unmarshal(specData, &swagger2Doc); err != nil {
-		// 如果 JSON 解析失败，尝试用 YAML 解析
-		if err := yaml.Unmarshal(specData, &swagger2Doc); err != nil {
-			return nil, fmt.Errorf("failed to parse Swagger 2.0 specification: %w", err)
-		}
-	}
-
-	// 将 Swagger 2.0 文档转换为 OpenAPI 3.0 文档
-	openapi3Doc, err := openapi2conv.ToV3(&swagger2Doc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert Swagger 2.0 to OpenAPI 3.0: %w", err)
-	}
-
-	// 将 OpenAPI 3.0 文档序列化为 JSON 字节数据
-	openapi3Data, err := json.Marshal(openapi3Doc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize OpenAPI 3.0 document: %w", err)
-	}
-
-	// 递归调用 Convert 方法处理 OpenAPI 3.0 数据
-	return c.Convert(openapi3Data)
-}
-
-// detectOpenAPIVersion 从规范数据中检测 OpenAPI 版本
+// DetectVersion 从规范数据中检测 OpenAPI 版本
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回检测到的版本字符串和可能出现的错误
-func detectOpenAPIVersion(specData []byte) (string, error) {
+func (c *Converter) DetectVersion(ctx context.Context, specData []byte) (string, error) {
 	var spec map[string]interface{}
 
 	// 尝试用 JSON 解析规范数据
@@ -352,18 +342,47 @@ func detectOpenAPIVersion(specData []byte) (string, error) {
 	return "", fmt.Errorf("could not determine OpenAPI version")
 }
 
+// convertSwagger2 将 Swagger 2.0 规范转换为 OpenAPI 3.0 规范，然后再转换为 MCP 配置
+// 参数 specData 为 Swagger 2.0 规范的字节数据
+// 返回 MCP 配置指针和可能出现的错误
+func (c *Converter) convertSwagger2(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
+	var swagger2Doc openapi2.T
+	// 尝试用 JSON 解析 Swagger 2.0 文档
+	if err := json.Unmarshal(specData, &swagger2Doc); err != nil {
+		// 如果 JSON 解析失败，尝试用 YAML 解析
+		if err := yaml.Unmarshal(specData, &swagger2Doc); err != nil {
+			return nil, fmt.Errorf("failed to parse Swagger 2.0 specification: %w", err)
+		}
+	}
+
+	// 将 Swagger 2.0 文档转换为 OpenAPI 3.0 文档
+	openapi3Doc, err := openapi2conv.ToV3(&swagger2Doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert Swagger 2.0 to OpenAPI 3.0: %w", err)
+	}
+
+	// 将 OpenAPI 3.0 文档序列化为 JSON 字节数据
+	openapi3Data, err := json.Marshal(openapi3Doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize OpenAPI 3.0 document: %w", err)
+	}
+
+	// 递归调用 Convert 方法处理 OpenAPI 3.0 数据
+	return c.Convert(ctx, openapi3Data)
+}
+
 // ConvertFromJSON 将 JSON 格式的 OpenAPI 规范转换为 MCP 配置
 // 参数 jsonData 为 JSON 格式的 OpenAPI 规范字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertFromJSON(jsonData []byte) (*config.MCPConfig, error) {
-	return c.Convert(jsonData)
+func (c *Converter) ConvertFromJSON(ctx context.Context, jsonData []byte) (*config.MCPConfig, error) {
+	return c.Convert(ctx, jsonData)
 }
 
 // ConvertFromYAML 将 YAML 格式的 OpenAPI 规范转换为 MCP 配置
 // 参数 yamlData 为 YAML 格式的 OpenAPI 规范字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertFromYAML(yamlData []byte) (*config.MCPConfig, error) {
-	return c.Convert(yamlData)
+func (c *Converter) ConvertFromYAML(ctx context.Context, yamlData []byte) (*config.MCPConfig, error) {
+	return c.Convert(ctx, yamlData)
 }
 
 // ConvertWithOptions 将 OpenAPI 规范转换为 MCP 配置，可指定租户和前缀
@@ -371,8 +390,8 @@ func (c *Converter) ConvertFromYAML(yamlData []byte) (*config.MCPConfig, error) 
 // 参数 tenant 为租户名称
 // 参数 prefix 为前缀
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertWithOptions(specData []byte, tenant, prefix string) (*config.MCPConfig, error) {
-	config, err := c.Convert(specData)
+func (c *Converter) ConvertWithOptions(ctx context.Context, specData []byte, tenant, prefix string) (*config.MCPConfig, error) {
+	config, err := c.Convert(ctx, specData)
 	if err != nil {
 		return nil, err
 	}

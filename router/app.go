@@ -3,7 +3,6 @@ package router
 import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/middleware"
-	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +13,6 @@ type App struct {
 func NewApp(
 	middleware *middleware.Middleware,
 	conf *conf.Conf,
-	log *logger.Logger,
 ) *App {
 	if !conf.Conf.GetBool("server.dev") {
 		gin.SetMode(gin.ReleaseMode)
@@ -33,11 +31,18 @@ func NewApp(
 	//	// 否则禁用代理信任
 	//	r.SetTrustedProxies(nil)
 	//}
+	timeoutSecond := conf.Conf.GetDuration("server.http.timeout")
+	if timeoutSecond <= 0 {
+		timeoutSecond = conf.Conf.GetDuration("server.timeout")
+	}
+
 	r.Use(
-		middleware.Cors(),
-		middleware.TraceId(),
-		middleware.Logger(log),
-		middleware.Recovery())
+		middleware.TraceId(),                        // 追踪ID - 最优先
+		middleware.Cors(),                           // CORS - 尽早处理，避免不必要的处理
+		middleware.Recovery(),                       // panic恢复 - 尽早放置，捕获所有panic
+		middleware.TimeoutMiddleware(timeoutSecond), // 超时控制 - 在主要业务逻辑前
+		middleware.Logger(),                         // 日志记录 - 记录完整处理过程
+	)
 	return &App{
 		app: r,
 	}

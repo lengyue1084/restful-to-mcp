@@ -10,6 +10,7 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
+	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/pkg/cache"
 	"flow-bridge-mcp/internal/pkg/database"
 	"flow-bridge-mcp/internal/service"
@@ -23,9 +24,9 @@ import (
 
 // initApp init gin application.
 func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
-	middlewareMiddleware := middleware.NewMiddleware()
 	loggerLogger := logger.NewLogger(config)
-	app := router.NewApp(middlewareMiddleware, config, loggerLogger)
+	middlewareMiddleware := middleware.NewMiddleware(loggerLogger)
+	app := router.NewApp(middlewareMiddleware, config)
 	db, cleanup, err := database.NewPgClient(config, loggerLogger)
 	if err != nil {
 		return nil, nil, err
@@ -42,7 +43,8 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		return nil, nil, err
 	}
 	openapiRepo := data.NewOpenapiRepo(dataData, loggerLogger)
-	openapiUseCase := biz.NewOpenapiUserCase(openapiRepo, loggerLogger)
+	transformer := openapi.NewConverter(loggerLogger)
+	openapiUseCase := biz.NewOpenapiUserCase(openapiRepo, transformer, loggerLogger)
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
 	engine := router.NewRouter(app, openapiService)
 	return engine, func() {

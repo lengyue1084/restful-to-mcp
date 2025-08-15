@@ -16,7 +16,7 @@ func NewRouter(
 	// 作为mcp服务对外提供服务
 	router := app.app.Group("/")
 	{
-		router.GET("/sse", OpenapiService.Create)
+		router.GET("/sse/:serverId", OpenapiService.Create)
 		router.POST("/message", OpenapiService.Create)
 		router.POST("/mcp", OpenapiService.Create)
 	}

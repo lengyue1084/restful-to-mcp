@@ -1,8 +1,9 @@
 package logger
 
 import (
+	"context"
 	"flow-bridge-mcp/internal/conf"
-	"github.com/gin-gonic/gin"
+
 	"github.com/google/wire"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -18,10 +19,12 @@ type Logger struct {
 	*zap.SugaredLogger
 }
 
-func (l *Logger) WithContext(ctx *gin.Context) *Logger {
+func (l *Logger) WithContext(ctx context.Context) *Logger {
+	traceId, _ := ctx.Value("traceId").(string)
+	spanId, _ := ctx.Value("spanId").(string)
 	l.SugaredLogger = l.SugaredLogger.With(
-		zap.String("traceId", ctx.GetString("traceId")),
-		zap.String("spanId", ctx.GetString("spanId")),
+		zap.String("traceId", traceId),
+		zap.String("spanId", spanId),
 	)
 	return l
 }
@@ -162,14 +165,14 @@ func (l *Logger) WithField(key string, value interface{}) *Logger {
 func (l *Logger) InfoF(template string, args ...interface{}) {
 	l.SugaredLogger.Infof(template, args...)
 }
-func (l *Logger) InfoWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) InfoWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Infof(template, args...)
 }
 func (l *Logger) ErrorF(template string, args ...interface{}) {
 	l.SugaredLogger.Errorf(template, args...)
 }
-func (l *Logger) ErrorWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) ErrorWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Errorf(template, args...)
 }
@@ -177,28 +180,28 @@ func (l *Logger) ErrorWithContext(ctx *gin.Context, template string, args ...int
 func (l *Logger) WarnF(template string, args ...interface{}) {
 	l.SugaredLogger.Warnf(template, args...)
 }
-func (l *Logger) WarnWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) WarnWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Warnf(template, args...)
 }
 func (l *Logger) DebugF(template string, args ...interface{}) {
 	l.SugaredLogger.Debugf(template, args...)
 }
-func (l *Logger) DebugWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) DebugWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Debugf(template, args...)
 }
 func (l *Logger) FatalF(template string, args ...interface{}) {
 	l.SugaredLogger.Fatalf(template, args...)
 }
-func (l *Logger) FatalWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) FatalWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Fatalf(template, args...)
 }
 func (l *Logger) PanicF(template string, args ...interface{}) {
 	l.SugaredLogger.Panicf(template, args...)
 }
-func (l *Logger) PanicWithContext(ctx *gin.Context, template string, args ...interface{}) {
+func (l *Logger) PanicWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Panicf(template, args...)
 }
