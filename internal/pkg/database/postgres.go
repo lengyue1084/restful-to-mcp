@@ -11,7 +11,7 @@ import (
 )
 
 // NewPgClient 创建 PostgreSQL 数据库连接
-func NewPgClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), error) {
+func NewPgClient(config *conf.Conf, log2 *logger.GormLogger, log *logger.Logger) (*gorm.DB, func(), error) {
 	dsn := config.Conf.GetString("data.database.pg_source")
 
 	// PostgresSQL 配置
@@ -20,8 +20,16 @@ func NewPgClient(config *conf.Conf, log *logger.Logger) (*gorm.DB, func(), error
 		PreferSimpleProtocol: false, // 禁用简单协议，使用扩展查询协议
 	}
 
+	// GORM 配置 - 启用日志
+	gormConfig := &gorm.Config{}
+
+	// 根据配置决定是否启用 SQL 日志
+	if config.Conf.GetBool("data.database.log_sql") {
+		gormConfig.Logger = log2 // 自定义日志记录器
+	}
+
 	// 连接数据库
-	dbOpen, err := gorm.Open(postgres.New(pgConfig), &gorm.Config{})
+	dbOpen, err := gorm.Open(postgres.New(pgConfig), gormConfig)
 	if err != nil {
 		log.Error("open postgresql error:%+v", zap.Error(err))
 		return nil, nil, err

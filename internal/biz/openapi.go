@@ -11,7 +11,7 @@ import (
 )
 
 type OpenapiRepo interface {
-	Create(serverInfo *model.McpServer) (err error)
+	Create(ctx context.Context, serverInfo *model.McpServer) (err error)
 }
 type OpenapiUseCase struct {
 	OpenapiRepo OpenapiRepo
@@ -28,7 +28,6 @@ func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, l
 }
 
 func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
-	o.log.ErrorWithContext(ctx, "Base64解析失败，err:%+v", err)
 	// 清理Base64字符串
 	cleanedContent := tool.CleanBase64String(req.FileContent)
 
@@ -64,6 +63,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 		return nil, err
 	}
 
-	err = o.OpenapiRepo.Create(serverInfo)
+	err = o.OpenapiRepo.Create(ctx, serverInfo)
 	return
 }

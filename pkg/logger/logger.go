@@ -2,7 +2,10 @@ package logger
 
 import (
 	"context"
+
 	"flow-bridge-mcp/internal/conf"
+
+	logger2 "gorm.io/gorm/logger"
 
 	"github.com/google/wire"
 	"go.uber.org/zap"
@@ -12,7 +15,7 @@ import (
 	"time"
 )
 
-var ProviderSet = wire.NewSet(NewLogger)
+var ProviderSet = wire.NewSet(NewLogger, NewGormLogger)
 
 type Logger struct {
 	//*zap.Logger
@@ -204,4 +207,44 @@ func (l *Logger) PanicF(template string, args ...interface{}) {
 func (l *Logger) PanicWithContext(ctx context.Context, template string, args ...interface{}) {
 	l.WithContext(ctx)
 	l.SugaredLogger.Panicf(template, args...)
+}
+
+type GormLogger struct {
+	log *Logger
+}
+
+func NewGormLogger(log *Logger) *GormLogger {
+	return &GormLogger{log: log}
+}
+
+// LogMode log mode
+func (g *GormLogger) LogMode(level logger2.LogLevel) logger2.Interface {
+	return g
+}
+
+// Info print info
+func (g *GormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
+	g.log.InfoWithContext(ctx, msg, data)
+}
+
+// Warn print warn messages
+func (g *GormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
+	g.log.WarnWithContext(ctx, msg, data)
+}
+
+// Error print error messages
+func (g *GormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
+	g.log.ErrorWithContext(ctx, msg, data)
+}
+
+// Trace print sql message
+func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	elapsed := time.Since(begin)
+	sql, rows := fc()
+
+	g.log.With(
+		zap.String("sql", sql),
+		zap.Duration("elapsed", elapsed),
+		zap.Int64("rows", rows),
+	).Info("SQL executed")
 }

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
@@ -20,7 +21,11 @@ func NewOpenapiRepo(d *Data, log *logger.Logger) biz.OpenapiRepo {
 	}
 }
 
-func (o *OpenapiRepo) Create(serverInfo *model.McpServer) (err error) {
-
+func (o *OpenapiRepo) Create(ctx context.Context, serverInfo *model.McpServer) (err error) {
+	err = o.data.db.Where("namesss = ?", serverInfo.CreatedAt).Updates(serverInfo).Error
+	if err != nil {
+		o.log.ErrorWithContext(ctx, "create mcp server error: %v", err)
+		return
+	}
 	return
 }

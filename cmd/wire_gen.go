@@ -27,7 +27,8 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	loggerLogger := logger.NewLogger(config)
 	middlewareMiddleware := middleware.NewMiddleware(loggerLogger)
 	app := router.NewApp(middlewareMiddleware, config)
-	db, cleanup, err := database.NewPgClient(config, loggerLogger)
+	gormLogger := logger.NewGormLogger(loggerLogger)
+	db, cleanup, err := database.NewPgClient(config, gormLogger, loggerLogger)
 	if err != nil {
 		return nil, nil, err
 	}
