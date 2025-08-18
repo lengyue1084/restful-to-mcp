@@ -311,7 +311,7 @@ func ValidateBase64String(content string) error {
 	return nil
 }
 
-// 尝试多种Base64解码方式
+// TryMultipleBase64Decodings 尝试多种Base64解码方式
 func TryMultipleBase64Decodings(content string) ([]byte, error) {
 	// 1. 标准Base64解码
 	if decoded, err := base64.StdEncoding.DecodeString(content); err == nil {

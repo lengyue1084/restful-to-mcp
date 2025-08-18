@@ -56,7 +56,7 @@ const (
 )
 
 const (
-	HeaderMcpSessionID = "SessionId"
+	HeaderMcpSessionID = "Mcp-Session-Id"
 )
 
 const (

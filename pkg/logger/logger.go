@@ -23,8 +23,14 @@ type Logger struct {
 }
 
 func (l *Logger) WithContext(ctx context.Context) *Logger {
-	traceId, _ := ctx.Value("traceId").(string)
-	spanId, _ := ctx.Value("spanId").(string)
+	var traceId string
+	if traceIdValue := ctx.Value("traceId"); traceIdValue != nil {
+		traceId, _ = traceIdValue.(string)
+	}
+	var spanId string
+	if spanIdValue := ctx.Value("spanId"); spanIdValue != nil {
+		spanId, _ = spanIdValue.(string)
+	}
 	l.SugaredLogger = l.SugaredLogger.With(
 		zap.String("traceId", traceId),
 		zap.String("spanId", spanId),

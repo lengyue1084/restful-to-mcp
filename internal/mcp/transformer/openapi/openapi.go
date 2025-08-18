@@ -11,6 +11,7 @@ import (
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"strings"
 	"time"
@@ -67,6 +68,14 @@ func (c *Converter) Validate(ctx context.Context, data []byte) error {
 // 返回 MCP 配置指针和可能出现的错误
 func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
 
+	var mcpUUID string
+	UUID := ctx.Value("uuid")
+	if UUID != nil {
+		mcpUUID = UUID.(string)
+	} else {
+		mcpUUID = uuid.NewString()
+	}
+
 	// 检测 OpenAPI 版本
 	version, err := c.DetectVersion(ctx, specData)
 	if err != nil {
@@ -103,11 +112,14 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 
 	// 生成一个 4 位的随机字符串
 	rs := tool.RandStringByLen(4)
+	if mcpUUID == "" {
+		mcpUUID = rs
+	}
 
 	// 创建基础的 MCP 配置
 	mcpConfig := &config.MCPConfig{
-		Name:      doc.Info.Title + "_" + rs,
-		Tenant:    "default", // 默认租户前缀
+		//Name:      doc.Info.Title + "_" + rs,
+		Name:      doc.Info.Title + "_" + mcpUUID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Routers:   make([]config.RouterConfig, 0),
@@ -125,13 +137,15 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 
 	// 将服务器 URL 添加到配置中
 	if len(doc.Servers) > 0 {
-		server.Config["url"] = doc.Servers[0].URL
+		// server默认服务器地址为第一个服务器地址
+		server.Config["url"] = c.selectServer(doc.Servers)
 	}
 
 	// 为服务器创建一个默认的路由配置
 	router := config.RouterConfig{
 		Server: mcpConfig.Name,
-		Prefix: fmt.Sprintf("/gateway/%s", rs), // 为每个路由生成一个随机前缀
+		//Prefix: fmt.Sprintf("/mcp/%s", rs), // 为每个路由生成一个随机前缀
+		Prefix: fmt.Sprintf("/mcp/%s", mcpUUID), // 为每个路由生成一个随机前缀,如果前端传来则使用前端的，如果没有则使用自己生成的
 		CORS: &config.CORSConfig{
 			AllowOrigins:     []string{"*"},
 			AllowMethods:     []string{"GET", "POST", "OPTIONS"},
@@ -224,7 +238,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 
 			// 处理请求体
 			if operation.RequestBody != nil {
-				// 获取请求体是否必需的标志
+				// 获取请求体是否必需的标志,否则会400错误，如果为true可以给一个空的json {}
 				requestBodyRequired := operation.RequestBody.Value.Required
 				// 遍历请求体支持的内容类型
 				for contentType, mediaType := range operation.RequestBody.Value.Content {
@@ -320,7 +334,16 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	return mcpConfig, nil
 }
 
-// VersionDetector 从规范数据中检测 OpenAPI 版本
+// 在 MCP 转换器中根据条件选择 server
+func (c *Converter) selectServer(servers []*openapi3.Server) string {
+	// 根据请求头选择环境,暂时不考虑吧，后期有需要再做
+	//if env := ctx.Value("env"); env == "staging" {
+	//	return servers[1].URL  // 返回预发布环境URL
+	//}
+	return servers[0].URL // 默认生产环境
+}
+
+// DetectVersion 从规范数据中检测 OpenAPI 版本
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回检测到的版本字符串和可能出现的错误
 func (c *Converter) DetectVersion(_ context.Context, data []byte) (string, error) {
@@ -400,23 +423,19 @@ func (c *Converter) ConvertWithOptions(ctx context.Context, specData []byte, ten
 	if err != nil {
 		return nil, err
 	}
-	// 去除租户名称前的斜杠
-	cleanTenant := strings.TrimPrefix(tenant, "/")
 	// 去除前缀前的斜杠
 	cleanPrefix := strings.TrimPrefix(prefix, "/")
 	if tenant != "" && prefix != "" {
-		config.Tenant = cleanTenant
 		if len(config.Routers) > 0 {
 			// 生成一个 4 位的随机字符串
 			rs := tool.RandStringByLen(4)
-			config.Routers[0].Prefix = "/" + cleanTenant + "/" + cleanPrefix + "/" + rs
+			config.Routers[0].Prefix = "/" + cleanPrefix + "/" + rs
 		}
 	} else if tenant != "" {
-		config.Tenant = cleanTenant
 		if len(config.Routers) > 0 {
 			// 自动生成前缀，逻辑与默认逻辑相同
 			rs := tool.RandStringByLen(4)
-			config.Routers[0].Prefix = "/" + cleanTenant + "/" + rs
+			config.Routers[0].Prefix = "/" + rs
 		}
 	}
 	return config, nil

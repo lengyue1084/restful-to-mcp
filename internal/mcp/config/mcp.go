@@ -51,8 +51,6 @@ type MCPServer struct {
 type MCPConfig struct {
 	// 配置名称
 	Name string `json:"name" yaml:"name"`
-	// 租户信息
-	Tenant string `json:"tenant" yaml:"tenant"`
 	// 配置创建时间
 	CreatedAt time.Time `json:"createdAt" yaml:"createdAt"`
 	// 配置更新时间

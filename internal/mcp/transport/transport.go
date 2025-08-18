@@ -3,7 +3,6 @@ package transport
 import (
 	"context"
 	"flow-bridge-mcp/internal/mcp/config"
-	"fmt"
 )
 
 //
@@ -42,10 +41,10 @@ type Transport interface {
 	FetchTools(ctx context.Context) ([]config.ToolSchema, error)
 
 	// CallTool invokes a tool
-	CallTool(ctx context.Context, params config.CallToolParams, req *template.RequestWrapper) (*mcp.CallToolResult, error)
+	CallTool(ctx context.Context, params config.CallToolParams, req *config.RequestWrapper) (*config.CallToolResult, error)
 
 	// Start starts the transport
-	Start(ctx context.Context, tmplCtx *template.Context) error
+	Start(ctx context.Context, tmplCtx *config.Context) error
 
 	// Stop stops the transport
 	Stop(ctx context.Context) error
@@ -60,15 +59,15 @@ type Transport interface {
 }
 
 // NewTransport creates transport based on the configuration
-func NewTransport(cfg config.MCPServerConfig) (Transport, error) {
-	switch TransportType(cfg.Type) {
-	case TypeSSE:
-		return &SSETransport{cfg: cfg}, nil
-	case TypeStdio:
-		return &StdioTransport{cfg: cfg}, nil
-	case TypeStreamable:
-		return &StreamableTransport{cfg: cfg}, nil
-	default:
-		return nil, fmt.Errorf("unknown transport type: %s", cfg.Type)
-	}
-}
+//func NewTransport(cfg config.MCPServerConfig) (Transport, error) {
+//	switch TransportType(cfg.Type) {
+//	case TypeSSE:
+//		return &SSETransport{cfg: cfg}, nil
+//	case TypeStdio:
+//		return &StdioTransport{cfg: cfg}, nil
+//	case TypeStreamable:
+//		return &StreamableTransport{cfg: cfg}, nil
+//	default:
+//		return nil, fmt.Errorf("unknown transport type: %s", cfg.Type)
+//	}
+//}

@@ -30,7 +30,12 @@ func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, l
 func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
 	// 清理Base64字符串
 	cleanedContent := tool.CleanBase64String(req.FileContent)
-
+	uuidStr := req.UUID
+	if uuidStr == "" {
+		return nil, fmt.Errorf("UUID不能为空")
+	}
+	ctx = context.WithValue(ctx, "uuid", uuidStr)
+	o.log.ErrorWithContext(ctx, "UUID不能为空")
 	// 验证Base64字符串
 	if err := tool.ValidateBase64String(cleanedContent); err != nil {
 		o.log.ErrorWithContext(ctx, "Base64字符串验证失败: %+v", err)
@@ -47,16 +52,11 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 
 	//converter := openapi.NewConverter()
 	mcpConfig, err := o.Transformer.Convert(ctx, decodeString)
-	//if err != nil {
-	//	return nil, err
-
-	//}
-	//mcpConfig, err := converter.Convert(decodeString)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "数据转换错误，err:%+v", err)
 		return nil, err
 	}
-	mcpConfig.Tenant = tool.WithPrefix(mcpConfig.Tenant, req.Name)
+	fmt.Printf("%+v", mcpConfig)
 
 	var serverInfo *model.McpServer
 	if err := tool.Copy(&serverInfo, req); err != nil {
