@@ -1,22 +1,21 @@
 package config
 
-// Protocol versions
+// JSPNRPCVersion Protocol versions
 const (
-	ProtocolVersion20250326 = "2025-03-26"
-	ProtocolVersion20241105 = "2024-11-05"
-	LatestProtocolVersion   = ProtocolVersion20241105
-	JSPNRPCVersion          = "2.0"
+	JSPNRPCVersion = "2.0"
 )
 
 // Methods
 const (
 	Initialize              = "initialize"
 	NotificationInitialized = "notifications/initialized"
+	NotificationMessage     = "notifications/message"
 	Ping                    = "ping"
 	ToolsList               = "tools/list"
 	ToolsCall               = "tools/call"
-	PromptsList             = "prompts/list"
-	PromptsGet              = "prompts/get"
+	// PromptsList 如果不涉及 AI 提示词功能，可以不实现
+	PromptsList = "prompts/list"
+	PromptsGet  = "prompts/get"
 )
 
 // Response
@@ -26,7 +25,6 @@ const (
 	NotificationRootsListChanged    = "notifications/roots/list_changed"
 	NotificationCancelled           = "notifications/cancelled"
 	NotificationProgress            = "notifications/progress"
-	NotificationMessage             = "notifications/message"
 	NotificationResourceUpdated     = "notifications/resources/updated"
 	NotificationResourceListChanged = "notifications/resources/list_changed"
 	NotificationToolListChanged     = "notifications/tools/list_changed"
@@ -35,6 +33,7 @@ const (
 	SamplingCreateMessage = "sampling/createMessage"
 	LoggingSetLevel       = "logging/setLevel"
 
+	// ResourcesList 如果不涉及文件或资源配置，可以不实现
 	ResourcesList          = "resources/list"
 	ResourcesTemplatesList = "resources/templates/list"
 	ResourcesRead          = "resources/read"
@@ -57,7 +56,7 @@ const (
 )
 
 const (
-	HeaderMcpSessionID = "Mcp-Session-Id"
+	HeaderMcpSessionID = "SessionId"
 )
 
 const (
