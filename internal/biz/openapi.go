@@ -49,6 +49,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 	mcpConfig, err := o.Transformer.Convert(ctx, decodeString)
 	//if err != nil {
 	//	return nil, err
+
 	//}
 	//mcpConfig, err := converter.Convert(decodeString)
 	if err != nil {

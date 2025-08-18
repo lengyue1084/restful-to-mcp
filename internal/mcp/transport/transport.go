@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"flow-bridge-mcp/internal/mcp/config"
 	"fmt"
 )
 
@@ -38,10 +39,10 @@ const (
 // Transport defines the interface for MCP transport implementations
 type Transport interface {
 	// FetchTools fetches the list of available tools
-	FetchTools(ctx context.Context) ([]mcp.ToolSchema, error)
+	FetchTools(ctx context.Context) ([]config.ToolSchema, error)
 
 	// CallTool invokes a tool
-	CallTool(ctx context.Context, params mcp.CallToolParams, req *template.RequestWrapper) (*mcp.CallToolResult, error)
+	CallTool(ctx context.Context, params config.CallToolParams, req *template.RequestWrapper) (*mcp.CallToolResult, error)
 
 	// Start starts the transport
 	Start(ctx context.Context, tmplCtx *template.Context) error
@@ -53,9 +54,9 @@ type Transport interface {
 	IsRunning() bool
 
 	// FetchPrompts fetches the list of available prompts
-	FetchPrompts(ctx context.Context) ([]mcp.PromptSchema, error)
+	FetchPrompts(ctx context.Context) ([]config.PromptSchema, error)
 	// FetchPrompt fetches a specific prompt by name
-	FetchPrompt(ctx context.Context, name string) (*mcp.PromptSchema, error)
+	FetchPrompt(ctx context.Context, name string) (*config.PromptSchema, error)
 }
 
 // NewTransport creates transport based on the configuration

@@ -27,7 +27,6 @@ func (o *OpenapiService) Create(c *gin.Context) {
 		response.Error(c, "参数错误", nil)
 		return
 	}
-	//time.Sleep(20 * time.Second)
 	resp, err := o.uc.Create(c, req)
 	if err != nil {
 		o.log.ErrorWithContext(c, "创建失败,err:%+v", err)

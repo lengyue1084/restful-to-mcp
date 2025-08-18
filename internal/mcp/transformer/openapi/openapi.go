@@ -51,6 +51,10 @@ func NewConverter(log *logger.Logger) transformer.Transformer {
 		log: log,
 	}
 }
+func (c *Converter) Metadata(ctx context.Context) *transformer.Metadata {
+
+	return &transformer.Metadata{}
+}
 
 func (c *Converter) Validate(ctx context.Context, data []byte) error {
 
@@ -62,6 +66,7 @@ func (c *Converter) Validate(ctx context.Context, data []byte) error {
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回 MCP 配置指针和可能出现的错误
 func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
+
 	// 检测 OpenAPI 版本
 	version, err := c.DetectVersion(ctx, specData)
 	if err != nil {
@@ -70,7 +75,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 
 	// 根据 API 版本选择对应的处理逻辑
 	if strings.HasPrefix(version, OpenAPIVersion2) {
-		// 处理 Swagger 2.0 版本
+		// 处理 Swagger 2.0 版本,统一转成3.0的版本处理
 		return c.convertSwagger2(ctx, specData)
 	}
 
@@ -315,16 +320,16 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	return mcpConfig, nil
 }
 
-// DetectVersion 从规范数据中检测 OpenAPI 版本
+// VersionDetector 从规范数据中检测 OpenAPI 版本
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回检测到的版本字符串和可能出现的错误
-func (c *Converter) DetectVersion(ctx context.Context, specData []byte) (string, error) {
+func (c *Converter) DetectVersion(_ context.Context, data []byte) (string, error) {
 	var spec map[string]interface{}
 
 	// 尝试用 JSON 解析规范数据
-	if err := json.Unmarshal(specData, &spec); err != nil {
+	if err := json.Unmarshal(data, &spec); err != nil {
 		// 如果 JSON 解析失败，尝试用 YAML 解析
-		if err := yaml.Unmarshal(specData, &spec); err != nil {
+		if err := yaml.Unmarshal(data, &spec); err != nil {
 			return "", fmt.Errorf("failed to parse specification: %w", err)
 		}
 	}
