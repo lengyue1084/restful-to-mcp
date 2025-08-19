@@ -1,8 +1,8 @@
 package transport
 
 import (
-	"context"
 	"flow-bridge-mcp/internal/mcp/config"
+	"flow-bridge-mcp/internal/mcp/context"
 )
 
 //
@@ -32,9 +32,9 @@ const (
 // Transport defines the interface for MCP transport implementations
 type Transport interface {
 	FetchTools(ctx context.Context) ([]config.ToolSchema, error)
-	CallTool(ctx context.Context, params config.CallToolParams, req *config.RequestWrapper) (*config.CallToolResult, error)
+	CallTool(ctx context.Context, params config.CallToolParams, req *context.RequestWrapper) (*config.CallToolResult, error)
 
-	Start(ctx context.Context, tmplCtx *config.Context) error
+	Start(ctx context.Context, tmplCtx *context.Context) error
 
 	// Stop stops the transport
 	Stop(ctx context.Context) error

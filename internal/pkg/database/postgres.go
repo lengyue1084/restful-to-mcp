@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -64,10 +63,15 @@ func NewPgClient(config *conf.Conf, log2 *logger.GormLogger, log *logger.Logger)
 	}
 
 	// 自动迁移 schema
-	if err := dbOpen.AutoMigrate(model.McpServer{}); err != nil {
-		log.Error("auto migrate postgresql error:%+v", zap.Error(err))
-		return nil, nil, err
-	}
+	//if err := dbOpen.AutoMigrate(
+	//	model.McpServer{},
+	//	model.McpTools{},
+	//	model.McpFile{},
+	//	model.McpTools{},
+	//); err != nil {
+	//	log.Error("auto migrate postgresql error:%+v", zap.Error(err))
+	//	return nil, nil, err
+	//}
 
 	// 清理函数
 	cleanup := func() {

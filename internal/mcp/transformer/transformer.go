@@ -15,6 +15,10 @@ type Metadata struct {
 	Data           map[string]any `json:"custom_tags"`
 }
 
+func NewMetadata() *Metadata {
+	return &Metadata{}
+}
+
 // Transformer 定义了转换器的通用接口,后续扩展其他协议的时候需要实现该方法
 // 所有具体的转换器实现都需要实现这个接口
 type Transformer interface {

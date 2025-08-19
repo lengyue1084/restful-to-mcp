@@ -103,7 +103,7 @@ type ProxyConfig struct {
 	Host string `json:"host" yaml:"host"`
 	// 代理端口
 	Port int `json:"port" yaml:"port"`
-	// 代理类型，支持 http, https, socks5
+	// 代理类型，支持 http, https, grpc
 	Type string `json:"type" yaml:"type"`
 }
 
@@ -147,7 +147,7 @@ type ToolConfig struct {
 
 // MCPServerConfig 表示 MCP 服务器的配置结构
 type MCPServerConfig struct {
-	// 服务器类型，支持 sse, stdio 和 streamable-http
+	// 服务器类型，支持 openapi、grpc
 	Type string `json:"type" yaml:"type"`
 	// 服务器名称
 	Name string `json:"name" yaml:"name"`

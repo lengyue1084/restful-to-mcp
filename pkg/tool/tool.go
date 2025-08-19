@@ -1,6 +1,7 @@
 package tool
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -280,8 +281,15 @@ func GetString(m map[string]any, key string, defaultValue string) string {
 	}
 	return s
 }
+func IsJson(data []byte) bool {
+	data = bytes.TrimSpace(data)
+	if len(data) <= 0 {
+		return false
+	}
+	return json.Valid(data)
+}
 
-// 清理Base64字符串
+// CleanBase64String 清理Base64字符串
 func CleanBase64String(content string) string {
 	// 移除空白字符
 	content = strings.ReplaceAll(content, " ", "")

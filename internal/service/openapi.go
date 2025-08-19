@@ -33,6 +33,7 @@ func (o *OpenapiService) Create(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("创建失败，err:%s", err), nil)
 		return
 	}
+
 	response.Success(c, "创建成功", resp)
 
 }

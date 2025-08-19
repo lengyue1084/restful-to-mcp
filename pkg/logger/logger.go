@@ -17,8 +17,39 @@ import (
 
 var ProviderSet = wire.NewSet(NewLogger, NewGormLogger)
 
+// Interface Logger 定义了应用日志记录器的标准接口
+type LoggerInterface interface {
+	Debug(args ...interface{})
+	Info(args ...interface{})
+	Warn(args ...interface{})
+	Error(args ...interface{})
+	Fatal(args ...interface{})
+	Panic(args ...interface{})
+
+	DebugF(template string, args ...interface{})
+	InfoF(template string, args ...interface{})
+	WarnF(template string, args ...interface{})
+	ErrorF(template string, args ...interface{})
+	FatalF(template string, args ...interface{})
+	PanicF(template string, args ...interface{})
+
+	DebugWithContext(ctx context.Context, template string, args ...interface{})
+	InfoWithContext(ctx context.Context, template string, args ...interface{})
+	WarnWithContext(ctx context.Context, template string, args ...interface{})
+	ErrorWithContext(ctx context.Context, template string, args ...interface{})
+	FatalWithContext(ctx context.Context, template string, args ...interface{})
+	PanicWithContext(ctx context.Context, template string, args ...interface{})
+
+	With(args ...interface{}) *zap.SugaredLogger
+	WithContext(ctx context.Context) *Logger
+	WithError(err error) *Logger
+	WithFields(fields map[string]interface{}) *Logger
+	WithField(key string, value interface{}) *Logger
+}
+
+var _ LoggerInterface = (*Logger)(nil)
+
 type Logger struct {
-	//*zap.Logger
 	*zap.SugaredLogger
 }
 
@@ -163,10 +194,7 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 	l.SugaredLogger = l.SugaredLogger.With(fields)
 	return l
 }
-func (l *Logger) WithFields2(fields ...interface{}) *Logger {
-	l.SugaredLogger = l.SugaredLogger.With(fields...)
-	return l
-}
+
 func (l *Logger) WithField(key string, value interface{}) *Logger {
 	l.SugaredLogger = l.SugaredLogger.With(key, value)
 	return l
@@ -214,6 +242,8 @@ func (l *Logger) PanicWithContext(ctx context.Context, template string, args ...
 	l.WithContext(ctx)
 	l.SugaredLogger.Panicf(template, args...)
 }
+
+var _ logger2.Interface = (*GormLogger)(nil)
 
 type GormLogger struct {
 	log *Logger

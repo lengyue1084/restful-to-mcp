@@ -11,7 +11,6 @@ import (
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/google/wire"
 	"strings"
 	"time"
@@ -47,6 +46,7 @@ const (
 
 // NewConverter 创建一个新的 Converter 实例
 // 返回一个指向 Converter 结构体的指针
+
 func NewConverter(log *logger.Logger) transformer.Transformer {
 	return &Converter{
 		log: log,
@@ -72,8 +72,6 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	UUID := ctx.Value("uuid")
 	if UUID != nil {
 		mcpUUID = UUID.(string)
-	} else {
-		mcpUUID = uuid.NewString()
 	}
 
 	// 检测 OpenAPI 版本
@@ -111,15 +109,16 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	}
 
 	// 生成一个 4 位的随机字符串
-	rs := tool.RandStringByLen(4)
+	//rs := tool.RandStringByLen(4)
 	if mcpUUID == "" {
-		mcpUUID = rs
+		mcpUUID = tool.RandStringByLen(4)
 	}
 
 	// 创建基础的 MCP 配置
 	mcpConfig := &config.MCPConfig{
 		//Name:      doc.Info.Title + "_" + rs,
-		Name:      doc.Info.Title + "_" + mcpUUID,
+		//Name:      doc.Info.Title + "_" + mcpUUID,
+		Name:      doc.Info.Title,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Routers:   make([]config.RouterConfig, 0),

@@ -28,6 +28,8 @@ func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, l
 }
 
 func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
+
+	var decodeString []byte
 	// 清理Base64字符串
 	cleanedContent := tool.CleanBase64String(req.FileContent)
 	uuidStr := req.UUID
@@ -44,11 +46,12 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 	}
 
 	// 尝试多种解码方式
-	decodeString, err := tool.TryMultipleBase64Decodings(cleanedContent)
+	decodeString, err = tool.TryMultipleBase64Decodings(cleanedContent)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "Base64解析失败，err:%+v", err)
 		return nil, fmt.Errorf("base64 decode failed: %w", err)
 	}
+
 	//req.FileContent = string(decodeString)
 
 	//converter := openapi.NewConverter()
