@@ -16,10 +16,10 @@ import (
 var ProviderSet = wire.NewSet(NewMiddleware)
 
 type middleware interface {
-	Cors() gin.HandlerFunc
-	Logger() gin.HandlerFunc
-	Recovery() gin.HandlerFunc
-	TraceId() gin.HandlerFunc
+	CorsMiddleware() gin.HandlerFunc
+	LoggerMiddleware() gin.HandlerFunc
+	RecoveryMiddleware() gin.HandlerFunc
+	TraceIdMiddleware() gin.HandlerFunc
 	TimeoutMiddleware(s time.Duration) gin.HandlerFunc
 }
 
@@ -35,7 +35,7 @@ func NewMiddleware(log *logger.Logger) *Middleware {
 	}
 }
 
-func (m *Middleware) Cors() gin.HandlerFunc {
+func (m *Middleware) CorsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
 		origin := c.Request.Header.Get("Origin")
@@ -64,7 +64,7 @@ func (m *Middleware) TimeoutMiddleware(timeoutDuration time.Duration) gin.Handle
 		timeout.WithResponse(m.timeoutResponse),
 	)
 }
-func (m *Middleware) Recovery() gin.HandlerFunc {
+func (m *Middleware) RecoveryMiddleware() gin.HandlerFunc {
 	return gin.Recovery()
 }
 
@@ -78,7 +78,7 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
-func (m *Middleware) Logger() gin.HandlerFunc {
+func (m *Middleware) LoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -162,7 +162,7 @@ func shouldLogBody(path string) bool {
 	return true
 }
 
-func (m *Middleware) TraceId() gin.HandlerFunc {
+func (m *Middleware) TraceIdMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceId := c.Request.Header.Get("traceId")
 		spanId := uuid.New().String()

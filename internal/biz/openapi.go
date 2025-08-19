@@ -34,6 +34,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 	if uuidStr == "" {
 		return nil, fmt.Errorf("UUID不能为空")
 	}
+	//
 	ctx = context.WithValue(ctx, "uuid", uuidStr)
 	o.log.ErrorWithContext(ctx, "UUID不能为空")
 	// 验证Base64字符串

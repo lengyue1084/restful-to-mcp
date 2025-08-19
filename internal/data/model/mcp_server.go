@@ -2,10 +2,11 @@ package model
 
 type McpServer struct {
 	BaseModel
-	Names       string `json:"name"`
-	Description string `json:"description"`
-	Url         string `json:"url"`
-	Version     string `json:"version"`
+	UUID        string `json:"uuid" gorm:"uuid"`
+	Name        string `json:"name" gorm:"name"`
+	Description string `json:"description" gorm:"description"`
+	Url         string `json:"url" gorm:"url"`
+	Version     string `json:"version" gorm:"version"`
 }
 
 func (m *McpServer) TableName() string {

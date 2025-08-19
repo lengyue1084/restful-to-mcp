@@ -19,31 +19,21 @@ import (
 //
 //// 支持流式输出的工具接口
 //type StreamableTool interface {
-//	BaseTool
-//	StreamableRun(ctx context.Context, argumentsInJSON string, opts ...Option) (*schema.StreamReader[string], error)
-//}
 
 // TransportType represents the type of transport
 type TransportType string
 
 const (
-	// TypeSSE represents SSE-based transport
 	TypeSSE TransportType = "sse"
-	// TypeStdio represents stdio-based transport
-	TypeStdio TransportType = "stdio"
-	// TypeStreamable represents streamable HTTP-based transport
+	//TypeStdio TransportType = "stdio"
 	TypeStreamable TransportType = "streamable-http"
 )
 
 // Transport defines the interface for MCP transport implementations
 type Transport interface {
-	// FetchTools fetches the list of available tools
 	FetchTools(ctx context.Context) ([]config.ToolSchema, error)
-
-	// CallTool invokes a tool
 	CallTool(ctx context.Context, params config.CallToolParams, req *config.RequestWrapper) (*config.CallToolResult, error)
 
-	// Start starts the transport
 	Start(ctx context.Context, tmplCtx *config.Context) error
 
 	// Stop stops the transport
