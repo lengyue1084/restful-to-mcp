@@ -18,13 +18,13 @@ func NewRouter(
 	{
 		router.GET("/sse/:serverId", OpenapiService.Create)
 		router.POST("/message", OpenapiService.Create)
-		router.POST("/mcp", OpenapiService.Create)
+		router.POST("/mcp/serverId", OpenapiService.Create)
 	}
 	// 作为api服务对外提供服务
 	router = router.Group("/v1")
 	{
 		//router.GET("/", HomeServer.Index)
-		router.POST("/openapi", OpenapiService.Create)
+		router.POST("/openapi/getMcpInfo", OpenapiService.Create)
 	}
 
 	return app.app

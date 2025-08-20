@@ -333,6 +333,10 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	return mcpConfig, nil
 }
 
+func (c *Converter) ApiSecurityToHeader() {
+
+}
+
 // 在 MCP 转换器中根据条件选择 server
 func (c *Converter) selectServer(servers []*openapi3.Server) string {
 	// 根据请求头选择环境,暂时不考虑吧，后期有需要再做
