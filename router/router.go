@@ -24,7 +24,7 @@ func NewRouter(
 	router = router.Group("/v1")
 	{
 		//router.GET("/", HomeServer.Index)
-		router.POST("/openapi", OpenapiService.Create)
+		router.POST("/openapi/getMcpInfo", OpenapiService.Create)
 	}
 
 	return app.app

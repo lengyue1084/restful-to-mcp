@@ -28,7 +28,7 @@ type Transformer interface {
 	// 参数 ctx 为上下文，用于控制超时和取消
 	// 参数 data 为规范的字节数据
 	// 返回 MCP 配置指针和可能出现的错误
-	Convert(ctx context.Context, data []byte) (*config.MCPConfig, error)
+	Convert(ctx context.Context, data []byte) (*config.MCPServer, error)
 	// Metadata 可选
 	// Metadata 获取转换过程的元数据信息
 	Metadata(ctx context.Context) *Metadata // 修正方法名和返回类型
