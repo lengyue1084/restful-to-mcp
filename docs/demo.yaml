@@ -1,10 +1,6 @@
-# 定义 OpenAPI 规范版本，这里使用的是 3.0.4 版本
 openapi: 3.0.4
-# 关于 API 的基本信息
 info:
-  # API 的标题
   title: Swagger Petstore - OpenAPI 3.0
-  # API 的详细描述
   description: |-
     This is a sample Pet Store Server based on the OpenAPI 3.0 specification.  You can find out more about
     Swagger at [https://swagger.io](https://swagger.io). In the third iteration of the pet store, we've switched to the design first approach!
@@ -14,1534 +10,905 @@ info:
     Some useful links:
     - [The Pet Store repository](https://github.com/swagger-api/swagger-petstore)
     - [The source API definition for the Pet Store](https://github.com/swagger-api/swagger-petstore/blob/master/src/main/resources/openapi.yaml)
-  # API 的使用条款链接
   termsOfService: https://swagger.io/terms/
-  # API 维护团队的联系信息
   contact:
-    # 联系邮箱
     email: apiteam@swagger.io
-  # API 使用的许可证信息
   license:
-    # 许可证名称
     name: Apache 2.0
-    # 许可证详细内容链接
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  # API 的版本号
   version: 1.0.12
-# 外部文档信息
 externalDocs:
-  # 外部文档的描述
   description: Find out more about Swagger
-  # 外部文档的链接
   url: https://swagger.io
-# API 可访问的服务器列表
 servers:
-  - # 第一个服务器的访问地址
-    url: https://petstore3.swagger.io/api/v3
-  - # 第二个服务器的访问地址
-    url: https://petstore3.swagger.io/api/v2
-# API 中使用的标签，用于对接口进行分类
+  - url: https://petstore3.swagger.io/api/v3
+  - url: https://petstore3.swagger.io/api/v2
 tags:
-  - # 第一个标签，用于宠物相关的接口
-    name: pet
-    # 标签的描述
+  - name: pet
     description: Everything about your Pets
-    # 该标签相关的外部文档信息
     externalDocs:
-      # 外部文档的描述
       description: Find out more
-      # 外部文档的链接
       url: https://swagger.io
-  - # 第二个标签，用于商店订单相关的接口
-    name: store
-    # 标签的描述
+  - name: store
     description: Access to Petstore orders
-    # 该标签相关的外部文档信息
     externalDocs:
-      # 外部文档的描述
       description: Find out more about our store
-      # 外部文档的链接
       url: https://swagger.io
-  - # 第三个标签，用于用户相关的接口
-    name: user
-    # 标签的描述
+  - name: user
     description: Operations about user
-# `paths` 是 OpenAPI 规范中的核心字段，用于定义 API 的所有端点（路径）。
-# 每个路径下可以定义不同的 HTTP 方法（如 GET、POST、PUT、DELETE 等），
-# 并为每个方法配置请求、响应、参数等详细信息。
-# 下面我们开始定义 API 的各个端点路径。
-# `paths` 字段用于定义 API 的所有端点（路径），以下定义与宠物（pet）相关的接口路径
 paths:
-  # 定义 /pet 路径，该路径支持 PUT 和 POST 方法
   /pet:
-    # PUT 方法，用于更新现有的宠物信息
     put:
-      # 接口所属的标签，用于对接口进行分类，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于更新现有的宠物
       summary: Update an existing pet.
-      # 接口的详细描述，说明该接口通过 ID 更新现有的宠物
       description: Update an existing pet by Id.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: updatePet
-      # 请求体信息，用于描述接口所需的请求数据
       requestBody:
-        # 请求体的描述，说明该请求体用于更新商店中已存在的宠物
         description: Update an existent pet in the store
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/json:
             schema:
               $ref: '#/components/schemas/Pet'
-          # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/xml:
             schema:
               $ref: '#/components/schemas/Pet'
-          # 支持表单编码格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Pet'
-        # 标记请求体为必需项
         required: true
-      # 接口的响应信息，定义不同状态码对应的响应内容
       responses:
-        # 状态码 200 表示操作成功，返回更新后的宠物信息
         '200':
           description: Successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示提供的 ID 无效
         '400':
           description: Invalid ID supplied
-        # 状态码 404 表示未找到对应的宠物
         '404':
           description: Pet not found
-        # 状态码 422 表示数据验证异常
         '422':
           description: Validation exception
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-    # POST 方法，用于向商店中添加新的宠物
     post:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于向商店中添加新的宠物
       summary: Add a new pet to the store.
-      # 接口的详细描述，说明该接口用于向商店中添加新的宠物
       description: Add a new pet to the store.
-      # 接口操作的唯一标识符
       operationId: addPet
-      # 请求体信息
       requestBody:
-        # 请求体的描述，说明该请求体用于在商店中创建新的宠物
         description: Create a new pet in the store
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/json:
             schema:
               $ref: '#/components/schemas/Pet'
-          # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/xml:
             schema:
               $ref: '#/components/schemas/Pet'
-          # 支持表单编码格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Pet'
-        # 标记请求体为必需项
         required: true
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回新添加的宠物信息
         '200':
           description: Successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示输入无效
         '400':
           description: Invalid input
-        # 状态码 422 表示数据验证异常
         '422':
           description: Validation exception
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-  # 定义 /pet/findByStatus 路径，该路径支持 GET 方法，用于根据宠物状态查找宠物
   /pet/findByStatus:
-    # GET 方法，用于根据宠物状态查找宠物
     get:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于根据状态查找宠物
       summary: Finds Pets by status.
-      # 接口的详细描述，说明可以提供多个状态值，用逗号分隔
       description: Multiple status values can be provided with comma separated strings.
-      # 接口操作的唯一标识符
       operationId: findPetsByStatus
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 status 的查询参数
         - name: status
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是用于过滤的状态值
           description: Status values that need to be considered for filter
-          # 标记该参数为非必需项
           required: false
-          # 当参数为数组或对象时，指定其展开方式
           explode: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-            # 参数默认值为 "available"
             default: available
-            # 参数允许的枚举值
             enum:
               - available
               - pending
               - sold
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回符合条件的宠物列表
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，返回一个宠物数组
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，返回一个宠物数组
             application/xml:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示提供的状态值无效
         '400':
           description: Invalid status value
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-  # 定义 /pet/findByTags 路径，该路径支持 GET 方法，用于根据宠物标签查找宠物
   /pet/findByTags:
-    # GET 方法，用于根据宠物标签查找宠物
     get:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于根据标签查找宠物
       summary: Finds Pets by tags.
-      # 接口的详细描述，说明可以提供多个标签，用逗号分隔，并给出测试示例
       description: Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
-      # 接口操作的唯一标识符
       operationId: findPetsByTags
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 tags 的查询参数
         - name: tags
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是用于过滤的标签
           description: Tags to filter by
-          # 标记该参数为非必需项
           required: false
-          # 当参数为数组或对象时，指定其展开方式
           explode: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为数组
             type: array
-            # 数组元素类型为字符串
             items:
               type: string
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回符合条件的宠物列表
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，返回一个宠物数组
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，返回一个宠物数组
             application/xml:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示提供的标签值无效
         '400':
           description: Invalid tag value
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-  # 定义 /pet/{petId} 路径，该路径支持 GET、POST 和 DELETE 方法，用于根据宠物 ID 进行操作
   /pet/{petId}:
-    # GET 方法，用于根据宠物 ID 查找单个宠物
     get:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于根据 ID 查找宠物
       summary: Find pet by ID.
-      # 接口的详细描述，说明该接口返回单个宠物信息
       description: Returns a single pet.
-      # 接口操作的唯一标识符
       operationId: getPetById
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 petId 的路径参数
         - name: petId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是要返回的宠物的 ID
           description: ID of pet to return
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回查找到的宠物信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示提供的 ID 无效
         '400':
           description: Invalid ID supplied
-        # 状态码 404 表示未找到对应的宠物
         '404':
           description: Pet not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - api_key: []
         - petstore_auth:
             - write:pets
             - read:pets
-    # POST 方法，用于使用表单数据更新商店中的宠物信息
     post:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于使用表单数据更新商店中的宠物
       summary: Updates a pet in the store with form data.
-      # 接口的详细描述，说明该接口根据表单数据更新宠物资源
       description: Updates a pet resource based on the form data.
-      # 接口操作的唯一标识符
       operationId: updatePetWithForm
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 petId 的路径参数
         - name: petId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是需要更新的宠物的 ID
           description: ID of pet that needs to be updated
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-        # 定义名为 name 的查询参数
         - name: name
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是需要更新的宠物的名称
           description: Name of pet that needs to be updated
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-        # 定义名为 status 的查询参数
         - name: status
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是需要更新的宠物的状态
           description: Status of pet that needs to be updated
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回更新后的宠物信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Pet'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 Pet 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/Pet'
-        # 状态码 400 表示输入无效
         '400':
           description: Invalid input
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-    # DELETE 方法，用于根据宠物 ID 删除宠物
     delete:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于删除宠物
       summary: Deletes a pet.
-      # 接口的详细描述，说明该接口用于删除宠物
       description: Delete a pet.
-      # 接口操作的唯一标识符
       operationId: deletePet
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 api_key 的头部参数
         - name: api_key
-          # 参数位置，此参数为头部参数
           in: header
-          # 参数描述，此处为空
           description: ''
-          # 标记该参数为非必需项
           required: false
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-        # 定义名为 petId 的路径参数
         - name: petId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是要删除的宠物的 ID
           description: Pet id to delete
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，宠物已被删除
         '200':
           description: Pet deleted
-        # 状态码 400 表示提供的宠物值无效
         '400':
           description: Invalid pet value
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息
-      # 接口所需的安全认证信息，使用 petstore_auth 认证方案，需要 write:pets 和 read:pets 权限
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-  # 定义 /pet/{petId}/uploadImage 路径，该路径支持 POST 方法，用于为指定 ID 的宠物上传图片
   /pet/{petId}/uploadImage:
-    # POST 方法，用于上传宠物图片
     post:
-      # 接口所属的标签，此接口属于 "pet" 标签
       tags:
         - pet
-      # 接口的简短描述，说明该接口用于上传图片
       summary: Uploads an image.
-      # 接口的详细描述，说明该接口用于上传指定宠物的图片
       description: Upload image of the pet.
-      # 接口操作的唯一标识符
       operationId: uploadFile
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 petId 的路径参数
         - name: petId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是要更新图片的宠物的 ID
           description: ID of pet to update
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-        # 定义名为 additionalMetadata 的查询参数
         - name: additionalMetadata
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是额外的元数据
           description: Additional Metadata
-          # 标记该参数为非必需项
           required: false
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 请求体信息，用于描述接口所需的请求数据
       requestBody:
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持二进制流格式的请求体，用于上传图片文件
           application/octet-stream:
             schema:
-              # 参数类型为字符串
               type: string
-              # 字符串格式为二进制
               format: binary
-      # 接口的响应信息，定义不同状态码对应的响应内容
       responses:
-        # 状态码 200 表示操作成功，返回 API 响应信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 ApiResponse 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-        # 状态码 400 表示没有上传文件
         '400':
           description: No file uploaded
-        # 状态码 404 表示未找到对应的宠物
         '404':
           description: Pet not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息，使用 petstore_auth 认证方案，需要 write:pets 和 read:pets 权限
       security:
         - petstore_auth:
             - write:pets
             - read:pets
-  # 定义 /store/inventory 路径，该路径支持 GET 方法，用于获取宠物库存信息
   /store/inventory:
-    # GET 方法，用于获取宠物按状态分类的库存信息
     get:
-      # 接口所属的标签，此接口属于 "store" 标签
       tags:
         - store
-      # 接口的简短描述，说明该接口用于返回按状态分类的宠物库存
       summary: Returns pet inventories by status.
-      # 接口的详细描述，说明该接口返回状态码到数量的映射
       description: Returns a map of status codes to quantities.
-      # 接口操作的唯一标识符
       operationId: getInventory
-      # 接口的响应信息，定义不同状态码对应的响应内容
       responses:
-        # 状态码 200 表示操作成功，返回库存信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，返回一个对象，对象的额外属性为 32 位整数
             application/json:
               schema:
                 type: object
                 additionalProperties:
                   type: integer
                   format: int32
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      # 接口所需的安全认证信息，使用 api_key 认证方案
       security:
         - api_key: []
-  # 定义 /store/order 路径，该路径支持 POST 方法，用于在商店中为宠物下订单
   /store/order:
-    # POST 方法，用于在商店中为宠物下订单
     post:
-      # 接口所属的标签，此接口属于 "store" 标签
       tags:
         - store
-      # 接口的简短描述，说明该接口用于为宠物下订单
       summary: Place an order for a pet.
-      # 接口的详细描述，说明该接口用于在商店中创建一个新订单
       description: Place a new order in the store.
-      # 接口操作的唯一标识符
       operationId: placeOrder
-      # 请求体信息，用于描述接口所需的请求数据
       requestBody:
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 Order 定义
           application/json:
             schema:
               $ref: '#/components/schemas/Order'
-          # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 Order 定义
           application/xml:
             schema:
               $ref: '#/components/schemas/Order'
-          # 支持表单编码格式的请求体，其 schema 引用 components/schemas 下的 Order 定义
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Order'
-      # 接口的响应信息，定义不同状态码对应的响应内容
       responses:
-        # 状态码 200 表示操作成功，返回新创建的订单信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Order 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-        # 状态码 400 表示输入无效
         '400':
           description: Invalid input
-        # 状态码 422 表示数据验证异常
         '422':
           description: Validation exception
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应支持 JSON 格式，其 schema 引用 components/schemas 下的 Error 定义
-          # 定义默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /store/order/{orderId} 路径，用于根据订单 ID 对订单进行操作
   /store/order/{orderId}:
-    # GET 方法，用于根据订单 ID 查找采购订单
     get:
-      # 接口所属的标签，此接口属于 "store" 标签
       tags:
         - store
-      # 接口的简短描述，说明该接口用于根据订单 ID 查找采购订单
       summary: Find purchase order by ID.
-      # 接口的详细描述，说明使用小于等于 5 或大于 10 的整数 ID 可获得有效响应，其他值会引发异常
       description: For valid response try integer IDs with value <= 5 or > 10. Other values will generate exceptions.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: getOrderById
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 orderId 的路径参数
         - name: orderId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是需要获取的订单的 ID
           description: ID of order that needs to be fetched
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回查找到的订单信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 Order 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 Order 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/Order'
-        # 状态码 400 表示提供的订单 ID 无效
         '400':
           description: Invalid ID supplied
-        # 状态码 404 表示未找到对应的订单
         '404':
           description: Order not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-    # DELETE 方法，用于根据订单 ID 删除采购订单
     delete:
-      # 接口所属的标签，此接口属于 "store" 标签
       tags:
         - store
-      # 接口的简短描述，说明该接口用于根据订单 ID 删除采购订单
       summary: Delete purchase order by identifier.
-      # 接口的详细描述，说明使用小于 1000 的整数 ID 可获得有效响应，其他值会引发 API 错误
       description: For valid response try integer IDs with value < 1000. Anything above 1000 or nonintegers will generate API errors.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: deleteOrder
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 orderId 的路径参数
         - name: orderId
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是需要删除的订单的 ID
           description: ID of the order that needs to be deleted
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为整数
             type: integer
-            # 整数格式为 64 位整数
             format: int64
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，订单已删除
         '200':
           description: order deleted
-        # 状态码 400 表示提供的订单 ID 无效
         '400':
           description: Invalid ID supplied
-        # 状态码 404 表示未找到对应的订单
         '404':
           description: Order not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /user 路径，用于创建用户
   /user:
-    # POST 方法，用于创建新用户
     post:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于创建用户
       summary: Create user.
-      # 接口的详细描述，说明只有已登录的用户才能执行此操作
       description: This can only be done by the logged in user.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: createUser
-      # 请求体信息
       requestBody:
-        # 请求体的描述，说明该请求体是用于创建的用户对象
         description: Created user object
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/json:
             schema:
               $ref: '#/components/schemas/User'
-          # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/xml:
             schema:
               $ref: '#/components/schemas/User'
-          # 支持表单编码格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/User'
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回创建的用户信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/User'
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /user/createWithList 路径，用于批量创建用户
   /user/createWithList:
-    # POST 方法，用于根据输入的数组批量创建用户
     post:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于根据输入的数组批量创建用户
       summary: Creates list of users with given input array.
-      # 接口的详细描述，说明该接口用于根据输入的数组批量创建用户
       description: Creates list of users with given input array.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: createUsersWithListInput
-      # 请求体信息
       requestBody:
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，请求体为一个用户数组，每个元素引用 components/schemas 下的 User 定义
           application/json:
             schema:
               type: array
               items:
                 $ref: '#/components/schemas/User'
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回创建的用户信息
         '200':
           description: Successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/User'
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /user/login 路径，用于用户登录系统
   /user/login:
-    # GET 方法，用于用户登录系统
     get:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于用户登录系统
       summary: Logs user into the system.
-      # 接口的详细描述，说明该接口用于用户登录系统
       description: Log into the system.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: loginUser
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 username 的查询参数
         - name: username
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是用户登录使用的用户名
           description: The user name for login
-          # 标记该参数为非必需项
           required: false
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-        # 定义名为 password 的查询参数
         - name: password
-          # 参数位置，此参数为查询参数
           in: query
-          # 参数描述，说明该参数是用户登录使用的明文密码
           description: The password for login in clear text
-          # 标记该参数为非必需项
           required: false
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，用户登录成功
         '200':
           description: successful operation
-          # 响应头信息
           headers:
-            # X-Rate-Limit 响应头，说明用户每小时允许的调用次数
             X-Rate-Limit:
               description: calls per hour allowed by the user
               schema:
-                # 响应头值类型为整数
                 type: integer
-                # 整数格式为 32 位整数
                 format: int32
-            # X-Expires-After 响应头，说明令牌过期的 UTC 时间
             X-Expires-After:
               description: date in UTC when token expires
               schema:
-                # 响应头值类型为字符串
                 type: string
-                # 字符串格式为日期时间
                 format: date-time
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 XML 格式的响应体，响应体为字符串类型
             application/xml:
               schema:
                 type: string
-            # 支持 JSON 格式的响应体，响应体为字符串类型
             application/json:
               schema:
                 type: string
-        # 状态码 400 表示提供的用户名或密码无效
         '400':
           description: Invalid username/password supplied
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /user/logout 路径，用于用户退出登录
   /user/logout:
-    # GET 方法，用于用户退出当前登录会话
     get:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于用户退出当前登录会话
       summary: Logs out current logged in user session.
-      # 接口的详细描述，说明该接口用于用户退出系统
       description: Log user out of the system.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: logoutUser
-      # 接口的请求参数信息，此接口无请求参数
       parameters: []
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，用户退出登录成功
         '200':
           description: successful operation
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-  # 定义 /user/{username} 路径，用于根据用户名对用户进行操作
   /user/{username}:
-    # GET 方法，用于根据用户名获取用户信息
     get:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于根据用户名获取用户信息
       summary: Get user by user name.
-      # 接口的详细描述，说明该接口用于根据用户名获取用户详细信息
       description: Get user detail based on username.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: getUserByName
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 username 的路径参数
         - name: username
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是需要获取的用户的名称，测试时可使用 user1
           description: The name that needs to be fetched. Use user1 for testing
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，返回查找到的用户信息
         '200':
           description: successful operation
-          # 响应支持的内容类型及对应的 schema
           content:
-            # 支持 JSON 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-            # 支持 XML 格式的响应体，其 schema 引用 components/schemas 下的 User 定义
             application/xml:
               schema:
                 $ref: '#/components/schemas/User'
-        # 状态码 400 表示提供的用户名无效
         '400':
           description: Invalid username supplied
-        # 状态码 404 表示未找到对应的用户
         '404':
           description: User not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-    # PUT 方法，用于根据用户名更新用户信息
     put:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于更新用户资源
       summary: Update user resource.
-      # 接口的详细描述，说明只有已登录的用户才能执行此操作
       description: This can only be done by the logged in user.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: updateUser
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 username 的路径参数
         - name: username
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，此处原描述有误，应是需要更新的用户的名称，当前为 "name that need to be deleted" 需修正
           description: name that need to be deleted
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 请求体信息
       requestBody:
-        # 请求体的描述，说明该请求体用于更新商店中已存在的用户
         description: Update an existent user in the store
-        # 请求体支持的内容类型及对应的 schema
         content:
-          # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/json:
             schema:
               $ref: '#/components/schemas/User'
-          # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/xml:
             schema:
               $ref: '#/components/schemas/User'
-          # 支持表单编码格式的请求体，其 schema 引用 components/schemas 下的 User 定义
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/User'
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，用户信息更新成功
         '200':
           description: successful operation
-        # 状态码 400 表示请求无效
         '400':
           description: bad request
-        # 状态码 404 表示未找到对应的用户
         '404':
           description: user not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-    # DELETE 方法，用于根据用户名删除用户
     delete:
-      # 接口所属的标签，此接口属于 "user" 标签
       tags:
         - user
-      # 接口的简短描述，说明该接口用于删除用户资源
       summary: Delete user resource.
-      # 接口的详细描述，说明只有已登录的用户才能执行此操作
       description: This can only be done by the logged in user.
-      # 接口操作的唯一标识符，用于在代码中引用该接口
       operationId: deleteUser
-      # 接口的请求参数信息
       parameters:
-        # 定义名为 username 的路径参数
         - name: username
-          # 参数位置，此参数为路径参数
           in: path
-          # 参数描述，说明该参数是需要删除的用户的名称
           description: The name that needs to be deleted
-          # 标记该参数为必需项
           required: true
-          # 参数的 schema 定义
           schema:
-            # 参数类型为字符串
             type: string
-      # 接口的响应信息
       responses:
-        # 状态码 200 表示操作成功，用户已删除
         '200':
           description: User deleted
-        # 状态码 400 表示提供的用户名无效
         '400':
           description: Invalid username supplied
-        # 状态码 404 表示未找到对应的用户
         '404':
           description: User not found
-        # 默认响应，用于处理其他未预料到的错误
         default:
           description: Unexpected error
-          # 默认响应的内容，使用 JSON 格式，引用 Error 模式
           content:
-            # 指定内容类型为 JSON
             application/json:
-              # 定义响应的 schema，引用 components 中的 Error 定义
               schema:
                 $ref: "#/components/schemas/Error"
-# components 组件部分，用于定义可复用的 schema、请求体、安全方案等
 components:
-  # schemas 部分，用于定义数据模型
   schemas:
-    # Order 模型，用于表示订单信息
     Order:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # id 属性，订单的唯一标识
         id:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-          # 属性示例值
           example: 10
-        # petId 属性，订单关联的宠物 ID
         petId:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-          # 属性示例值
           example: 198772
-        # quantity 属性，订单中宠物的数量
         quantity:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 32 位整数
           format: int32
-          # 属性示例值
           example: 7
-        # shipDate 属性，订单的发货日期
         shipDate:
-          # 属性类型为字符串
           type: string
-          # 字符串格式为日期时间
           format: date-time
-        # status 属性，订单的状态
         status:
-          # 属性类型为字符串
           type: string
-          # 属性描述，说明该属性表示订单状态
           description: Order Status
-          # 属性示例值
           example: approved
-          # 属性允许的枚举值
           enum:
             - placed
             - approved
             - delivered
-        # complete 属性，订单是否完成
         complete:
-          # 属性类型为布尔值
           type: boolean
-      # XML 相关配置，指定 XML 元素名称为 order
       xml:
         name: order
-    # Category 模型，用于表示宠物分类信息
     Category:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # id 属性，分类的唯一标识
         id:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-          # 属性示例值
           example: 1
-        # name 属性，分类的名称
         name:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: Dogs
-      # XML 相关配置，指定 XML 元素名称为 category
       xml:
         name: category
-    # User 模型，用于表示用户信息
     User:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # id 属性，用户的唯一标识
         id:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-          # 属性示例值
           example: 10
-        # username 属性，用户的用户名
         username:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: theUser
-        # firstName 属性，用户的名字
         firstName:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: John
-        # lastName 属性，用户的姓氏
         lastName:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: James
-        # email 属性，用户的电子邮箱
         email:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: john@email.com
-        # password 属性，用户的密码
         password:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: '12345'
-        # phone 属性，用户的电话号码
         phone:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: '12345'
-        # userStatus 属性，用户的状态
         userStatus:
-          # 属性类型为整数
           type: integer
-          # 属性描述，说明该属性表示用户状态
           description: User Status
-          # 整数格式为 32 位整数
           format: int32
-          # 属性示例值
           example: 1
-      # XML 相关配置，指定 XML 元素名称为 user
       xml:
         name: user
-    # Tag 模型，用于表示宠物标签信息
     Tag:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # id 属性，标签的唯一标识
         id:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-        # name 属性，标签的名称
         name:
-          # 属性类型为字符串
           type: string
-      # XML 相关配置，指定 XML 元素名称为 tag
       xml:
         name: tag
-    # Pet 模型，用于表示宠物信息
     Pet:
-      # 定义必需的属性
       required:
         - name
         - photoUrls
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # id 属性，宠物的唯一标识
         id:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 64 位整数
           format: int64
-          # 属性示例值
           example: 10
-        # name 属性，宠物的名称
         name:
-          # 属性类型为字符串
           type: string
-          # 属性示例值
           example: doggie
-        # category 属性，宠物所属的分类，引用 Category 模型
         category:
           $ref: '#/components/schemas/Category'
-        # photoUrls 属性，宠物的照片 URL 列表
         photoUrls:
-          # 属性类型为数组
           type: array
-          # XML 相关配置，指定数组元素是否包装
           xml:
             wrapped: true
-          # 数组元素的定义
           items:
-            # 元素类型为字符串
             type: string
-            # XML 相关配置，指定 XML 元素名称为 photoUrl
             xml:
               name: photoUrl
-        # tags 属性，宠物的标签列表
         tags:
-          # 属性类型为数组
           type: array
-          # XML 相关配置，指定数组元素是否包装
           xml:
             wrapped: true
-          # 数组元素的定义，引用 Tag 模型
           items:
             $ref: '#/components/schemas/Tag'
-        # status 属性，宠物在商店中的状态
         status:
-          # 属性类型为字符串
           type: string
-          # 属性描述，说明该属性表示宠物在商店中的状态
           description: pet status in the store
-          # 属性允许的枚举值
           enum:
             - available
             - pending
             - sold
-      # XML 相关配置，指定 XML 元素名称为 pet
       xml:
         name: pet
-    # ApiResponse 模型，用于表示 API 响应信息
     ApiResponse:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # code 属性，响应的代码
         code:
-          # 属性类型为整数
           type: integer
-          # 整数格式为 32 位整数
           format: int32
-        # type 属性，响应的类型
         type:
-          # 属性类型为字符串
           type: string
-        # message 属性，响应的消息
         message:
-          # 属性类型为字符串
           type: string
-      # XML 相关配置，指定 XML 元素名称为 ##default
       xml:
         name: '##default'
-    # Error 模型，用于表示错误信息
     Error:
-      # 数据类型为对象
       type: object
-      # 定义对象的属性
       properties:
-        # code 属性，错误代码
         code:
-          # 属性类型为字符串
           type: string
-        # message 属性，错误消息
         message:
-          # 属性类型为字符串
           type: string
-      # 定义必需的属性
       required:
         - code
         - message
-  # requestBodies 部分，用于定义可复用的请求体
   requestBodies:
-    # Pet 请求体，用于添加宠物到商店
     Pet:
-      # 请求体的描述，说明该请求体是需要添加到商店的宠物对象
       description: Pet object that needs to be added to the store
-      # 请求体支持的内容类型及对应的 schema
       content:
-        # 支持 JSON 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
         application/json:
           schema:
             $ref: '#/components/schemas/Pet'
-        # 支持 XML 格式的请求体，其 schema 引用 components/schemas 下的 Pet 定义
         application/xml:
           schema:
             $ref: '#/components/schemas/Pet'
-    # UserArray 请求体，用于批量创建用户
     UserArray:
-      # 请求体的描述，说明该请求体是用户对象列表
       description: List of user object
-      # 请求体支持的内容类型及对应的 schema
       content:
-        # 支持 JSON 格式的请求体，请求体为一个用户数组，每个元素引用 components/schemas 下的 User 定义
         application/json:
           schema:
             type: array
             items:
               $ref: '#/components/schemas/User'
-  # securitySchemes 部分，用于定义安全认证方案
   securitySchemes:
-    # petstore_auth 安全认证方案，使用 OAuth2 认证
     petstore_auth:
-      # 认证类型为 OAuth2
       type: oauth2
-      # OAuth2 认证流程
       flows:
-        # 隐式授权流程
         implicit:
-          # 授权 URL
           authorizationUrl: https://petstore3.swagger.io/oauth/authorize
-          # 授权范围
           scopes:
-            # write:pets 范围，允许修改账户中的宠物信息
             "write:pets": modify pets in your account
-            # read:pets 范围，允许读取账户中的宠物信息
             "read:pets": read your pets
-    # api_key 安全认证方案，使用 API 密钥认证
     api_key:
-      # 认证类型为 API 密钥
       type: apiKey
-      # API 密钥的名称
       name: api_key
-      # API 密钥的位置，位于请求头中
       in: header
