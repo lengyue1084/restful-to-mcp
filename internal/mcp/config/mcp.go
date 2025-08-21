@@ -5,14 +5,28 @@ import (
 )
 
 // MCPStartupPolicy represents the startup policy for MCP servers
-type MCPStartupPolicy string
+
+type (
+	MCPStartupPolicy string
+	AuthMode         string
+	AuthPosition     string
+)
 
 const (
 	PolicyOnStart  MCPStartupPolicy = "onStart"
 	PolicyOnDemand MCPStartupPolicy = "onDemand"
 )
 
-type AuthMode string
+func (m MCPStartupPolicy) Sting() string {
+	switch m {
+	case PolicyOnStart:
+		return "onStart"
+	case PolicyOnDemand:
+		return "onDemand"
+	default:
+		return "unknown"
+	}
+}
 
 const (
 	// AuthModeApiKey 必选. security scheme 的类型。有效值包括 "apiKey", "http", "oauth2", "openIdConnect".
@@ -31,6 +45,25 @@ func (a AuthMode) String() string {
 	}
 }
 
+var (
+	AuthPositionHeader AuthPosition = "header"
+	AuthPositionQuery  AuthPosition = "query"
+	AuthPositionCookie AuthPosition = "cookie"
+)
+
+func (a AuthPosition) String() string {
+	switch a {
+	case AuthPositionHeader:
+		return "header"
+	case AuthPositionQuery:
+		return "query"
+	case AuthPositionCookie:
+		return "cookie"
+	default:
+		return "unknown"
+	}
+}
+
 // MCPServer 表示 MCP 服务器的数据结构
 type MCPServer struct {
 	ID          uint              `json:"id"`
@@ -43,6 +76,7 @@ type MCPServer struct {
 	Config      map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
 	Auth        []*Auth           `json:"auth"`
 	Tools       []ToolConfig      `json:"tools,omitempty" yaml:"tools,omitempty"`
+	Version     string            `json:"version"`
 	//CORS        CORSConfig `json:"cors"` //暂时不考虑
 }
 
@@ -114,12 +148,12 @@ type ItemsConfig struct {
 // Auth 表示认证的配置结构
 type Auth struct {
 	// 认证模式
-	Mode         AuthMode `json:"mode"`         //Any http, apiKey, oauth2, openIdConnect
-	Description  string   `json:"description"`  //Any
-	Name         string   `json:"name"`         //apiKey
-	In           string   `json:"in"`           //apiKey
-	Scheme       string   `json:"scheme"`       //http
-	BearerFormat string   `json:"bearerFormat"` //http ("bearer")
+	Mode         AuthMode     `json:"mode"`         //Any http, apiKey, oauth2, openIdConnect
+	Description  string       `json:"description"`  //Any
+	Name         string       `json:"name"`         //apiKey
+	In           AuthPosition `json:"in"`           //apiKey
+	Scheme       string       `json:"scheme"`       //http
+	BearerFormat string       `json:"bearerFormat"` //http ("bearer")
 	//Flows        *Flows `json:"flows,omitempty"`
 	//OpenIdConnectUrl string `json:"openIdConnectUrl`
 }

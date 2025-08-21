@@ -66,7 +66,7 @@ func (c *Converter) Validate(ctx context.Context, data []byte) error {
 // Convert 将 OpenAPI 规范数据转换为 MCP 配置
 // 参数 specData 为 OpenAPI 规范的字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
+func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPServer, error) {
 
 	var mcpUUID string
 	UUID := ctx.Value("uuid")
@@ -100,6 +100,9 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse OpenAPI specification: %w", err)
 	}
+	if doc == nil {
+		return nil, fmt.Errorf("failed to load OpenAPI specification,err:%s", "doc is nil")
+	}
 
 	// 如果是 OpenAPI 3.0 版本，验证文档的有效性
 	if strings.HasPrefix(version, OpenAPIVersion3) {
@@ -113,45 +116,76 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 	if mcpUUID == "" {
 		mcpUUID = tool.RandStringByLen(4)
 	}
-
-	// 创建基础的 MCP 配置
-	mcpConfig := &config.MCPConfig{
-		//Name:      doc.Info.Title + "_" + rs,
-		//Name:      doc.Info.Title + "_" + mcpUUID,
-		Name:      doc.Info.Title,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Routers:   make([]config.RouterConfig, 0),
-		Servers:   make([]config.ServerConfig, 0),
-		Tools:     make([]config.ToolConfig, 0),
+	var (
+		info            *openapi3.Info
+		serverName      string
+		servers         []*openapi3.Server
+		paths           *openapi3.Paths
+		securitySchemes openapi3.SecuritySchemes
+		urls            []string
+		components      *openapi3.Components
+	)
+	info = doc.Info
+	if info == nil {
+		return nil, fmt.Errorf("info is nil")
+	}
+	serverName = doc.Info.Title
+	if serverName == "" {
+		return nil, fmt.Errorf("openapi info title must no empty")
+	}
+	servers = doc.Servers
+	if servers == nil || len(servers) == 0 {
+		return nil, fmt.Errorf("openapi servers is empty")
+	}
+	if len(servers) <= 0 {
+		return nil, fmt.Errorf("openapi servers url is needed")
+	}
+	for _, server := range servers {
+		url := server.URL
+		if url != "" && (strings.HasPrefix(url, "http") || strings.HasPrefix(url, "https")) {
+			urls = append(urls, server.URL)
+		}
+	}
+	if urls == nil || len(urls) == 0 {
+		return nil, fmt.Errorf("openapi servers url is invalid")
+	}
+	paths = doc.Paths
+	if paths == nil {
+		return nil, fmt.Errorf("paths is nil")
+	}
+	components = doc.Components
+	securitySchemes = components.SecuritySchemes
+	var auth []*config.Auth
+	for _, scheme := range securitySchemes {
+		val := scheme.Value
+		if val == nil {
+			continue
+		}
+		if val.Type != config.AuthModeApiKey.String() && val.In != config.AuthModeHttp.String() {
+			continue
+		}
+		auth = append(auth, &config.Auth{
+			Name:         val.Name,
+			Mode:         config.AuthMode(val.Type),
+			Description:  val.Description,
+			In:           config.AuthPosition(val.In),
+			Scheme:       val.Scheme,
+			BearerFormat: val.BearerFormat,
+		})
 	}
 
 	// 创建服务器配置
-	server := config.ServerConfig{
-		Name:         mcpConfig.Name,
-		Description:  doc.Info.Description,
-		Config:       make(map[string]string),
-		AllowedTools: make([]string, 0),
-	}
-
-	// 将服务器 URL 添加到配置中
-	if len(doc.Servers) > 0 {
-		// server默认服务器地址为第一个服务器地址
-		server.Config["url"] = c.selectServer(doc.Servers)
-	}
-
-	// 为服务器创建一个默认的路由配置
-	router := config.RouterConfig{
-		Server: mcpConfig.Name,
-		//Prefix: fmt.Sprintf("/mcp/%s", rs), // 为每个路由生成一个随机前缀
-		Prefix: fmt.Sprintf("/mcp/%s", mcpUUID), // 为每个路由生成一个随机前缀,如果前端传来则使用前端的，如果没有则使用自己生成的
-		CORS: &config.CORSConfig{
-			AllowOrigins:     []string{"*"},
-			AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-			AllowHeaders:     []string{"Content-Type", "Authorization", "Mcp-Session-Id", "mcp-protocol-version"},
-			ExposeHeaders:    []string{"Mcp-Session-Id", "mcp-protocol-version"},
-			AllowCredentials: true,
-		},
+	server := &config.MCPServer{
+		Name:        info.Title,
+		UUID:        mcpUUID,
+		Description: info.Description,
+		Urls:        urls,
+		CreatedAt:   time.Time{}, //目前没有创建则时间为零值
+		UpdatedAt:   time.Time{}, //目前没有创建则时间为零值
+		Config:      nil,
+		Auth:        auth,
+		Tools:       nil,
+		Version:     info.Version,
 	}
 
 	// 将文档中的路径转换为工具配置
@@ -319,18 +353,18 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPCo
 			}
 
 			// 将工具配置添加到 MCP 配置中
-			mcpConfig.Tools = append(mcpConfig.Tools, tool)
-			// 将工具名称添加到服务器允许的工具列表中
-			server.AllowedTools = append(server.AllowedTools, tool.Name)
+			//mcpConfig.Tools = append(mcpConfig.Tools, tool)
+			//// 将工具名称添加到服务器允许的工具列表中
+			//server.AllowedTools = append(server.AllowedTools, tool.Name)
 		}
 	}
 
 	// 将服务器配置添加到 MCP 配置中
-	mcpConfig.Servers = append(mcpConfig.Servers, server)
-	// 将路由配置添加到 MCP 配置中
-	mcpConfig.Routers = append(mcpConfig.Routers, router)
+	//mcpConfig.Servers = append(mcpConfig.Servers, server)
+	//// 将路由配置添加到 MCP 配置中
+	//mcpConfig.Routers = append(mcpConfig.Routers, router)
 
-	return mcpConfig, nil
+	return server, nil
 }
 
 // 在 MCP 转换器中根据条件选择 server
@@ -372,7 +406,7 @@ func (c *Converter) DetectVersion(_ context.Context, data []byte) (string, error
 // convertSwagger2 将 Swagger 2.0 规范转换为 OpenAPI 3.0 规范，然后再转换为 MCP 配置
 // 参数 specData 为 Swagger 2.0 规范的字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) convertSwagger2(ctx context.Context, specData []byte) (*config.MCPConfig, error) {
+func (c *Converter) convertSwagger2(ctx context.Context, specData []byte) (*config.MCPServer, error) {
 	var swagger2Doc openapi2.T
 	// 尝试用 JSON 解析 Swagger 2.0 文档
 	if err := json.Unmarshal(specData, &swagger2Doc); err != nil {
@@ -401,14 +435,14 @@ func (c *Converter) convertSwagger2(ctx context.Context, specData []byte) (*conf
 // ConvertFromJSON 将 JSON 格式的 OpenAPI 规范转换为 MCP 配置
 // 参数 jsonData 为 JSON 格式的 OpenAPI 规范字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertFromJSON(ctx context.Context, jsonData []byte) (*config.MCPConfig, error) {
+func (c *Converter) ConvertFromJSON(ctx context.Context, jsonData []byte) (*config.MCPServer, error) {
 	return c.Convert(ctx, jsonData)
 }
 
 // ConvertFromYAML 将 YAML 格式的 OpenAPI 规范转换为 MCP 配置
 // 参数 yamlData 为 YAML 格式的 OpenAPI 规范字节数据
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertFromYAML(ctx context.Context, yamlData []byte) (*config.MCPConfig, error) {
+func (c *Converter) ConvertFromYAML(ctx context.Context, yamlData []byte) (*config.MCPServer, error) {
 	return c.Convert(ctx, yamlData)
 }
 
@@ -417,28 +451,28 @@ func (c *Converter) ConvertFromYAML(ctx context.Context, yamlData []byte) (*conf
 // 参数 tenant 为租户名称
 // 参数 prefix 为前缀
 // 返回 MCP 配置指针和可能出现的错误
-func (c *Converter) ConvertWithOptions(ctx context.Context, specData []byte, tenant, prefix string) (*config.MCPConfig, error) {
-	config, err := c.Convert(ctx, specData)
-	if err != nil {
-		return nil, err
-	}
-	// 去除前缀前的斜杠
-	cleanPrefix := strings.TrimPrefix(prefix, "/")
-	if tenant != "" && prefix != "" {
-		if len(config.Routers) > 0 {
-			// 生成一个 4 位的随机字符串
-			rs := tool.RandStringByLen(4)
-			config.Routers[0].Prefix = "/" + cleanPrefix + "/" + rs
-		}
-	} else if tenant != "" {
-		if len(config.Routers) > 0 {
-			// 自动生成前缀，逻辑与默认逻辑相同
-			rs := tool.RandStringByLen(4)
-			config.Routers[0].Prefix = "/" + rs
-		}
-	}
-	return config, nil
-}
+//func (c *Converter) ConvertWithOptions(ctx context.Context, specData []byte, tenant, prefix string) (*config.MCPServer, error) {
+//	config, err := c.Convert(ctx, specData)
+//	if err != nil {
+//		return nil, err
+//	}
+//	// 去除前缀前的斜杠
+//	cleanPrefix := strings.TrimPrefix(prefix, "/")
+//	if tenant != "" && prefix != "" {
+//		if len(config.Routers) > 0 {
+//			// 生成一个 4 位的随机字符串
+//			rs := tool.RandStringByLen(4)
+//			config.Routers[0].Prefix = "/" + cleanPrefix + "/" + rs
+//		}
+//	} else if tenant != "" {
+//		if len(config.Routers) > 0 {
+//			// 自动生成前缀，逻辑与默认逻辑相同
+//			rs := tool.RandStringByLen(4)
+//			config.Routers[0].Prefix = "/" + rs
+//		}
+//	}
+//	return config, nil
+//}
 
 // contains 检查字符串是否在字符串切片中
 // 参数 slice 为字符串切片
