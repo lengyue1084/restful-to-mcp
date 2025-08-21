@@ -20,41 +20,39 @@ const (
 	AuthModeHttp   AuthMode = "http"
 )
 
+func (a AuthMode) String() string {
+	switch a {
+	case AuthModeApiKey:
+		return "apiKey"
+	case AuthModeHttp:
+		return "http"
+	default:
+		return "unknown"
+	}
+}
+
 // MCPServer 表示 MCP 服务器的数据结构
 type MCPServer struct {
-	ID          uint      `json:"id"`
-	Name        string    `json:"name" yaml:"name"`
-	UUID        string    `json:"uuid" yaml:"uuid"`
-	Description string    `json:"description" yaml:"description"`
-	URL         []string  `json:"url,omitempty" yaml:"url,omitempty"`
-	CreatedAt   time.Time `json:"createdAt" yaml:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt" yaml:"updatedAt"`
+	ID          uint              `json:"id"`
+	Name        string            `json:"name" yaml:"name"`
+	UUID        string            `json:"uuid" yaml:"uuid"`
+	Description string            `json:"description" yaml:"description"`
+	Urls        []string          `json:"urls,omitempty" yaml:"urls,omitempty"`
+	CreatedAt   time.Time         `json:"createdAt" yaml:"createdAt"`
+	UpdatedAt   time.Time         `json:"updatedAt" yaml:"updatedAt"`
+	Config      map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
+	Auth        []*Auth           `json:"auth"`
+	Tools       []ToolConfig      `json:"tools,omitempty" yaml:"tools,omitempty"`
+	//CORS        CORSConfig `json:"cors"` //暂时不考虑
 }
 
 // CORSConfig 表示 CORS（跨域资源共享）的配置结构
 type CORSConfig struct {
-	// 允许的源列表
-	AllowOrigins []string `json:"allowOrigins,omitempty" yaml:"allowOrigins,omitempty"`
-	// 允许的方法列表
-	AllowMethods []string `json:"allowMethods,omitempty" yaml:"allowMethods,omitempty"`
-	// 允许的请求头列表
-	AllowHeaders []string `json:"allowHeaders,omitempty" yaml:"allowHeaders,omitempty"`
-	// 暴露的响应头列表
-	ExposeHeaders []string `json:"exposeHeaders,omitempty" yaml:"exposeHeaders,omitempty"`
-	// 是否允许携带凭证
-	AllowCredentials bool `json:"allowCredentials" yaml:"allowCredentials"`
-}
-
-// ServerConfig 表示服务器的配置结构
-type ServerConfig struct {
-	// 服务器名称
-	Name         string   `json:"name" yaml:"name"`
-	Description  string   `json:"description" yaml:"description"`
-	AllowedTools []string `json:"allowedTools,omitempty" yaml:"allowedTools,omitempty"`
-	// 服务器配置键值对
-	Config map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
-	// 是否在 mcp-gateway 启动时安装此 MCP 服务器
-	Preinstalled MCPStartupPolicy `json:"preinstalled" yaml:"preinstalled"`
+	AllowOrigins     []string `json:"allowOrigins,omitempty" yaml:"allowOrigins,omitempty"`
+	AllowMethods     []string `json:"allowMethods,omitempty" yaml:"allowMethods,omitempty"`
+	AllowHeaders     []string `json:"allowHeaders,omitempty" yaml:"allowHeaders,omitempty"`
+	ExposeHeaders    []string `json:"exposeHeaders,omitempty" yaml:"exposeHeaders,omitempty"`
+	AllowCredentials bool     `json:"allowCredentials" yaml:"allowCredentials"`
 }
 
 // ToolConfig 表示工具的配置结构
@@ -79,18 +77,6 @@ type ToolConfig struct {
 	InputSchema map[string]any `json:"inputSchema,omitempty" yaml:"inputSchema,omitempty"`
 	// 注解信息
 	Annotations map[string]any `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-}
-
-// MCPServerConfig 表示 MCP 服务器的配置结构
-type MCPServerConfig struct {
-	// 服务器类型，支持 openapi、grpc
-	Type string `json:"type" yaml:"type"`
-	// 服务器名称
-	Name string `json:"name" yaml:"name"`
-	// 用于 sse 和 streamable-http 类型的 URL
-	URL string `json:"url,omitempty" yaml:"url,omitempty"`
-	// 启动策略，支持两种模式：onStart（启动时立即启动）和 onDemand（按需启动）
-	Policy MCPStartupPolicy `json:"policy" yaml:"policy"`
 }
 
 // ArgConfig 表示参数的配置结构
@@ -128,7 +114,14 @@ type ItemsConfig struct {
 // Auth 表示认证的配置结构
 type Auth struct {
 	// 认证模式
-	Mode AuthMode `json:"mode" yaml:"mode"`
+	Mode         AuthMode `json:"mode"`         //Any http, apiKey, oauth2, openIdConnect
+	Description  string   `json:"description"`  //Any
+	Name         string   `json:"name"`         //apiKey
+	In           string   `json:"in"`           //apiKey
+	Scheme       string   `json:"scheme"`       //http
+	BearerFormat string   `json:"bearerFormat"` //http ("bearer")
+	//Flows        *Flows `json:"flows,omitempty"`
+	//OpenIdConnectUrl string `json:"openIdConnectUrl`
 }
 
 //// ToToolSchema 将 ToolConfig 转换为 ToolSchema
