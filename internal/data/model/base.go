@@ -19,10 +19,10 @@ type (
 )
 
 const (
-	IsAuthNo             AuthStatus          = 0
-	IsAuthYes            AuthStatus          = 1
-	HaveToolsNo          HaveToolsStatus     = 0
-	HaveToolsYes         HaveToolsStatus     = 1
+	IsAuthNo             AuthStatus          = 1
+	IsAuthYes            AuthStatus          = 2
+	HaveToolsNo          HaveToolsStatus     = 1
+	HaveToolsYes         HaveToolsStatus     = 2
 	McpServerTypeOpenapi McpServerTypeStatus = 1
 	McpServerTypeGrpc    McpServerTypeStatus = 2
 )
