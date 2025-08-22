@@ -75,23 +75,29 @@ type MCPServer struct {
 	UpdatedAt   time.Time         `json:"updatedAt" yaml:"updatedAt"`
 	Config      map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
 	Auth        []*Auth           `json:"auth"`
-	Tools       []ToolConfig      `json:"tools,omitempty" yaml:"tools,omitempty"`
+	Tools       []*ToolConfig     `json:"tools,omitempty" yaml:"tools,omitempty"`
 	Version     string            `json:"version"`
 	//CORS        CORSConfig `json:"cors"` //暂时不考虑
 }
 
 // CORSConfig 表示 CORS（跨域资源共享）的配置结构
-type CORSConfig struct {
-	AllowOrigins     []string `json:"allowOrigins,omitempty" yaml:"allowOrigins,omitempty"`
-	AllowMethods     []string `json:"allowMethods,omitempty" yaml:"allowMethods,omitempty"`
-	AllowHeaders     []string `json:"allowHeaders,omitempty" yaml:"allowHeaders,omitempty"`
-	ExposeHeaders    []string `json:"exposeHeaders,omitempty" yaml:"exposeHeaders,omitempty"`
-	AllowCredentials bool     `json:"allowCredentials" yaml:"allowCredentials"`
-}
+//type CORSConfig struct {
+//	AllowOrigins     []string `json:"allowOrigins,omitempty" yaml:"allowOrigins,omitempty"`
+//	AllowMethods     []string `json:"allowMethods,omitempty" yaml:"allowMethods,omitempty"`
+//	AllowHeaders     []string `json:"allowHeaders,omitempty" yaml:"allowHeaders,omitempty"`
+//	ExposeHeaders    []string `json:"exposeHeaders,omitempty" yaml:"exposeHeaders,omitempty"`
+//	AllowCredentials bool     `json:"allowCredentials" yaml:"allowCredentials"`
+//}
 
+// ToolConfig name：工具的唯一标识符
+// title：用于显示目的的可选的、人类可读的工具名称。
+// description：人类可读的功能描述
+// inputSchema：定义预期参数的 JSON Schema
+// outputSchema：可选 JSON Schema 定义预期输出结构
+// annotations：描述工具行为的可选属性
 // ToolConfig 表示工具的配置结构
 type ToolConfig struct {
-	// 工具名称
+	// 工具名称,需要考虑如果没有的时候需要新构建一个
 	Name string `json:"name" yaml:"name"`
 	// 工具描述
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
