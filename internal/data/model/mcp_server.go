@@ -13,7 +13,8 @@ type McpServer struct {
 	ServiceToken  string          `json:"serviceToken" gorm:"column:service_token;type:text;comment:服务认证Token，用于访问用户提供的接口"`
 	PlatformToken string          `json:"platformToken" gorm:"column:platform_token;type:text;comment:平台认证Token，平台添加的认证令牌"`
 
-	Auth string `json:"auth" gorm:"column:auth;type:text;default:'';comment:认证信息"` //认证的原始信息
+	Security string `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"` //认证的原始信息
+
 }
 
 func (m *McpServer) TableName() string {

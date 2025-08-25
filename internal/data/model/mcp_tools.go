@@ -16,8 +16,9 @@ type McpTools struct {
 	InputSchema string `json:"inputSchema" gorm:"column:input_schema;type:text;default:'';comment:输入参数Schema定义"`
 	Annotations string `json:"annotations" gorm:"column:annotations;type:text;default:'';comment:工具注解信息，JSON格式存储"`
 
-	IsAuth   AuthStatus `json:"isAuth" gorm:"column:is_auth;type:SMALLINT;default:1;comment:是否需要认证"` // 是否需要认证 0未知，默认1不需要认证,2需要认证，这个认证为接口级别
-	AuthType string     `json:"authType" gorm:"column:auth_type;type:varchar(30);default:'';comment:认证方式"`
+	IsAuth         AuthStatus `json:"isAuth" gorm:"column:is_auth;type:SMALLINT;default:1;comment:是否需要认证"` // 是否需要认证 0未知，默认1不需要认证,2需要认证，这个认证为接口级别
+	AuthType       string     `json:"authType" gorm:"column:auth_type;type:varchar(30);default:'';comment:认证方式"`
+	IsPlatformAuth AuthStatus `json:"isPlatformAuth" gorm:"column:is_platform_auth;type:SMALLINT;default:1;comment:是否平台认证"`
 }
 
 func (m *McpTools) TableName() string {

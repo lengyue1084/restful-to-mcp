@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"flow-bridge-mcp/api"
+	"flow-bridge-mcp/internal/data"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/internal/mcp/transformer"
 	"flow-bridge-mcp/pkg/logger"
@@ -12,14 +13,16 @@ import (
 
 type OpenapiRepo interface {
 	Create(ctx context.Context, serverInfo *model.McpServer) (err error)
+	UpdateByUUID(ctx context.Context, serverInfo *model.McpServer) (err error)
 }
 type OpenapiUseCase struct {
 	OpenapiRepo OpenapiRepo
 	log         *logger.Logger
 	Transformer transformer.Transformer
+	data        *data.Data
 }
 
-func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, log *logger.Logger) *OpenapiUseCase {
+func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, log *logger.Logger, data *data.Data) *OpenapiUseCase {
 	return &OpenapiUseCase{
 		OpenapiRepo: repo,
 		log:         log,
@@ -28,6 +31,8 @@ func NewOpenapiUserCase(repo OpenapiRepo, Transformer transformer.Transformer, l
 }
 
 func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
+
+	//md5Str := tool.MD5(req.FileContent)
 
 	var decodeString []byte
 	// 清理Base64字符串

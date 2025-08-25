@@ -22,10 +22,14 @@ func NewOpenapiRepo(d *Data, log *logger.Logger) biz.OpenapiRepo {
 }
 
 func (o *OpenapiRepo) Create(ctx context.Context, serverInfo *model.McpServer) (err error) {
-	err = o.data.db.Where("namesss = ?", serverInfo.CreatedAt).Updates(serverInfo).Error
+	err = o.data.db.Create(serverInfo).Error
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "create mcp server error: %v", err)
 		return
 	}
+	return
+}
+
+func (o *OpenapiRepo) UpdateByUUID(ctx context.Context, serverInfo *model.McpServer) (err error) {
 	return
 }
