@@ -1,0 +1,466 @@
+openapi: 3.0.0
+info:
+  title: 多认证方式API示例
+  version: 1.0.0
+  description: |
+    # 多认证方式API
+    
+    本API支持三种认证方式：
+    
+    ## 1. API Key 认证
+    - 用于客户端应用和服务端之间的认证
+    - 使用自定义头：`X-API-Key`
+    - 适用于机器到机器的通信
+    
+    ## 2. HTTP Bearer 认证 (JWT)
+    - 用于用户身份认证
+    - 使用标准头：`Authorization: Bearer <token>`
+    - 适用于用户相关的操作
+    
+    ## 3. OAuth 2.0 认证
+    - 用于第三方应用授权
+    - 支持多种授权流程：授权码、客户端凭证、密码模式
+    - 使用标准头：`Authorization: Bearer <access-token>`
+    
+    ## 使用场景
+    - **公开数据**: 无需认证
+    - **应用级操作**: 使用 API Key
+    - **用户级操作**: 使用 JWT Token 或 OAuth 2.0
+    - **第三方集成**: 使用 OAuth 2.0
+    - **高安全操作**: 可组合多种认证方式
+
+servers:
+  - url: https://api.example.com/v1
+    description: 生产环境
+security:
+  - ApiKeyAuth: []      # 需要有效的API Key
+  - OAuth2: [admin]     # 并且需要admin权限的OAuth令牌
+components:
+  securitySchemes:
+    # API Key 认证方案
+    ApiKeyAuth:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: |
+        应用级别的API Key认证。
+        格式：`X-API-Key: your-api-key`
+        
+        示例：
+        ```http
+        GET /api/data HTTP/1.1
+        Host: api.example.com
+        X-API-Key: app_1234567890abcdef
+        ```
+
+    # JWT Bearer 认证方案
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        用户级别的JWT令牌认证。
+        格式：`Authorization: Bearer <jwt-token>`
+        
+        示例：
+        ```http
+        GET /api/user/profile HTTP/1.1
+        Host: api.example.com
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
+
+    # OAuth 2.0 认证方案
+    OAuth2:
+      type: oauth2
+      description: |
+        OAuth 2.0 认证流程，支持第三方应用授权。
+        
+        使用格式：`Authorization: Bearer <access-token>`
+      flows:
+        # 授权码流程（用于第三方Web应用）
+        authorizationCode:
+          authorizationUrl: https://api.example.com/oauth/authorize
+          tokenUrl: https://api.example.com/oauth/token
+          refreshUrl: https://api.example.com/oauth/refresh
+          scopes:
+            profile: "读取用户基本信息"
+            email: "读取用户邮箱"
+            read: "读取权限"
+            write: "写入权限"
+            admin: "管理员权限"
+
+        # 客户端凭证流程（用于机器到机器通信）
+        clientCredentials:
+          tokenUrl: https://api.example.com/oauth/token
+          scopes:
+            internal: "内部服务权限"
+            metrics: "访问监控指标"
+
+        # 密码模式（用于受信任的第一方应用）
+        password:
+          tokenUrl: https://api.example.com/oauth/token
+          scopes:
+            profile: "读取用户基本信息"
+            email: "读取用户邮箱"
+
+        # 隐式流程（不推荐，用于兼容旧客户端）
+        implicit:
+          authorizationUrl: https://api.example.com/oauth/authorize
+          scopes:
+            profile: "读取用户基本信息"
+            email: "读取用户邮箱"
+
+  # 通用响应定义
+  responses:
+    Unauthorized:
+      description: 认证失败
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "unauthorized"
+              message:
+                type: string
+                example: "有效的认证凭证是必需的"
+
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "forbidden"
+              message:
+                type: string
+                example: "没有访问该资源的权限"
+
+    InvalidScope:
+      description: 权限范围不足
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "insufficient_scope"
+              message:
+                type: string
+                example: "访问令牌缺少必要的权限范围"
+
+  # 参数定义
+  parameters:
+    ApiKeyHeader:
+      name: X-API-Key
+      in: header
+      required: false
+      schema:
+        type: string
+      description: 应用API Key，用于应用级认证
+
+    AuthorizationHeader:
+      name: Authorization
+      in: header
+      required: false
+      schema:
+        type: string
+      description: JWT Bearer令牌或OAuth访问令牌，用于用户认证
+
+  # 请求体定义
+  requestBodies:
+    OAuthTokenRequest:
+      description: OAuth 2.0 令牌请求
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              grant_type:
+                type: string
+                enum: [authorization_code, client_credentials, password, refresh_token]
+                description: 授权类型
+              client_id:
+                type: string
+                description: 客户端ID
+              client_secret:
+                type: string
+                description: 客户端密钥（某些流程需要）
+              code:
+                type: string
+                description: 授权码（授权码流程需要）
+              redirect_uri:
+                type: string
+                description: 重定向URI（授权码流程需要）
+              username:
+                type: string
+                description: 用户名（密码模式需要）
+              password:
+                type: string
+                description: 密码（密码模式需要）
+              refresh_token:
+                type: string
+                description: 刷新令牌（刷新令牌流程需要）
+              scope:
+                type: string
+                description: 请求的权限范围
+            required:
+              - grant_type
+              - client_id
+
+paths:
+  # 公开端点 - 无需认证
+  /public/data:
+    get:
+      summary: 获取公开数据
+      description: 此端点不需要任何认证
+      responses:
+        '200':
+          description: 成功获取公开数据
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+
+  # OAuth 2.0 相关端点
+  /oauth/authorize:
+    get:
+      summary: OAuth 2.0 授权端点
+      description: 启动OAuth 2.0授权码流程
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+            example: "code"
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '302':
+          description: 重定向到认证页面或回调URI
+        '400':
+          description: 无效的请求参数
+
+  /oauth/token:
+    post:
+      summary: OAuth 2.0 令牌端点
+      description: 获取OAuth 2.0访问令牌
+      requestBody:
+        $ref: '#/components/requestBodies/OAuthTokenRequest'
+      responses:
+        '200':
+          description: 成功获取访问令牌
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: 访问令牌
+                  token_type:
+                    type: string
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    description: 过期时间（秒）
+                  refresh_token:
+                    type: string
+                    description: 刷新令牌（某些流程返回）
+                  scope:
+                    type: string
+                    description: 授予的权限范围
+        '400':
+          description: 无效的请求或认证失败
+
+  # 仅需要 API Key 的端点
+  /app/metrics:
+    get:
+      summary: 获取应用指标
+      description: 需要应用级别的API Key认证
+      security:
+        - ApiKeyAuth: []  # 只需要API Key
+      responses:
+        '200':
+          description: 成功获取应用指标
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_requests:
+                    type: integer
+                  active_users:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # 需要 JWT 或 OAuth 2.0 的端点（用户相关）
+  /user/profile:
+    get:
+      summary: 获取用户个人信息
+      description: 需要用户级别的JWT或OAuth 2.0认证
+      security:
+        - BearerAuth: []  # JWT认证
+        - OAuth2: [profile]  # 或OAuth 2.0认证，需要profile权限
+      responses:
+        '200':
+          description: 成功获取用户信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # 需要 OAuth 2.0 特定权限的端点
+  /user/email:
+    get:
+      summary: 获取用户邮箱
+      description: 需要OAuth 2.0认证且具有email权限
+      security:
+        - OAuth2: [email]  # 需要email权限
+      responses:
+        '200':
+          description: 成功获取邮箱信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    format: email
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # 需要多种认证的端点
+  /admin/audit-logs:
+    get:
+      summary: 获取审计日志（高安全操作）
+      description: 需要API Key和应用管理员权限的OAuth 2.0令牌
+      security:
+        - ApiKeyAuth: []      # 需要有效的API Key
+        - OAuth2: [admin]     # 并且需要admin权限的OAuth令牌
+      responses:
+        '200':
+          description: 成功获取审计日志
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    timestamp:
+                      type: string
+                      format: date-time
+                    action:
+                      type: string
+                    user_id:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # 第三方集成端点
+  /integration/data:
+    get:
+      summary: 第三方集成数据访问
+      description: 仅允许通过OAuth 2.0认证的第三方应用访问
+      security:
+        - OAuth2: [read]  # 需要read权限的OAuth令牌
+      parameters:
+        - name: client_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 客户端ID（用于审计）
+      responses:
+        '200':
+          description: 成功获取集成数据
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # 客户端凭证流程示例
+  /internal/stats:
+    get:
+      summary: 内部统计信息
+      description: 使用客户端凭证流程获取的内部服务统计
+      security:
+        - OAuth2: [internal]  # 需要internal权限的客户端凭证令牌
+      responses:
+        '200':
+          description: 成功获取统计信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  system_health:
+                    type: object
+                  performance_metrics:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+# 可选的全局安全要求
+# security:
+#   - ApiKeyAuth: []

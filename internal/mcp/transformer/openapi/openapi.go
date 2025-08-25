@@ -6,6 +6,7 @@ package openapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flow-bridge-mcp/internal/mcp/config"
 	"flow-bridge-mcp/internal/mcp/transformer"
 	"flow-bridge-mcp/pkg/logger"
@@ -124,20 +125,26 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		securitySchemes openapi3.SecuritySchemes
 		urls            []string
 		components      *openapi3.Components
+		toolsSlice      []*config.ToolConfig
+		securityKey     string
 	)
 	info = doc.Info
 	if info == nil {
+		c.log.ErrorWithContext(ctx, "info is nil")
 		return nil, fmt.Errorf("info is nil")
 	}
 	serverName = doc.Info.Title
 	if serverName == "" {
+		c.log.ErrorWithContext(ctx, "openapi info title must no empty")
 		return nil, fmt.Errorf("openapi info title must no empty")
 	}
 	servers = doc.Servers
 	if servers == nil || len(servers) == 0 {
+		c.log.ErrorWithContext(ctx, "openapi servers is empty")
 		return nil, fmt.Errorf("openapi servers is empty")
 	}
 	if len(servers) <= 0 {
+		c.log.ErrorWithContext(ctx, "openapi servers is empty")
 		return nil, fmt.Errorf("openapi servers url is needed")
 	}
 	for _, server := range servers {
@@ -147,24 +154,28 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		}
 	}
 	if urls == nil || len(urls) == 0 {
+		c.log.ErrorWithContext(ctx, "openapi servers url is invalid")
 		return nil, fmt.Errorf("openapi servers url is invalid")
 	}
 	paths = doc.Paths
 	if paths == nil {
+		c.log.ErrorWithContext(ctx, "paths is nil")
 		return nil, fmt.Errorf("paths is nil")
 	}
 	components = doc.Components
 	securitySchemes = components.SecuritySchemes
-	var auth []*config.Auth
-	for _, scheme := range securitySchemes {
+	var authSecuritySchemes []*config.Security
+	for key, scheme := range securitySchemes {
 		val := scheme.Value
 		if val == nil {
 			continue
 		}
-		if val.Type != config.AuthModeApiKey.String() && val.In != config.AuthModeHttp.String() {
-			continue
+		if val.Type == config.AuthModeApiKey.String() && val.Name == "" {
+			c.log.ErrorWithContext(ctx, "security scheme name is empty", "key", key)
+			return nil, fmt.Errorf("security scheme name is empty")
 		}
-		auth = append(auth, &config.Auth{
+		authSecuritySchemes = append(authSecuritySchemes, &config.Security{
+			SecurityKey:  key,
 			Name:         val.Name,
 			Mode:         config.AuthMode(val.Type),
 			Description:  val.Description,
@@ -172,31 +183,118 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 			Scheme:       val.Scheme,
 			BearerFormat: val.BearerFormat,
 		})
+
 	}
 
+	if doc.Security != nil && len(doc.Security) > 0 {
+		//for _, sec := range doc.Security {
+		// todo 暂时这里不考虑到多种授权的方式，只考虑默认一种
+		ok, err := c.isAllNotAllowed(doc.Security, authSecuritySchemes)
+		if err != nil {
+			return nil, fmt.Errorf("doc security isAllNotAllowed failed: %w", err)
+		}
+		if ok {
+			return nil, fmt.Errorf("doc security only support:%s and%s  methods，", config.AuthModeHttp, config.AuthModeApiKey)
+		}
+		//如果有多个，则只取第一个
+		securityKey = c.getFirstSecurityName(doc.Security)
+	}
+
+	toolsSlice, err = c.PathsToTools(paths, components, securityKey, authSecuritySchemes)
+	if err != nil {
+		c.log.ErrorWithContext(ctx, "failed to convert OpenAPI paths to MCP tools: %w", err)
+		return nil, err
+	}
+
+	//serverTitle := strings.ReplaceAll(serverName, " ", "")
 	// 创建服务器配置
 	server := &config.MCPServer{
-		Name:        info.Title,
-		UUID:        mcpUUID,
-		Description: info.Description,
-		Urls:        urls,
-		CreatedAt:   time.Time{}, //目前没有创建则时间为零值
-		UpdatedAt:   time.Time{}, //目前没有创建则时间为零值
-		Config:      nil,
-		Auth:        auth,
-		Tools:       nil,
-		Version:     info.Version,
+		Name:         info.Title,
+		UUID:         mcpUUID,
+		Description:  info.Description,
+		Urls:         urls,
+		CreatedAt:    time.Time{}, //目前没有创建则时间为零值
+		UpdatedAt:    time.Time{}, //目前没有创建则时间为零值
+		Config:       nil,
+		Tools:        toolsSlice,
+		Version:      info.Version,
+		SecurityList: authSecuritySchemes,
 	}
 
+	return server, nil
+}
+
+// 只要有个认证方式不支持就返回true
+func (c *Converter) getFirstSecurityName(security openapi3.SecurityRequirements) (securityName string) {
+
+	for _, sec := range security {
+		for name := range sec {
+			securityName = name
+			break
+		}
+	}
+	return securityName
+}
+func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, securitySlice []*config.Security) (isAllNotAllowed bool, err error) {
+	isAllNotAllowed = false
+	if len(security) > 1 {
+		// or
+		return true, errors.New("only one security is allowed")
+	}
+	var securityMap = make(map[string]*config.Security)
+	for _, val := range securitySlice {
+		securityMap[val.SecurityKey] = val
+	}
+	for _, sec := range security {
+		// and
+		if len(sec) > 1 {
+			return true, errors.New("only one security is allowed")
+		}
+		for name := range sec {
+			if v, ok := securityMap[name]; ok {
+				securityMap[name] = v
+				if v.Mode != config.AuthModeHttp && v.Mode != config.AuthModeApiKey {
+					isAllNotAllowed = true
+				}
+			}
+
+		}
+	}
+	return isAllNotAllowed, nil
+}
+
+//func (c Converter) GetSecurity(security openapi3.SecuritySchemes)  {
+//	if security != nil && len(security) > 0 && security[0] {
+//		//for _, sec := range doc.Security {
+//		// todo 暂时这里不考虑到多种授权的方式，只考虑默认一种
+//		for name := range security[0] {
+//			security = name
+//			break
+//		}
+//	}
+//
+//}
+
+func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Components, docSecuritykey string, authSecuritySchemes []*config.Security) (toolsSlice []*config.ToolConfig, err error) {
+	var securityLevel = config.SecurityLevelPublic
+	if docSecuritykey != "" {
+		securityLevel = config.SecurityLevelDoc
+	}
+	var (
+		pathSecurityLevel = securityLevel
+		pathSecurityKey   = docSecuritykey
+		isShow            = false
+	)
 	// 将文档中的路径转换为工具配置
-	for path, pathItem := range doc.Paths.Map() {
+	for path, pathItem := range paths.Map() {
+		isShow = false
 		// 为每个 HTTP 方法创建一个工具配置
 		for method, operation := range pathItem.Operations() {
 			if method == "options" {
 				continue // 跳过 CORS 预检请求
 			}
 
-			// 如果操作 ID 为空，则根据方法和路径生成一个操作 ID
+			//判断OperationID 是否为空，则根据方法和路径生成一个操作 OperationID
 			if operation.OperationID == "" {
 				// 转换路径为操作 ID 格式，例如：/users/email/{email} -> users_email_argemail
 				pathParts := strings.Split(strings.TrimPrefix(path, "/"), "/")
@@ -207,21 +305,51 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 				}
 				operation.OperationID = fmt.Sprintf("%s_%s", strings.ToLower(method), strings.Join(pathParts, "_"))
 			}
+			var securityInfo *config.Security
+			var pathSecurityMode config.AuthMode
+			security := operation.Security
+			if security != nil {
+				pathSecurityLevel = config.SecurityLevelApi
+				ok, err := c.isAllNotAllowed(*security, authSecuritySchemes)
+				if err != nil {
+					return nil, err
+				}
+				if ok {
+					return nil, fmt.Errorf("path:%s,security not allowed", path)
+				}
+				pathSecurityKey = c.getFirstSecurityName(*security)
+
+			}
+
+			for _, val := range authSecuritySchemes {
+				if pathSecurityKey == val.SecurityKey {
+					pathSecurityMode = val.Mode
+					securityInfo = val
+					if pathSecurityMode == config.AuthModeHttp || val.Mode == config.AuthModeApiKey {
+						isShow = true
+					}
+					break
+				}
+			}
 
 			// 创建工具配置
-			tool := config.ToolConfig{
-				Name:         operation.OperationID,
-				Description:  tool.FirstNonEmpty(operation.Description, operation.Summary),
-				Method:       method,
-				Endpoint:     fmt.Sprintf("{{.Config.url}}%s", path),
-				Headers:      make(map[string]string),
-				Args:         make([]config.ArgConfig, 0),
-				ResponseBody: "{{.Response.Body}}", // 使用透传响应
+			tool := &config.ToolConfig{
+				Name:          operation.OperationID,
+				Description:   tool.FirstNonEmpty(operation.Description, operation.Summary),
+				Method:        method,
+				Endpoint:      fmt.Sprintf("{{.Config.url}}%s", path),
+				Headers:       make(map[string]string),
+				Args:          make([]config.ArgConfig, 0),
+				ResponseBody:  "{{.Response.Body}}", // 使用透传响应
+				SecurityMode:  pathSecurityMode,
+				SecurityLevel: pathSecurityLevel,
+				IsShow:        isShow,
+				Security:      securityInfo,
 			}
 
 			// 添加默认请求头
 			tool.Headers["Content-Type"] = "application/json"
-			tool.Headers["Authorization"] = "{{.Request.Headers.Authorization}}"
+			//tool.Headers["Authorization"] = "{{.Request.Headers.Authorization}}"
 
 			// 定义不同位置的参数切片
 			var bodyArgs []config.ArgConfig
@@ -274,16 +402,17 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 				// 获取请求体是否必需的标志,否则会400错误，如果为true可以给一个空的json {}
 				requestBodyRequired := operation.RequestBody.Value.Required
 				// 遍历请求体支持的内容类型
-				for contentType, mediaType := range operation.RequestBody.Value.Content {
-					if contentType == "application/json" {
+				for contentType, contentValue := range operation.RequestBody.Value.Content {
+					if contentType == "application/json" { //只处理application/json，过滤其他类型包括二进制文件的类型
 						tool.RequestBody = contentType
+						tool.ContentType = contentType
 						// 添加请求体参数
-						if mediaType.Schema != nil {
-							schema := mediaType.Schema.Value
+						if contentValue.Schema != nil {
+							schema := contentValue.Schema.Value
 							// 处理 schema 引用
-							if mediaType.Schema.Ref != "" {
-								refName := strings.TrimPrefix(mediaType.Schema.Ref, "#/components/schemas/")
-								if refSchema, ok := doc.Components.Schemas[refName]; ok {
+							if contentValue.Schema.Ref != "" {
+								refName := strings.TrimPrefix(contentValue.Schema.Ref, "#/components/schemas/")
+								if refSchema, ok := components.Schemas[refName]; ok {
 									schema = refSchema.Value
 								}
 							}
@@ -298,10 +427,10 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 
 									// 创建请求体参数配置
 									arg := config.ArgConfig{
-										Name:        name,
+										Name:        name, //字段名
 										Position:    "body",
-										Required:    requestBodyRequired || contains(schema.Required, name),
-										Type:        "string", // 默认参数类型为字符串
+										Required:    requestBodyRequired || contains(schema.Required, name), // 判断属性是否必需，如果全局没有设置，则取，则判断ref中required是否定义了字段
+										Type:        "string",                                               // 设置默认参数类型为字符串
 										Description: prop.Value.Description,
 									}
 
@@ -309,7 +438,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 									if prop.Value != nil && prop.Value.Type != nil {
 										types := prop.Value.Type.Slice()
 										if len(types) > 0 {
-											arg.Type = types[0]
+											arg.Type = types[0] //重新赋值参数类型
 											// 如果是数组类型且有 items 定义
 											if arg.Type == "array" && prop.Value.Items != nil && prop.Value.Items.Value != nil {
 												arg.Items = buildNestedArg(prop.Value.Items.Value)
@@ -336,7 +465,14 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 			tool.Args = append(tool.Args, bodyArgs...)
 			tool.Args = append(tool.Args, headerArgs...)
 
-			// 如果有请求体参数，构建请求体模板
+			// 如果有请求体参数，构建请求体模板,格式为json，如果参数为quantity，shipDate，status，complete，petId，则模板为：
+			//{
+			//	"quantity": {{ toJSON .Args.quantity}},
+			//	"shipDate": {{ toJSON .Args.shipDate}},
+			//	"status": {{ toJSON .Args.status}},
+			//	"complete": {{ toJSON .Args.complete}},
+			//	"petId": {{ toJSON .Args.petId}}
+			//}
 			if len(bodyArgs) > 0 {
 				var bodyTemplate strings.Builder
 				bodyTemplate.WriteString("{\n")
@@ -352,19 +488,14 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 				tool.RequestBody = bodyTemplate.String()
 			}
 
+			toolsSlice = append(toolsSlice, tool)
 			// 将工具配置添加到 MCP 配置中
 			//mcpConfig.Tools = append(mcpConfig.Tools, tool)
 			//// 将工具名称添加到服务器允许的工具列表中
 			//server.AllowedTools = append(server.AllowedTools, tool.Name)
 		}
 	}
-
-	// 将服务器配置添加到 MCP 配置中
-	//mcpConfig.Servers = append(mcpConfig.Servers, server)
-	//// 将路由配置添加到 MCP 配置中
-	//mcpConfig.Routers = append(mcpConfig.Routers, router)
-
-	return server, nil
+	return toolsSlice, nil
 }
 
 // 在 MCP 转换器中根据条件选择 server

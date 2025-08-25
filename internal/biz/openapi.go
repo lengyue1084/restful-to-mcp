@@ -52,9 +52,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 		return nil, fmt.Errorf("base64 decode failed: %w", err)
 	}
 
-	//req.FileContent = string(decodeString)
-
-	//converter := openapi.NewConverter()
 	mcpConfig, err := o.Transformer.Convert(ctx, decodeString)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "数据转换错误，err:%+v", err)

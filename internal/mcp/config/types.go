@@ -4,7 +4,10 @@ import (
 	"time"
 )
 
-// MCPStartupPolicy represents the startup policy for MCP servers
+const (
+	SecurityTypeOr  string = "or"
+	SecurityTypeAnd string = "and"
+)
 
 type (
 	MCPStartupPolicy string
@@ -30,8 +33,10 @@ func (m MCPStartupPolicy) Sting() string {
 
 const (
 	// AuthModeApiKey 必选. security scheme 的类型。有效值包括 "apiKey", "http", "oauth2", "openIdConnect".
-	AuthModeApiKey AuthMode = "apiKey"
-	AuthModeHttp   AuthMode = "http"
+	AuthModeApiKey        AuthMode = "apiKey"
+	AuthModeHttp          AuthMode = "http"
+	AuthModeOauth2        AuthMode = "oauth2"
+	AuthModeOpenIdConnect AuthMode = "openIdConnect"
 )
 
 func (a AuthMode) String() string {
@@ -66,28 +71,20 @@ func (a AuthPosition) String() string {
 
 // MCPServer 表示 MCP 服务器的数据结构
 type MCPServer struct {
-	ID          uint              `json:"id"`
-	Name        string            `json:"name" yaml:"name"`
-	UUID        string            `json:"uuid" yaml:"uuid"`
-	Description string            `json:"description" yaml:"description"`
-	Urls        []string          `json:"urls,omitempty" yaml:"urls,omitempty"`
-	CreatedAt   time.Time         `json:"createdAt" yaml:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt" yaml:"updatedAt"`
-	Config      map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
-	Auth        []*Auth           `json:"auth"`
-	Tools       []*ToolConfig     `json:"tools,omitempty" yaml:"tools,omitempty"`
-	Version     string            `json:"version"`
+	ID           uint              `json:"id"`
+	Name         string            `json:"name" yaml:"name"`
+	UUID         string            `json:"uuid" yaml:"uuid"`
+	Description  string            `json:"description" yaml:"description"`
+	Urls         []string          `json:"urls,omitempty" yaml:"urls,omitempty"`
+	CreatedAt    time.Time         `json:"createdAt" yaml:"createdAt"`
+	UpdatedAt    time.Time         `json:"updatedAt" yaml:"updatedAt"`
+	Config       map[string]string `json:"config,omitempty" yaml:"config,omitempty"`
+	Tools        []*ToolConfig     `json:"tools,omitempty" yaml:"tools,omitempty"`
+	Version      string            `json:"version"`
+	SecurityList []*Security       `json:"securityList"` //
+
 	//CORS        CORSConfig `json:"cors"` //暂时不考虑
 }
-
-// CORSConfig 表示 CORS（跨域资源共享）的配置结构
-//type CORSConfig struct {
-//	AllowOrigins     []string `json:"allowOrigins,omitempty" yaml:"allowOrigins,omitempty"`
-//	AllowMethods     []string `json:"allowMethods,omitempty" yaml:"allowMethods,omitempty"`
-//	AllowHeaders     []string `json:"allowHeaders,omitempty" yaml:"allowHeaders,omitempty"`
-//	ExposeHeaders    []string `json:"exposeHeaders,omitempty" yaml:"exposeHeaders,omitempty"`
-//	AllowCredentials bool     `json:"allowCredentials" yaml:"allowCredentials"`
-//}
 
 // ToolConfig name：工具的唯一标识符
 // title：用于显示目的的可选的、人类可读的工具名称。
@@ -98,26 +95,54 @@ type MCPServer struct {
 // ToolConfig 表示工具的配置结构
 type ToolConfig struct {
 	// 工具名称,需要考虑如果没有的时候需要新构建一个
-	Name string `json:"name" yaml:"name"`
+	Name string `json:"name"`
 	// 工具描述
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 	// 请求方法
-	Method string `json:"method" yaml:"method"`
+	Method string `json:"method"`
 	// 请求端点
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Endpoint string `json:"endpoint"`
 	// 请求头键值对
-	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
 	// 参数配置列表
-	Args []ArgConfig `json:"args,omitempty" yaml:"args,omitempty"`
+	Args []ArgConfig `json:"args,omitempty"`
 	// 请求体内容
-	RequestBody string `json:"requestBody"  yaml:"requestBody"`
+	RequestBody string `json:"requestBody"`
+	// 响应模式, 目前只支持 application/json
+	ContentType string `json:"contentType"`
 	// 响应体内容
-	ResponseBody string `json:"responseBody" yaml:"responseBody"`
+	ResponseBody string `json:"responseBody"`
 	// 输入模式
-	InputSchema map[string]any `json:"inputSchema,omitempty" yaml:"inputSchema,omitempty"`
+	InputSchema map[string]any `json:"inputSchema,omitempty"`
 	// 注解信息
-	Annotations map[string]any `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	Annotations map[string]any `json:"annotations,omitempty"`
+	//是否需要认证，为原有接口的鉴权
+	Security     *Security `json:"security"`
+	SecurityMode AuthMode  `json:"securityMode"`
+	// 认证级别
+	SecurityLevel SecurityLevel `json:"authLevel"` // 1 api，2 path 3 doc
+	// 是否显示,如果不符合认证信息，则不显示
+	IsShow bool `json:"isShow"` //true 显示，false不显示
 }
+
+type Security struct {
+	SecurityKey  string       `json:"securityKey"`
+	Mode         AuthMode     `json:"mode"` //Any http, apiKey, oauth2, openIdConnect
+	Name         string       `json:"name"`
+	Scheme       string       `json:"scheme"` //http ("bearer")
+	In           AuthPosition `json:"in"`     //"query"、"header" 或 "cookie".
+	Description  string       `json:"description"`
+	BearerFormat string       `json:"bearerFormat"` // http ("bearer")
+	//Flows        *Flows `json:"flows,omitempty"`
+	//OpenIdConnectUrl string `json:"openIdConnectUrl`
+}
+type SecurityLevel int
+
+const (
+	SecurityLevelPublic SecurityLevel = 0 //没有授权
+	SecurityLevelApi    SecurityLevel = 1 //api级别授权
+	SecurityLevelDoc    SecurityLevel = 2 // doc级别授权
+)
 
 // ArgConfig 表示参数的配置结构
 type ArgConfig struct {
@@ -149,19 +174,6 @@ type ItemsConfig struct {
 	Items *ItemsConfig `json:"items,omitempty" yaml:"items,omitempty"`
 	// 必填属性列表
 	Required []string `json:"required,omitempty" yaml:"required,omitempty"`
-}
-
-// Auth 表示认证的配置结构
-type Auth struct {
-	// 认证模式
-	Mode         AuthMode     `json:"mode"`         //Any http, apiKey, oauth2, openIdConnect
-	Description  string       `json:"description"`  //Any
-	Name         string       `json:"name"`         //apiKey
-	In           AuthPosition `json:"in"`           //apiKey
-	Scheme       string       `json:"scheme"`       //http
-	BearerFormat string       `json:"bearerFormat"` //http ("bearer")
-	//Flows        *Flows `json:"flows,omitempty"`
-	//OpenIdConnectUrl string `json:"openIdConnectUrl`
 }
 
 //// ToToolSchema 将 ToolConfig 转换为 ToolSchema
