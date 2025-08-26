@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -386,6 +387,26 @@ func CurrentDateToString(str string) string {
 	default:
 		return now.Format("2006-01-02")
 	}
+}
+
+// WriteFile 将内容写入指定路径的文件
+func WriteFile(path, fileName string, content []byte) (name string, err error) {
+	// 参数验证
+	if path == "" {
+		return "", fmt.Errorf("文件路径不能为空:path:%s", path)
+	}
+	path = filepath.Join(path, fileName)
+	// 获取文件所在目录
+	dir := filepath.Dir(path)
+	// 确保目录存在
+	if err = os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("创建目录失败 %s: %w", dir, err)
+	}
+	err = os.WriteFile(path, content, 0644)
+	if err != nil {
+		return "", fmt.Errorf("写入文件 %s 失败: %w", path, err)
+	}
+	return path, nil
 }
 
 func DateToString(t time.Time, str string) string {
