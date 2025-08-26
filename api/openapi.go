@@ -5,8 +5,10 @@ import "time"
 // ServerInfoRequest 创建服务器信息请求
 type ServerInfoRequest struct {
 	UUID        string `json:"uuid" binding:"required"`
-	Name        string `json:"name" binding:"required,min=1,max=100"`
+	Name        string `json:"name" binding:"required,min=1,max=200"`
 	FileContent string `json:"file_content" binding:"required"`
+	Description string `json:"description"`
+	Suffix      string `json:"suffix" binding:"required"`
 }
 
 // ServerInfoResponse 服务器信息响应

@@ -21,7 +21,7 @@ func NewOpenapiService(uc *biz.OpenapiUseCase, log *logger.Logger) *OpenapiServi
 	}
 }
 
-func (o *OpenapiService) Create(c *gin.Context) {
+func (o *OpenapiService) Upload(c *gin.Context) {
 	var req *api.ServerInfoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, "参数错误", nil)
@@ -33,7 +33,5 @@ func (o *OpenapiService) Create(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("创建失败，err:%s", err), nil)
 		return
 	}
-
 	response.Success(c, "创建成功", resp)
-
 }

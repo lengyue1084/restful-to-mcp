@@ -9,6 +9,7 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
+	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
@@ -28,5 +29,6 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		router.ProviderSet,
 		logger.ProviderSet,
 		openapi.ProviderSet,
+		database.ProviderSet,
 	))
 }

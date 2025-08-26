@@ -10,9 +10,9 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
+	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/pkg/cache"
-	"flow-bridge-mcp/internal/pkg/database"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
 	"flow-bridge-mcp/pkg/logger"
@@ -27,6 +27,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	loggerLogger := logger.NewLogger(config)
 	middlewareMiddleware := middleware.NewMiddleware(loggerLogger)
 	app := router.NewApp(middlewareMiddleware, config)
+	transformer := openapi.NewConverter(loggerLogger)
 	gormLogger := logger.NewGormLogger(loggerLogger)
 	db, cleanup, err := database.NewPgClient(config, gormLogger, loggerLogger)
 	if err != nil {
@@ -37,15 +38,18 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	dataData, cleanup3, err := data.NewData(db, client, loggerLogger)
+	databaseData, cleanup3, err := database.NewData(db, client, loggerLogger)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	openapiRepo := data.NewOpenapiRepo(dataData, loggerLogger)
-	transformer := openapi.NewConverter(loggerLogger)
-	openapiUseCase := biz.NewOpenapiUserCase(openapiRepo, transformer, loggerLogger)
+	transaction := database.NewTransaction(databaseData)
+	mcpServerRepo := data.NewMcpServerRepo(databaseData, loggerLogger)
+	mcpFileRepo := data.NewMcpFileRepo(databaseData, loggerLogger)
+	mcpFileUserCase := biz.NewMcpFileUserCase(mcpFileRepo, loggerLogger)
+	mcpToolsRepo := data.NewMcpToolsRepo(databaseData, loggerLogger)
+	openapiUseCase := biz.NewOpenapiUserCase(transformer, loggerLogger, transaction, mcpServerRepo, mcpFileUserCase, mcpToolsRepo, config)
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
 	engine := router.NewRouter(app, openapiService)
 	return engine, func() {
