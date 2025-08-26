@@ -79,7 +79,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 		}
 
 		path := o.conf.Conf.GetString("file.path")
-		// todo 写入文件中,md5表明是否变化
+		//写入文件中,md5表明是否变化
 		_, err = tool.WriteFile(path, fileName, decodeString)
 		if err != nil {
 			o.log.ErrorWithContext(ctx, "写入文件失败，err:%+v", err)

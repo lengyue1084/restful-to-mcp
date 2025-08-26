@@ -4,6 +4,7 @@ import (
 	"context"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
+	"flow-bridge-mcp/pkg/tool"
 )
 
 type McpFileRepo interface {
@@ -34,9 +35,12 @@ func (m *McpFileUserCase) GetMcpFileInfoByMd5(ctx context.Context, fileMd5 strin
 
 func (m *McpFileUserCase) CreateMcpFile(ctx context.Context, fileName, sourceName, suffix, contentMd5Str, description string) (err error) {
 
+	if fileName == "" {
+		fileName = tool.FileNameByUUid()
+	}
 	mcpFile := model.McpFile{
 		Name:        fileName,
-		SourceName:  fileName,
+		SourceName:  sourceName,
 		Md5:         contentMd5Str,
 		Description: description,
 		Suffix:      suffix,
