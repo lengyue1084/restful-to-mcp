@@ -6,6 +6,7 @@ import (
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
+	"gorm.io/gorm/clause"
 )
 
 var _ biz.McpToolsRepo = (*McpToolsRepo)(nil)
@@ -23,7 +24,11 @@ func NewMcpToolsRepo(data *database.Data, log *logger.Logger) biz.McpToolsRepo {
 }
 
 func (m *McpToolsRepo) Create(ctx context.Context, mcpToolInfo *model.McpTools) (err error) {
-
+	err = m.data.Db.WithContext(ctx).Create(mcpToolInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "create mcp tools error: %v", err)
+		return
+	}
 	return
 }
 
@@ -35,16 +40,40 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 	}
 
 	// 1、批量删除本次没有包含的工具
-	err = db.Where("mcp_server_id = ? and uuid = ? and name in (?)", mcpServerId, uuid, allTools).
+	err = db.WithContext(ctx).Where("mcp_server_id = ? and uuid = ? and name not in ?", mcpServerId, uuid, allTools).
 		Delete(&model.McpTools{}).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch delete error: %v", err)
 		return
 	}
-
-	// 2、本次包含的工具，更新操作
-	// 3、本次没有包含的工具，插入操作
-	err = db.WithContext(ctx).Create(mcpToolInfo).Error
-
+	// 2、查询工具是否存在，如果不存在的插入、如果存在的更新
+	err = db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "mcp_server_id"},
+			{Name: "uuid"},
+			{Name: "name"},
+		},
+		DoUpdates: clause.AssignmentColumns([]string{"id",
+			"description",
+			"mcp_server_type",
+			"method",
+			"endpoint",
+			"headers",
+			"args",
+			"request_body",
+			"response_body",
+			"input_schema",
+			"annotations",
+			"security",
+			"is_auth",
+			"auth_mode",
+			"is_platform_auth",
+			"is_show",
+		}),
+	}).CreateInBatches(mcpToolInfo, 100).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)
+		return
+	}
 	return
 }
