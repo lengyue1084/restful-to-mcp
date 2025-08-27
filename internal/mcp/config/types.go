@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flow-bridge-mcp/pkg/tool"
 	"time"
 )
 
@@ -113,12 +114,13 @@ type ToolConfig struct {
 	// 响应体内容
 	ResponseBody string `json:"responseBody"`
 	// 输入模式
-	InputSchema map[string]any `json:"inputSchema,omitempty"`
+	InputSchema ToolSchema `json:"inputSchema,omitempty"`
 	// 注解信息
 	Annotations map[string]any `json:"annotations,omitempty"`
 	//是否需要认证，为原有接口的鉴权
-	Security     *Security `json:"security"`
-	SecurityMode AuthMode  `json:"securityMode"`
+	Security *Security `json:"security"`
+	// 认证模式
+	SecurityMode AuthMode `json:"securityMode"`
 	// 认证级别
 	SecurityLevel SecurityLevel `json:"authLevel"` // 1 api，2 path 3 doc
 	// 是否显示,如果不符合认证信息，则不显示
@@ -176,68 +178,100 @@ type ItemsConfig struct {
 	Required []string `json:"required,omitempty" yaml:"required,omitempty"`
 }
 
-//// ToToolSchema 将 ToolConfig 转换为 ToolSchema
-//func (t *ToolConfig) ToToolSchema() ToolSchema {
-//	// 创建输入模式的属性映射
-//	properties := make(map[string]any)
-//	// 存储必填参数名称列表
-//	required := make([]string, 0)
-//	// 遍历所有参数，构建属性映射
-//	for _, arg := range t.Args {
-//		property := map[string]any{
-//			"type":        arg.Type,
-//			"description": arg.Description,
-//		}
-//
-//		// 如果参数类型为数组，处理数组子项配置
-//		if arg.Type == "array" {
-//			items := make(map[string]any)
-//			if len(arg.Items.Enum) > 0 {
-//				items["enum"] = tool.Union(arg.Items.Enum)
-//			} else {
-//				items["type"] = arg.Items.Type
-//				// 如果子项是对象类型，递归处理其属性
-//				if arg.Items.Properties != nil {
-//					items["properties"] = arg.Items.Properties
-//				}
-//			}
-//			property["items"] = items
-//		}
-//
-//		properties[arg.Name] = property
-//		// 如果参数是必填的，将其名称添加到必填列表中
-//		if arg.Required {
-//			required = append(required, arg.Name)
-//		}
-//	}
-//
-//	// 如果存在已有的输入模式，将其合并到属性映射中
-//	if t.InputSchema != nil {
-//		for k, v := range t.InputSchema {
-//			properties[k] = v
-//		}
-//	}
-//	var annotations *ToolAnnotations
-//	// 如果存在注解信息，解析注解
-//	if t.Annotations != nil {
-//		annotations = &ToolAnnotations{
-//			Title:           tool.GetString(t.Annotations, "title", ""),
-//			DestructiveHint: tool.GetBool(t.Annotations, "destructiveHint", true),
-//			IdempotentHint:  tool.GetBool(t.Annotations, "idempotentHint", false),
-//			OpenWorldHint:   tool.GetBool(t.Annotations, "openWorldHint", true),
-//			ReadOnlyHint:    tool.GetBool(t.Annotations, "readOnlyHint", false),
-//		}
-//	}
-//
-//	// 返回转换后的 ToolSchema
-//	return ToolSchema{
-//		Name:        t.Name,
-//		Description: t.Description,
-//		InputSchema: ToolInputSchema{
-//			Type:       "object",
-//			Properties: properties,
-//			Required:   required,
-//		},
-//		Annotations: annotations,
-//	}
-//}
+// // ToToolSchema 将 ToolConfig 转换为 ToolSchema
+func (t *ToolConfig) ToToolSchema() ToolSchema {
+	// 创建输入模式的属性映射
+	properties := make(map[string]any)
+	// 存储必填参数名称列表
+	required := make([]string, 0)
+	// 遍历所有参数，构建属性映射
+	for _, arg := range t.Args {
+		property := map[string]any{
+			"type":        arg.Type,
+			"description": arg.Description,
+		}
+
+		// 如果参数类型为数组，处理数组子项配置
+		if arg.Type == "array" {
+			items := make(map[string]any)
+			if len(arg.Items.Enum) > 0 {
+				items["enum"] = tool.Union(arg.Items.Enum)
+			} else {
+				items["type"] = arg.Items.Type
+				// 如果子项是对象类型，递归处理其属性
+				if arg.Items.Properties != nil {
+					items["properties"] = arg.Items.Properties
+				}
+			}
+			property["items"] = items
+		}
+
+		properties[arg.Name] = property
+		// 如果参数是必填的，将其名称添加到必填列表中
+		if arg.Required {
+			required = append(required, arg.Name)
+		}
+	}
+
+	// 如果存在已有的输入模式，将其合并到属性映射中
+	//if t.InputSchema != nil {
+	//	for k, v := range t.InputSchema {
+	//		properties[k] = v
+	//	}
+	//}
+	var annotations *ToolAnnotations
+	// 如果存在注解信息，解析注解
+	if t.Annotations != nil {
+		annotations = &ToolAnnotations{
+			Title:           tool.GetString(t.Annotations, "title", ""),
+			DestructiveHint: tool.GetBool(t.Annotations, "destructiveHint", true),
+			IdempotentHint:  tool.GetBool(t.Annotations, "idempotentHint", false),
+			OpenWorldHint:   tool.GetBool(t.Annotations, "openWorldHint", true),
+			ReadOnlyHint:    tool.GetBool(t.Annotations, "readOnlyHint", false),
+		}
+	}
+
+	// 返回转换后的 ToolSchema
+	return ToolSchema{
+		Name:        t.Name,
+		Description: t.Description,
+		InputSchema: ToolInputSchema{
+			Type:       "object",
+			Properties: properties,
+			Required:   required,
+		},
+		Annotations: annotations,
+	}
+}
+
+type (
+	// ToolSchema represents a tool definition
+	ToolSchema struct {
+		// The name of the tool
+		Name string `json:"name"`
+		// A human-readable description of the tool
+		Description string `json:"description"`
+		// A JSON Schema object defining the expected parameters for the tool
+		InputSchema ToolInputSchema `json:"inputSchema"`
+		// Annotations for the tool
+		Annotations *ToolAnnotations `json:"annotations,omitempty"`
+	}
+
+	// https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2025-03-26/schema.json
+	ToolAnnotations struct {
+		DestructiveHint bool `json:"destructiveHint,omitempty"`
+		IdempotentHint  bool `json:"idempotentHint,omitempty"`
+		OpenWorldHint   bool `json:"openWorldHint,omitempty"`
+		ReadOnlyHint    bool `json:"readOnlyHint,omitempty"`
+		// A human-readable title for the tool.
+		Title string `json:"title,omitempty"`
+	}
+
+	ToolInputSchema struct {
+		Type       string         `json:"type"`
+		Properties map[string]any `json:"properties"`
+		Required   []string       `json:"required,omitempty"`
+		Title      string         `json:"title"`
+		Enum       []any          `json:"enum,omitempty"`
+	}
+)
