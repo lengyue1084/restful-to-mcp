@@ -285,8 +285,10 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 		pathSecurityKey   = docSecuritykey
 		isShow            = false
 	)
+
 	// 将文档中的路径转换为工具配置
 	for path, pathItem := range paths.Map() {
+
 		isShow = false
 		// 为每个 HTTP 方法创建一个工具配置
 		for method, operation := range pathItem.Operations() {
@@ -415,13 +417,20 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 								if refSchema, ok := components.Schemas[refName]; ok {
 									schema = refSchema.Value
 								}
+								// 处理数组类型
+							} else if schema.Type != nil && len(schema.Type.Slice()) > 0 && schema.Type.Slice()[0] == "array" {
+								if schema.Items != nil && schema.Items.Value != nil {
+									refName := strings.TrimPrefix(schema.Items.Ref, "#/components/schemas/")
+									if refSchema, ok := components.Schemas[refName]; ok {
+										schema = refSchema.Value
+									}
+								}
 							}
 
-							// 如果 schema 有属性定义
-							if schema.Properties != nil {
+							if schema.Properties != nil { // 如果 schema 有属性定义
 								for name, prop := range schema.Properties {
 									// 跳过响应专用字段
-									if strings.HasPrefix(name, "response") || name == "id" || name == "createdAt" {
+									if strings.HasPrefix(name, "response") || name == "createdAt" {
 										continue
 									}
 
@@ -455,7 +464,11 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 								}
 							}
 						}
+					} else { //其他类型的不显示，比如multipart/form-data、application/x-www-form-urlencoded、text/plain、application/octet-stream
+						tool.IsShow = false
+						tool.ContentType = contentType
 					}
+					break
 				}
 			}
 
@@ -487,6 +500,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				bodyTemplate.WriteString("}")
 				tool.RequestBody = bodyTemplate.String()
 			}
+			tool.InputSchema = tool.ToToolSchema()
 
 			toolsSlice = append(toolsSlice, tool)
 			// 将工具配置添加到 MCP 配置中
@@ -576,34 +590,6 @@ func (c *Converter) ConvertFromJSON(ctx context.Context, jsonData []byte) (*conf
 func (c *Converter) ConvertFromYAML(ctx context.Context, yamlData []byte) (*config.MCPServer, error) {
 	return c.Convert(ctx, yamlData)
 }
-
-// ConvertWithOptions 将 OpenAPI 规范转换为 MCP 配置，可指定租户和前缀
-// 参数 specData 为 OpenAPI 规范的字节数据
-// 参数 tenant 为租户名称
-// 参数 prefix 为前缀
-// 返回 MCP 配置指针和可能出现的错误
-//func (c *Converter) ConvertWithOptions(ctx context.Context, specData []byte, tenant, prefix string) (*config.MCPServer, error) {
-//	config, err := c.Convert(ctx, specData)
-//	if err != nil {
-//		return nil, err
-//	}
-//	// 去除前缀前的斜杠
-//	cleanPrefix := strings.TrimPrefix(prefix, "/")
-//	if tenant != "" && prefix != "" {
-//		if len(config.Routers) > 0 {
-//			// 生成一个 4 位的随机字符串
-//			rs := tool.RandStringByLen(4)
-//			config.Routers[0].Prefix = "/" + cleanPrefix + "/" + rs
-//		}
-//	} else if tenant != "" {
-//		if len(config.Routers) > 0 {
-//			// 自动生成前缀，逻辑与默认逻辑相同
-//			rs := tool.RandStringByLen(4)
-//			config.Routers[0].Prefix = "/" + rs
-//		}
-//	}
-//	return config, nil
-//}
 
 // contains 检查字符串是否在字符串切片中
 // 参数 slice 为字符串切片
