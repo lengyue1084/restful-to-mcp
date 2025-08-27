@@ -22,7 +22,7 @@ func NewOpenapiService(uc *biz.OpenapiUseCase, log *logger.Logger) *OpenapiServi
 }
 
 func (o *OpenapiService) Upload(c *gin.Context) {
-	var req *api.ServerInfoRequest
+	var req *api.OpenapiUploadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, "参数错误", nil)
 		return

@@ -81,6 +81,30 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 	return int64(serverMcpInfoId), nil
 }
 
+func (m *McpServerRepo) GetMcpServerInfoByID(ctx context.Context, id int64) (mcpServerInfo *model.McpServer, err error) {
+
+	err = m.data.Db.WithContext(ctx).Where("id = ?", id).
+		Preload("Tools").
+		Find(&mcpServerInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	return
+}
+
+func (m *McpServerRepo) GetMcpServerInfoByUUID(ctx context.Context, id string) (mcpServerInfo *model.McpServer, err error) {
+
+	err = m.data.Db.WithContext(ctx).Where("uuid = ?", id).
+		Preload("Tools").
+		Find(&mcpServerInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	return
+}
+
 func (m *McpServerRepo) UpdateByUUID(ctx context.Context, serverInfo *model.McpServer) (err error) {
 	return
 }

@@ -44,7 +44,7 @@ func NewOpenapiUserCase(
 	}
 }
 
-func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest) (resp *api.ServerInfoResponse, err error) {
+func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadRequest) (resp *api.OpenapiUploadResponse, err error) {
 
 	var decodeString []byte
 	uuidStr := req.UUID

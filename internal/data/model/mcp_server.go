@@ -2,7 +2,7 @@ package model
 
 type McpServer struct {
 	BaseModel
-	UUID          string          `json:"uuid" gorm:"column:uuid;type:varchar(36);not null;default:'';comment:服务器唯一标识"`
+	UUID          string          `json:"uuid" gorm:"column:uuid;uniqueIndex:idx_uuid_unique;type:varchar(36);not null;default:'';comment:服务器唯一标识"`
 	Name          string          `json:"name" gorm:"column:name;type:varchar(500);not null;default:'';comment:服务器名称"`
 	Description   string          `json:"description" gorm:"column:description;type:text;default:'';comment:服务器详细描述"`
 	Urls          string          `json:"urls" gorm:"column:urls;type:varchar(255);not null;default:'';comment:服务器访问地址"`
@@ -13,8 +13,9 @@ type McpServer struct {
 	ServiceToken  string          `json:"serviceToken" gorm:"column:service_token;type:text;default:'';comment:服务认证Token，用于访问用户提供的接口"`
 	PlatformToken string          `json:"platformToken" gorm:"column:platform_token;type:text;default:'';comment:平台认证Token，平台添加的认证令牌"`
 
-	Security string `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"` //认证的原始信息
-	Status   Status `json:"status" gorm:"column:status;type:SMALLINT;default:1;comment:服务器状态,0未知，1正常，2非正常状态，如实没有上架"`
+	Security string      `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"` //认证的原始信息
+	Status   Status      `json:"status" gorm:"column:status;type:SMALLINT;default:1;comment:服务器状态,0未知，1正常，2非正常状态，如实没有上架"`
+	Tools    []*McpTools `json:"tools" gorm:"foreignKey:McpServerId"`
 }
 
 func (m *McpServer) TableName() string {
