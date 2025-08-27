@@ -6,7 +6,7 @@ type McpServer struct {
 	Name          string          `json:"name" gorm:"column:name;type:varchar(500);not null;default:'';comment:服务器名称"`
 	Description   string          `json:"description" gorm:"column:description;type:text;default:'';comment:服务器详细描述"`
 	Urls          string          `json:"urls" gorm:"column:urls;type:varchar(255);not null;default:'';comment:服务器访问地址"`
-	AllowedTools  string          `json:"allowedTools" gorm:"column:allowed_tools;type:text;default:'';comment:允许使用的工具列表，JSON格式存储"`
+	AllTools      string          `json:"allTools" gorm:"column:all_tools;type:text;default:'';comment:允许使用的工具列表，JSON格式存储"`
 	Version       string          `json:"version" gorm:"column:version;type:varchar(20);default:v1.0.0;comment:OpenAPI版本号"`
 	HaveTools     HaveToolsStatus `json:"haveTools" gorm:"column:have_tools;type:SMALLINT;default:1;comment:服务器是否支持工具,0未知，1 不支持，2支持"`
 	IsAuth        AuthStatus      `json:"isAuth" gorm:"column:is_auth;type:SMALLINT;default:1;comment:服务器是否需要认证,如果开启全局认证，则所有的方法都需要认证,0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权"`

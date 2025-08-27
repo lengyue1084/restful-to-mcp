@@ -205,6 +205,10 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		c.log.ErrorWithContext(ctx, "failed to convert OpenAPI paths to MCP tools: %w", err)
 		return nil, err
 	}
+	var allTools []string
+	for _, tool := range toolsSlice {
+		allTools = append(allTools, tool.Name)
+	}
 
 	//serverTitle := strings.ReplaceAll(serverName, " ", "")
 	// 创建服务器配置
@@ -219,6 +223,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		Tools:        toolsSlice,
 		Version:      info.Version,
 		SecurityList: authSecuritySchemes,
+		AllTools:     allTools,
 	}
 
 	return server, nil
@@ -501,12 +506,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				tool.RequestBody = bodyTemplate.String()
 			}
 			tool.InputSchema = tool.ToToolSchema()
-
 			toolsSlice = append(toolsSlice, tool)
-			// 将工具配置添加到 MCP 配置中
-			//mcpConfig.Tools = append(mcpConfig.Tools, tool)
-			//// 将工具名称添加到服务器允许的工具列表中
-			//server.AllowedTools = append(server.AllowedTools, tool.Name)
 		}
 	}
 	return toolsSlice, nil

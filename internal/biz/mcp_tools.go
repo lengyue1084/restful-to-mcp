@@ -7,4 +7,5 @@ import (
 
 type McpToolsRepo interface {
 	Create(ctx context.Context, mcpToolInfo *model.McpTools) (err error)
+	CreateMcpToolsBatch(ctx context.Context, mcpServerId int64, uuid string, allTools []string, mcpToolInfo []*model.McpTools) (err error)
 }

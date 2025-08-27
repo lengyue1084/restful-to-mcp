@@ -109,19 +109,20 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 		return nil, err
 	}
 	var tools []string
+	isHaveTools := false
 	for _, val := range mcpInfo.Tools {
 		if val.IsShow {
-			tools = append(tools, val.Name)
+			isHaveTools = true
 		}
-
+		tools = append(tools, val.Name)
 	}
-	allowedTools, err := json.Marshal(tools)
+	allTools, err := json.Marshal(tools)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "mcpConfig.Tools allowedTools json转换错误，err:%+v", err)
 		return nil, err
 	}
 	haveTools := model.HaveToolsNo
-	if len(tools) > 0 {
+	if isHaveTools {
 		haveTools = model.HaveToolsYes
 	}
 	security, err := json.Marshal(mcpInfo.SecurityList)
@@ -136,13 +137,14 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 			Name:          req.Name,
 			Description:   req.Description,
 			Urls:          string(serverUrls),
-			AllowedTools:  string(allowedTools),
+			AllTools:      string(allTools),
 			Version:       mcpInfo.Version,
 			HaveTools:     haveTools,
 			IsAuth:        model.IsAuthNo, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
 			ServiceToken:  "",
 			PlatformToken: "",
 			Security:      string(security),
+			Status:        model.StatusHidden,
 		}
 		mcpServerId, err := o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
@@ -170,9 +172,23 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 			if val.SecurityLevel == config.SecurityLevelPublic {
 				isAuth = model.IsAuthNo
 			}
-			//inputSchema:=
+			inputSchema := ""
+			if val.InputSchema != nil {
+				inputSchemaByte, err := json.Marshal(val.InputSchema)
+				if err != nil {
+					o.log.ErrorWithContext(ctx, "mcpConfig.Tools.InputSchema json转换错误，err:%+v", err)
+					return fmt.Errorf("mcpConfig.Tools.InputSchema json转换错误")
+				}
+				inputSchema = string(inputSchemaByte)
+			}
+			isShow := model.StatusDisplay
+			if !val.IsShow {
+				isShow = model.StatusHidden
+			}
+
 			var toolInfo = &model.McpTools{
 				McpServerId:    mcpServerId,
+				UUID:           req.UUID,
 				Name:           val.Name,
 				Description:    val.Description,
 				McpServerType:  model.McpServerTypeOpenapi,
@@ -182,12 +198,13 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 				Args:           string(args),
 				RequestBody:    val.RequestBody,
 				ResponseBody:   val.ResponseBody,
-				InputSchema:    "",
-				Annotations:    "",
+				InputSchema:    inputSchema,
+				Annotations:    "", //暂时不做支持，如果需要可以考虑后期支持
 				Security:       string(toolSecurity),
 				IsAuth:         isAuth,
 				AuthMode:       val.SecurityMode.String(),
 				IsPlatformAuth: model.IsAuthNo, //默认不启用平台权限控制
+				IsShow:         isShow,
 			}
 			mcpTools = append(mcpTools, toolInfo)
 

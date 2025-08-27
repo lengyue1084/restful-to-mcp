@@ -83,7 +83,7 @@ type MCPServer struct {
 	Tools        []*ToolConfig     `json:"tools,omitempty" yaml:"tools,omitempty"`
 	Version      string            `json:"version"`
 	SecurityList []*Security       `json:"securityList"` //
-
+	AllTools     []string          `json:"allTools"`
 	//CORS        CORSConfig `json:"cors"` //暂时不考虑
 }
 
@@ -114,7 +114,7 @@ type ToolConfig struct {
 	// 响应体内容
 	ResponseBody string `json:"responseBody"`
 	// 输入模式
-	InputSchema ToolSchema `json:"inputSchema,omitempty"`
+	InputSchema *ToolSchema `json:"inputSchema,omitempty"`
 	// 注解信息
 	Annotations map[string]any `json:"annotations,omitempty"`
 	//是否需要认证，为原有接口的鉴权
@@ -179,7 +179,7 @@ type ItemsConfig struct {
 }
 
 // // ToToolSchema 将 ToolConfig 转换为 ToolSchema
-func (t *ToolConfig) ToToolSchema() ToolSchema {
+func (t *ToolConfig) ToToolSchema() *ToolSchema {
 	// 创建输入模式的属性映射
 	properties := make(map[string]any)
 	// 存储必填参数名称列表
@@ -232,7 +232,7 @@ func (t *ToolConfig) ToToolSchema() ToolSchema {
 	}
 
 	// 返回转换后的 ToolSchema
-	return ToolSchema{
+	return &ToolSchema{
 		Name:        t.Name,
 		Description: t.Description,
 		InputSchema: ToolInputSchema{

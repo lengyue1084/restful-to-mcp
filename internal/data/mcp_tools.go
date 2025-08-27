@@ -26,3 +26,25 @@ func (m *McpToolsRepo) Create(ctx context.Context, mcpToolInfo *model.McpTools) 
 
 	return
 }
+
+func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int64, uuid string, allTools []string, mcpToolInfo []*model.McpTools) (err error) {
+	db, err := m.data.GetDb(ctx)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch get tx error: %v", err)
+		return
+	}
+
+	// 1、批量删除本次没有包含的工具
+	err = db.Where("mcp_server_id = ? and uuid = ? and name in (?)", mcpServerId, uuid, allTools).
+		Delete(&model.McpTools{}).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch delete error: %v", err)
+		return
+	}
+
+	// 2、本次包含的工具，更新操作
+	// 3、本次没有包含的工具，插入操作
+	err = db.WithContext(ctx).Create(mcpToolInfo).Error
+
+	return
+}
