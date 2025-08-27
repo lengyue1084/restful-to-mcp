@@ -6,7 +6,6 @@ import (
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
-	"gorm.io/gorm/clause"
 )
 
 var _ biz.McpToolsRepo = (*McpToolsRepo)(nil)
@@ -47,33 +46,33 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 		return
 	}
 	// 2、查询工具是否存在，如果不存在的插入、如果存在的更新
-	err = db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{
-			{Name: "mcp_server_id"},
-			{Name: "uuid"},
-			{Name: "name"},
-		},
-		DoUpdates: clause.AssignmentColumns([]string{"id",
-			"description",
-			"mcp_server_type",
-			"method",
-			"endpoint",
-			"headers",
-			"args",
-			"request_body",
-			"response_body",
-			"input_schema",
-			"annotations",
-			"security",
-			"is_auth",
-			"auth_mode",
-			"is_platform_auth",
-			"is_show",
-		}),
-	}).CreateInBatches(mcpToolInfo, 100).Error
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)
-		return
+	// 然后单独更新已存在的记录
+	for _, tool := range mcpToolInfo {
+		var mcpTool model.McpTools
+		err = db.WithContext(ctx).Model(&model.McpTools{}).
+			Where("mcp_server_id = ? AND uuid = ? AND name = ?",
+				tool.McpServerId, tool.UUID, tool.Name).
+			Find(&mcpTool).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find error: %v", err)
+			return
+		}
+		if mcpTool.ID == 0 {
+			// 插入
+			err = db.WithContext(ctx).Create(tool).Error
+			if err != nil {
+				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)
+				return
+			}
+			continue
+		}
+		err = db.WithContext(ctx).Model(&model.McpTools{}).
+			Where("id = ?", mcpTool.ID).
+			Updates(tool).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch update error: %v", err)
+			return
+		}
 	}
 	return
 }

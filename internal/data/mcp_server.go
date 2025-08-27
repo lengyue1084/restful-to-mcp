@@ -57,6 +57,7 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
 		return
 	}
+	var serverMcpInfoId = serverMcpInfo.ID
 	if serverMcpInfo.ID > 0 {
 		//更新
 		err = db.WithContext(ctx).
@@ -75,8 +76,9 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 			m.log.ErrorWithContext(ctx, "create mcp server error: %v", err)
 			return
 		}
+		serverMcpInfoId = serverInfo.ID
 	}
-	return int64(serverInfo.ID), nil
+	return int64(serverMcpInfoId), nil
 }
 
 func (m *McpServerRepo) UpdateByUUID(ctx context.Context, serverInfo *model.McpServer) (err error) {

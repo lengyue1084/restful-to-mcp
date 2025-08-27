@@ -93,7 +93,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 			o.log.ErrorWithContext(ctx, "更新McpFile失败，err:%+v", err)
 			return nil, errors.New("更新McpFile失败")
 		}
-
 	}
 
 	mcpInfo, err := o.transformer.Convert(ctx, decodeString)
@@ -209,8 +208,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.ServerInfoRequest)
 			mcpTools = append(mcpTools, toolInfo)
 
 		}
-
-		return err
+		return o.mcpToolsRepo.CreateMcpToolsBatch(ctx, mcpServerId, req.UUID, tools, mcpTools)
 	})
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "创建McpServer失败，err:%+v", err)
