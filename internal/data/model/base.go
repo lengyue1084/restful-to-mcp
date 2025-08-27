@@ -16,6 +16,7 @@ type (
 	AuthStatus          int8
 	HaveToolsStatus     int8
 	McpServerTypeStatus int8
+	Status              int8
 )
 
 const (
@@ -25,7 +26,24 @@ const (
 	HaveToolsYes         HaveToolsStatus     = 2
 	McpServerTypeOpenapi McpServerTypeStatus = 1
 	McpServerTypeGrpc    McpServerTypeStatus = 2
+
+	// StatusDisplay 通用的是否显示
+	StatusDisplay Status = 1
+	StatusHidden  Status = 2
 )
+
+func (s Status) String() string {
+
+	switch s {
+	case StatusDisplay:
+		return "显示"
+	case StatusHidden:
+		return "隐藏"
+	default:
+		return "未知"
+
+	}
+}
 
 func (a AuthStatus) String() string {
 	switch a {
@@ -59,3 +77,9 @@ func (m McpServerTypeStatus) String() string {
 		return "未知"
 	}
 }
+
+type contextKey string
+
+const (
+	TxKey contextKey = "tx"
+)
