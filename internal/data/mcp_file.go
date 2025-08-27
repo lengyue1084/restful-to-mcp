@@ -40,8 +40,8 @@ func (m *McpFileRepo) GetMcpFileInfoByMd5(ctx context.Context, md5 string) (mcpF
 	return
 }
 
-func (m *McpFileRepo) UpdateMcpFileById(ctx context.Context, serverInfo *model.McpFile) (err error) {
-	err = m.data.Db.WithContext(ctx).Where("id = ?", serverInfo.ID).Updates(serverInfo).Error
+func (m *McpFileRepo) UpdateMcpFileById(ctx context.Context, id int64, serverInfo *model.McpFile) (err error) {
+	err = m.data.Db.WithContext(ctx).Where("id = ?", id).Updates(serverInfo).Error
 	if err != nil {
 		m.log.Errorf("update mcp file error: %v", err)
 		return err

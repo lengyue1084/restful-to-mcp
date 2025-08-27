@@ -10,7 +10,7 @@ import (
 type McpFileRepo interface {
 	Create(ctx context.Context, McpFileInfo *model.McpFile) (err error)
 	GetMcpFileInfoByMd5(ctx context.Context, md5 string) (mcpFileInfo *model.McpFile, err error)
-	UpdateMcpFileById(ctx context.Context, serverInfo *model.McpFile) (err error)
+	UpdateMcpFileById(ctx context.Context, id int64, serverInfo *model.McpFile) (err error)
 }
 type McpFileUserCase struct {
 	mfRepo McpFileRepo
@@ -53,15 +53,15 @@ func (m *McpFileUserCase) CreateMcpFile(ctx context.Context, fileName, sourceNam
 	return
 }
 
-func (m *McpFileUserCase) UpdateMcpFile(ctx context.Context, fileName, suffix, contentMd5Str, description string) (err error) {
+func (m *McpFileUserCase) UpdateMcpFile(ctx context.Context, id int64, fileName, suffix, contentMd5Str, description string) (err error) {
 
-	mcpFile := model.McpFile{
+	mcpFile := &model.McpFile{
 		SourceName:  fileName,
 		Md5:         contentMd5Str,
 		Description: description,
 		Suffix:      suffix,
 	}
-	err = m.mfRepo.UpdateMcpFileById(ctx, &mcpFile)
+	err = m.mfRepo.UpdateMcpFileById(ctx, id, mcpFile)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "创建McpFile失败，err:%+v", err)
 		return err
