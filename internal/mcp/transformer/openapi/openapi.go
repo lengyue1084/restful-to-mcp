@@ -413,6 +413,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 					if contentType == "application/json" { //只处理application/json，过滤其他类型包括二进制文件的类型
 						tool.RequestBody = contentType
 						tool.ContentType = contentType
+						tool.IsShow = true
 						// 添加请求体参数
 						if contentValue.Schema != nil {
 							schema := contentValue.Schema.Value
@@ -469,11 +470,12 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 								}
 							}
 						}
+						break
 					} else { //其他类型的不显示，比如multipart/form-data、application/x-www-form-urlencoded、text/plain、application/octet-stream
 						tool.IsShow = false
-						tool.ContentType = contentType
+						tool.ContentType = contentType //如果非application/json，则取最后一次的类型
 					}
-					break
+
 				}
 			}
 
@@ -505,7 +507,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				bodyTemplate.WriteString("}")
 				tool.RequestBody = bodyTemplate.String()
 			}
-			tool.InputSchema = tool.ToToolSchema()
+			tool.ToolSchema = tool.ToToolSchema()
 			toolsSlice = append(toolsSlice, tool)
 		}
 	}
