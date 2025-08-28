@@ -23,8 +23,8 @@ func NewRouter(
 	// 作为api服务对外提供服务
 	router = router.Group("/v1")
 	{
-		//router.GET("/", HomeServer.Index)
 		router.POST("/openapi/upload", OpenapiService.Upload)
+		router.POST("/openapi/updateForAuth", OpenapiService.UpdateForAuth)
 	}
 
 	return app.app

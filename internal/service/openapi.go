@@ -40,3 +40,7 @@ func (o *OpenapiService) Upload(c *gin.Context) {
 	}
 	response.Success(c, "创建成功", resp)
 }
+
+func (o *OpenapiService) UpdateForAuth(c *gin.Context) {
+
+}

@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/pkg/const"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +26,7 @@ func (t *transaction) ExecTx(ctx context.Context, fn func(ctx context.Context) e
 	// 在GORM事务中执行函数，确保数据库操作的原子性
 	err = t.data.Db.Transaction(func(tx *gorm.DB) error {
 		// 将事务对象存储到上下文中，以便在fn函数中可以通过上下文获取事务对象进行数据库操作
-		ctx = context.WithValue(ctx, model.TxKey, tx)
+		ctx = context.WithValue(ctx, _const.TxKey, tx)
 		return fn(ctx)
 
 	})

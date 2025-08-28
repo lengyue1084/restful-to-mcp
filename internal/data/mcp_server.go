@@ -5,6 +5,7 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 )
 
@@ -37,7 +38,7 @@ func (m *McpServerRepo) GetMcpServerInfo(ctx context.Context, UUID string) (serv
 		m.log.ErrorWithContext(ctx, "get tx error: %v", err)
 		return
 	}
-	err = db.WithContext(ctx).Where("uuid = ? and status = ?", UUID, model.StatusHidden).Find(&serverInfo).Error
+	err = db.WithContext(ctx).Where("uuid = ? and status = ?", UUID, _const.StatusHidden).Find(&serverInfo).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
 		return
@@ -52,7 +53,7 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 		return
 	}
 	var serverMcpInfo model.McpServer
-	err = db.WithContext(ctx).Where("uuid = ? and status = ?", serverInfo.UUID, model.StatusHidden).Find(&serverMcpInfo).Error
+	err = db.WithContext(ctx).Where("uuid = ? and status = ?", serverInfo.UUID, _const.StatusHidden).Find(&serverMcpInfo).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
 		return

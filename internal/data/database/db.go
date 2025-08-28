@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -24,7 +24,7 @@ func NewData(db *gorm.DB, redis *redis.Client, log *logger.Logger) (*Data, func(
 
 // GetDb biz 层开启事务可以使用该方法获取同一个tx对象，避免多表操作时，tx对象不一致
 func (m *Data) GetDb(ctx context.Context) (db *gorm.DB, err error) {
-	if tx, ok := ctx.Value(model.TxKey).(*gorm.DB); ok {
+	if tx, ok := ctx.Value(_const.TxKey).(*gorm.DB); ok {
 		return tx, nil
 	}
 	return nil, fmt.Errorf("tx is not exist")

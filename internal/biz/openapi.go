@@ -9,6 +9,7 @@ import (
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/internal/mcp/config"
 	"flow-bridge-mcp/internal/mcp/transformer"
+	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
@@ -120,9 +121,9 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "mcpConfig.Tools allowedTools json转换错误，err:%+v", err)
 		return nil, err
 	}
-	haveTools := model.HaveToolsNo
+	haveTools := _const.HaveToolsNo
 	if isHaveTools {
-		haveTools = model.HaveToolsYes
+		haveTools = _const.HaveToolsYes
 	}
 	security, err := json.Marshal(mcpInfo.SecurityList)
 	if err != nil {
@@ -140,11 +141,11 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			AllTools:      string(allTools),
 			Version:       mcpInfo.Version,
 			HaveTools:     haveTools,
-			IsAuth:        model.IsAuthNo, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
+			IsAuth:        _const.IsAuthNo, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
 			ServiceToken:  "",
 			PlatformToken: "",
 			Security:      string(security),
-			Status:        model.StatusHidden,
+			Status:        _const.ServerNotSetToken,
 		}
 		mcpServerId, err = o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
@@ -168,9 +169,9 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				o.log.ErrorWithContext(ctx, "mcpConfig.Tools.Security json转换错误，err:%+v", err)
 				return fmt.Errorf("mcpConfig.Tools.Security json转换错误")
 			}
-			isAuth := model.IsAuthYes
+			isAuth := _const.IsAuthYes
 			if val.SecurityLevel == config.SecurityLevelPublic {
-				isAuth = model.IsAuthNo
+				isAuth = _const.IsAuthNo
 			}
 			toolSchema := ""
 			if val.ToolSchema != nil {
@@ -181,9 +182,9 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				}
 				toolSchema = string(inputSchemaByte)
 			}
-			isShow := model.StatusDisplay
+			isShow := _const.StatusDisplay
 			if !val.IsShow {
-				isShow = model.StatusHidden
+				isShow = _const.StatusHidden
 			}
 
 			var toolInfo = &model.McpTools{
@@ -191,7 +192,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				UUID:           req.UUID,
 				Name:           val.Name,
 				Description:    val.Description,
-				McpServerType:  model.McpServerTypeOpenapi,
+				McpServerType:  _const.McpServerTypeOpenapi,
 				Method:         val.Method,
 				Endpoint:       val.Endpoint,
 				Headers:        string(headers),
@@ -203,7 +204,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				Security:       string(toolSecurity),
 				IsAuth:         isAuth,
 				AuthMode:       val.SecurityMode.String(),
-				IsPlatformAuth: model.IsAuthNo, //默认不启用平台权限控制
+				IsPlatformAuth: _const.IsAuthNo, //默认不启用平台权限控制
 				IsShow:         isShow,
 			}
 			mcpTools = append(mcpTools, toolInfo)
