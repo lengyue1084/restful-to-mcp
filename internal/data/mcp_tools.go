@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
@@ -71,6 +72,23 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 			Updates(tool).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch update error: %v", err)
+			return
+		}
+	}
+	return
+}
+
+func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string, tools []*api.Tools) (err error) {
+	db, err := m.data.GetDb(ctx)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "UpdateToolsForAuthWithTx get tx error: %v", err)
+	}
+	for _, tool := range tools {
+		err = db.WithContext(ctx).Model(&model.McpTools{}).
+			Where("id = ?", tool.ID).
+			Update("is_platform_auth", tool.IsAuth).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "UpdateToolsForAuthWithTx update error: %v", err)
 			return
 		}
 	}

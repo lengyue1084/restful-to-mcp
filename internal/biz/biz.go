@@ -9,6 +9,7 @@ import (
 var ProviderSet = wire.NewSet(
 	NewOpenapiUserCase,
 	NewMcpFileUserCase,
+	NewMcpServerUseCase,
 )
 
 type Transaction interface {

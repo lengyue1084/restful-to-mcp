@@ -101,8 +101,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "数据转换错误，err:%+v", err)
 		return nil, err
 	}
-	fmt.Printf("%+v", mcpInfo)
-	//todo 如果文件存，则查询server服务
 	serverUrls, err := json.Marshal(mcpInfo.Urls)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "mcpConfig.Urls json转换错误，err:%+v", err)
@@ -132,7 +130,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	}
 
 	var mcpServerId = int64(0)
-	err = o.Tx.ExecTx(ctx, func(ctx context.Context) error {
+	err = o.Tx.ExecTx(ctx, func(ctx context.Context) (err error) {
 		var serverInfo = &model.McpServer{
 			UUID:          req.UUID,
 			Name:          req.Name,
@@ -210,7 +208,12 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			mcpTools = append(mcpTools, toolInfo)
 
 		}
-		return o.mcpToolsRepo.CreateMcpToolsBatch(ctx, mcpServerId, req.UUID, tools, mcpTools)
+		err = o.mcpToolsRepo.CreateMcpToolsBatch(ctx, mcpServerId, req.UUID, tools, mcpTools)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "创建McpTools失败，err:%+v", err)
+			return err
+		}
+		return
 	})
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "创建McpServer失败，err:%+v", err)
@@ -273,6 +276,29 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		Status:      mcpServerInfo.Status,
 	}
 	return resp, nil
+}
+
+func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpdateForAuthRequest) (resp *api.OpenapiUpdateForAuthResponse, err error) {
+
+	err = o.Tx.ExecTx(ctx, func(ctx context.Context) error {
+		err = o.mcpServerRepo.UpdateMcpServerForAuthWithTx(ctx, req.UUID, req.IsAuth, req.ServiceToken, req.PlatformToken)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "更新server token 失败,err:%+v", err)
+			return fmt.Errorf("更新失败，err:%+v", err)
+		}
+		err = o.mcpToolsRepo.UpdateToolsForAuthWithTx(ctx, req.UUID, req.Tools)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "更新tool token 失败,err:%+v", err)
+			return fmt.Errorf("更新失败，err:%+v", err)
+		}
+		return nil
+	})
+	if err != nil {
+		o.log.ErrorWithContext(ctx, "更新token 信息失败,err:%+v", err)
+		return nil, fmt.Errorf("更新失败，err:%+v", err)
+	}
+
+	return
 }
 
 func (o *OpenapiUseCase) ValidateBase64String(ctx context.Context, fileContent string) bool {

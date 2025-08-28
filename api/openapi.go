@@ -53,11 +53,23 @@ type ToolInfo struct {
 }
 
 type OpenapiUpdateForAuthRequest struct {
-	UUID          string              `json:"uuid" binding:"required"`
-	Name          string              `json:"name" binding:"required,min=1,max=200"`
-	Description   string              `json:"description"`
-	Status        _const.ServerStatus `json:"status"`
-	IsAuth        _const.AuthStatus   `json:"isAuth"` //是否授权状态，这个状态是针对平台授权
-	ServiceToken  string              `json:"serviceToken"`
-	PlatformToken string              `json:"platformToken"`
+	UUID          string            `json:"uuid" binding:"required"`
+	IsAuth        _const.AuthStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
+	ServiceToken  string            `json:"serviceToken" binding:"omitempty,min=1,max=200"`
+	PlatformToken string            `json:"platformToken" binding:"omitempty,min=1,max=200"`
+	Tools         []*Tools          `json:"tools" binding:"required"`
+}
+type OpenapiUpdateForAuthResponse struct {
+}
+type Tools struct {
+	ID     uint              `json:"id" binding:"required"`
+	IsAuth _const.AuthStatus `json:"isAuth" binding:"required"`
+}
+
+type UpdateMcpServerByUUIDRequest struct {
+	UUID        string `json:"uuid" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description" binding:"required"`
+}
+type UpdateMcpServerByUUIDResponse struct {
 }

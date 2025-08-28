@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
@@ -106,6 +107,36 @@ func (m *McpServerRepo) GetMcpServerInfoByUUID(ctx context.Context, id string) (
 	return
 }
 
-func (m *McpServerRepo) UpdateByUUID(ctx context.Context, serverInfo *model.McpServer) (err error) {
+func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthStatus, serviceToken, platformToken string) (err error) {
+	db, err := m.data.GetDb(ctx)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get tx error: %v", err)
+		return
+	}
+	err = db.WithContext(ctx).
+		Where("uuid = ?", uuid).
+		Updates(model.McpServer{
+			ServiceToken:  serviceToken,
+			PlatformToken: platformToken,
+			IsAuth:        isAuth,
+			Status:        _const.ServerHadSetToken,
+		}).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
+		return
+	}
 	return
+}
+
+func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error) {
+	err = m.data.Db.WithContext(ctx).
+		Model(&model.McpServer{}).
+		Where("uuid = ?", uuid).
+		Updates(map[string]interface{}{"name": name, "description": description}).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
+		return
+	}
+	return
+
 }
