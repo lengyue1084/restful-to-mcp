@@ -14,7 +14,7 @@ type McpTools struct {
 	RequestBody   string              `json:"requestBody" gorm:"column:request_body;type:text;default:'';comment:请求体模板或内容"`
 	ResponseBody  string              `json:"responseBody" gorm:"column:response_body;type:text;default:'';comment:响应体模板或内容"`
 
-	InputSchema string `json:"inputSchema" gorm:"column:input_schema;type:text;default:'';comment:输入参数Schema定义"`
+	ToolSchema  string `json:"toolSchema" gorm:"column:tool_schema;type:text;default:'';comment:工具参数Schema定义"`
 	Annotations string `json:"annotations" gorm:"column:annotations;type:text;default:'';comment:工具注解信息，JSON格式存储"`
 	Security    string `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"`
 

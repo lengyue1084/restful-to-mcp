@@ -95,6 +95,9 @@ type MCPServer struct {
 // annotations：描述工具行为的可选属性
 // ToolConfig 表示工具的配置结构
 type ToolConfig struct {
+	ID uint `json:"id"`
+
+	UUID string `json:"uuid"`
 	// 工具名称,需要考虑如果没有的时候需要新构建一个
 	Name string `json:"name"`
 	// 工具描述
@@ -114,7 +117,7 @@ type ToolConfig struct {
 	// 响应体内容
 	ResponseBody string `json:"responseBody"`
 	// 输入模式
-	InputSchema *ToolSchema `json:"inputSchema,omitempty"`
+	ToolSchema *ToolSchema `json:"tool_schema,omitempty"`
 	// 注解信息
 	Annotations map[string]any `json:"annotations,omitempty"`
 	//是否需要认证，为原有接口的鉴权
@@ -214,8 +217,8 @@ func (t *ToolConfig) ToToolSchema() *ToolSchema {
 	}
 
 	// 如果存在已有的输入模式，将其合并到属性映射中
-	//if t.InputSchema != nil {
-	//	for k, v := range t.InputSchema {
+	//if t.ToolSchema != nil {
+	//	for k, v := range t.ToolSchema {
 	//		properties[k] = v
 	//	}
 	//}

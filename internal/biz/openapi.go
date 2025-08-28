@@ -130,6 +130,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		return nil, err
 	}
 
+	var mcpServerId = int64(0)
 	err = o.Tx.ExecTx(ctx, func(ctx context.Context) error {
 		var serverInfo = &model.McpServer{
 			UUID:          req.UUID,
@@ -145,7 +146,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			Security:      string(security),
 			Status:        model.StatusHidden,
 		}
-		mcpServerId, err := o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
+		mcpServerId, err = o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
 			o.log.ErrorWithContext(ctx, "CreateWithTx,创建McpServer失败，err:%+v", err)
 			return fmt.Errorf("创建McpServer失败")
@@ -171,14 +172,14 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			if val.SecurityLevel == config.SecurityLevelPublic {
 				isAuth = model.IsAuthNo
 			}
-			inputSchema := ""
-			if val.InputSchema != nil {
-				inputSchemaByte, err := json.Marshal(val.InputSchema)
+			toolSchema := ""
+			if val.ToolSchema != nil {
+				inputSchemaByte, err := json.Marshal(val.ToolSchema)
 				if err != nil {
 					o.log.ErrorWithContext(ctx, "mcpConfig.Tools.InputSchema json转换错误，err:%+v", err)
 					return fmt.Errorf("mcpConfig.Tools.InputSchema json转换错误")
 				}
-				inputSchema = string(inputSchemaByte)
+				toolSchema = string(inputSchemaByte)
 			}
 			isShow := model.StatusDisplay
 			if !val.IsShow {
@@ -197,7 +198,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				Args:           string(args),
 				RequestBody:    val.RequestBody,
 				ResponseBody:   val.ResponseBody,
-				InputSchema:    inputSchema,
+				ToolSchema:     toolSchema,
 				Annotations:    "", //暂时不做支持，如果需要可以考虑后期支持
 				Security:       string(toolSecurity),
 				IsAuth:         isAuth,
@@ -214,8 +215,63 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "创建McpServer失败，err:%+v", err)
 		return nil, err
 	}
-
-	return
+	mcpServerInfo, err := o.mcpServerRepo.GetMcpServerInfoByID(ctx, mcpServerId)
+	if err != nil {
+		o.log.ErrorWithContext(ctx, "获取McpServer失败，err:%+v", err)
+		return nil, err
+	}
+	var urls []string
+	err = json.Unmarshal([]byte(mcpServerInfo.Urls), &urls)
+	if err != nil {
+		o.log.ErrorWithContext(ctx, "mcpServerInfo.Urls json转换错误，err:%+v", err)
+		return nil, err
+	}
+	var toolsList []*api.ToolInfo
+	for _, val := range mcpServerInfo.Tools {
+		var toolSchema *config.ToolSchema
+		if val.ToolSchema != "" {
+			err = json.Unmarshal([]byte(val.ToolSchema), &toolSchema)
+			if err != nil {
+				o.log.ErrorWithContext(ctx, "mcpServerInfo.ToolSchema json转换错误，err:%+v", err)
+				return nil, err
+			}
+		}
+		toolsList = append(toolsList, &api.ToolInfo{
+			ID:             val.ID,
+			McpServerId:    val.McpServerId,
+			UUID:           val.UUID,
+			Name:           val.Name,
+			Description:    val.Description,
+			Method:         val.Method,
+			Endpoint:       val.Endpoint,
+			Headers:        val.Headers,
+			Args:           val.Args,
+			RequestBody:    val.RequestBody,
+			ResponseBody:   val.ResponseBody,
+			ToolSchema:     toolSchema,
+			Annotations:    val.Annotations,
+			Security:       val.Security,
+			IsAuth:         val.IsAuth,
+			IsShow:         val.IsShow,
+			IsPlatformAuth: val.IsPlatformAuth,
+			CreatedAt:      val.CreatedAt,
+			UpdatedAt:      val.UpdatedAt,
+		})
+	}
+	resp = &api.OpenapiUploadResponse{
+		ID:          mcpServerInfo.ID,
+		UUID:        mcpServerInfo.UUID,
+		Name:        mcpServerInfo.Name,
+		Description: mcpServerInfo.Description,
+		Urls:        urls,
+		AllTools:    tools,
+		Version:     mcpServerInfo.Version,
+		Tools:       toolsList,
+		CreatedAt:   mcpServerInfo.CreatedAt,
+		UpdatedAt:   mcpServerInfo.UpdatedAt,
+		Status:      mcpServerInfo.Status,
+	}
+	return resp, nil
 }
 
 func (o *OpenapiUseCase) ValidateBase64String(ctx context.Context, fileContent string) bool {
