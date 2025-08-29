@@ -10,6 +10,7 @@ var ProviderSet = wire.NewSet(
 	NewOpenapiUserCase,
 	NewMcpFileUserCase,
 	NewMcpServerUseCase,
+	NewMcpToolsUserCase,
 )
 
 type Transaction interface {

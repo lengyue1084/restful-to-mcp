@@ -2,12 +2,60 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/internal/mcp/config"
+	"flow-bridge-mcp/pkg/logger"
+	"fmt"
 )
 
 type McpToolsRepo interface {
 	Create(ctx context.Context, mcpToolInfo *model.McpTools) (err error)
 	CreateMcpToolsBatch(ctx context.Context, mcpServerId int64, uuid string, allTools []string, mcpToolInfo []*model.McpTools) (err error)
 	UpdateToolsForAuthWithTx(ctx context.Context, uuid string, tools []*api.Tools) (err error)
+	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
+}
+
+type McpToolsUserCase struct {
+	mtRepo McpToolsRepo
+	log    *logger.Logger
+}
+
+func NewMcpToolsUserCase(mtRepo McpToolsRepo, log *logger.Logger) *McpToolsUserCase {
+	return &McpToolsUserCase{
+		mtRepo: mtRepo,
+		log:    log,
+	}
+}
+
+func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (resp *api.GetMcpServerToolsResponse, err error) {
+	tools, err := m.mtRepo.GetMcpServerTools(ctx, uuid)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "查询工具列表失败,err:%+v", err)
+		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
+	}
+
+	var toolsList []*config.ToolSchema
+	for _, tool := range tools {
+		var annotations *config.ToolAnnotations
+		if tool.Annotations != "" {
+			err = json.Unmarshal([]byte(tool.Annotations), &annotations)
+			if err != nil {
+				m.log.ErrorWithContext(ctx, "tool.Annotations json转换错误，err:%+v", err)
+				return nil, err
+			}
+		}
+		var toolSchema = &config.ToolSchema{}
+		err = json.Unmarshal([]byte(tool.ToolSchema), toolSchema)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "tool.ToolSchema json转换错误，err:%+v", err)
+			return nil, err
+		}
+		toolsList = append(toolsList, toolSchema)
+	}
+	resp = &api.GetMcpServerToolsResponse{
+		Tools: toolsList,
+	}
+	return resp, nil
 }

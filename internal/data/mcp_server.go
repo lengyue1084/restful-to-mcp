@@ -54,7 +54,7 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 		return
 	}
 	var serverMcpInfo model.McpServer
-	err = db.WithContext(ctx).Where("uuid = ? and status = ?", serverInfo.UUID, _const.StatusHidden).Find(&serverMcpInfo).Error
+	err = db.WithContext(ctx).Where("uuid = ?", serverInfo.UUID).Find(&serverMcpInfo).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
 		return
@@ -129,10 +129,17 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 }
 
 func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error) {
+	updateMap := make(map[string]string)
+	if name == "" {
+		updateMap["name"] = name
+	}
+	if description == "" {
+		updateMap["description"] = description
+	}
 	err = m.data.Db.WithContext(ctx).
 		Model(&model.McpServer{}).
 		Where("uuid = ?", uuid).
-		Updates(map[string]interface{}{"name": name, "description": description}).Error
+		Updates(updateMap).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
 		return

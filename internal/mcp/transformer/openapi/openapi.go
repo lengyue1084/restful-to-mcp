@@ -373,18 +373,50 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 					Required:    param.Value.Required,
 					Type:        "string", // 默认参数类型为字符串
 					Description: param.Value.Description,
+					Explode:     false,
 				}
 
 				// 如果参数有 schema 定义，尝试获取参数类型和默认值
 				if param.Value.Schema != nil && param.Value.Schema.Value != nil {
-					if param.Value.Schema.Value.Type != nil {
-						types := param.Value.Schema.Value.Type.Slice()
+					schema := param.Value.Schema.Value
+
+					// 处理参数类型
+					if schema.Type != nil {
+						types := schema.Type.Slice()
 						if len(types) > 0 {
 							arg.Type = types[0]
+							//解析数组类型的 query参数
+							// 对于数组类型，尝试获取元素类型
+							if arg.Type == "array" && schema.Items != nil && schema.Items.Value != nil {
+								arg.Explode = true
+								if schema.Items.Value.Type != nil {
+									itemTypes := schema.Items.Value.Type.Slice()
+									if len(itemTypes) > 0 {
+										// 可以记录数组元素类型，或者构建更复杂的类型描述
+										arg.Items = buildNestedArg(schema.Items.Value)
+									}
+								}
+							}
 						}
 					}
 					if param.Value.Schema.Value.Default != nil {
 						arg.Default = fmt.Sprintf("%v", param.Value.Schema.Value.Default)
+					}
+					// 处理其他有用的 schema 属性
+					if schema.Description != "" && arg.Description == "" {
+						arg.Description = schema.Description
+					}
+
+					// 处理枚举值
+					if len(schema.Enum) > 0 {
+						// 可以将枚举值存储在 arg 的扩展字段中
+						enumValues := make([]string, len(schema.Enum))
+						for i, enumVal := range schema.Enum {
+							enumValues[i] = fmt.Sprintf("%v", enumVal)
+						}
+						// 如果有扩展字段可以存储枚举信息
+						arg.Enum = enumValues
+						arg.Description = fmt.Sprintf("%s,其中参数只能从 (%s)选取", arg.Description, strings.Join(enumValues, ", "))
 					}
 				}
 

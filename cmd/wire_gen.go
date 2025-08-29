@@ -53,7 +53,9 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
 	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, loggerLogger)
 	mcpServerSverService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
-	engine := router.NewRouter(app, openapiService, mcpServerSverService)
+	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger)
+	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
+	engine := router.NewRouter(app, openapiService, mcpServerSverService, mcpToosService)
 	return engine, func() {
 		cleanup3()
 		cleanup2()

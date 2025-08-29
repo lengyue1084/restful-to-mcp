@@ -11,7 +11,8 @@ var ProviderSet = wire.NewSet(NewApp, NewRouter)
 func NewRouter(
 	app *App,
 	OpenapiService *service.OpenapiService,
-	sverService *service.McpServerSverService,
+	serverService *service.McpServerSverService,
+	toosService *service.McpToosService,
 ) *gin.Engine {
 
 	// 作为mcp服务对外提供服务
@@ -26,7 +27,8 @@ func NewRouter(
 	{
 		router.POST("/openapi/upload", OpenapiService.Upload)
 		router.POST("/openapi/updateForAuth", OpenapiService.UpdateForAuth)
-		router.POST("/mcpServer/updateByUUID", sverService.UpdateMcpServerByUUID)
+		router.POST("/mcpServer/updateByUUID", serverService.UpdateMcpServerByUUID)
+		router.POST("/mcpServer/getMcpServerTools", toosService.GetMcpServerTools)
 	}
 
 	return app.app

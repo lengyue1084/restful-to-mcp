@@ -94,3 +94,12 @@ func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string
 	}
 	return
 }
+
+func (m *McpToolsRepo) GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
+	err = m.data.Db.WithContext(ctx).Where("uuid = ?", uuid).Find(&mcpTools).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server tools error: %v", err)
+		return
+	}
+	return
+}

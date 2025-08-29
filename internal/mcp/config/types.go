@@ -165,6 +165,9 @@ type ArgConfig struct {
 	Default string `json:"default" yaml:"default"`
 	// 数组类型参数的子项配置
 	Items ItemsConfig `json:"items,omitempty" yaml:"items,omitempty"`
+	// 枚举值列表
+	Enum    []string `json:"enum,omitempty" yaml:"enum,omitempty"`
+	Explode bool     `json:"explode" yaml:"explode"` // 是否展开参数
 }
 
 // ItemsConfig 表示数组子项的配置结构
