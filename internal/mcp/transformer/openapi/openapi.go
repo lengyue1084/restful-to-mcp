@@ -416,7 +416,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 						}
 						// 如果有扩展字段可以存储枚举信息
 						arg.Enum = enumValues
-						arg.Description = fmt.Sprintf("%s,其中参数只能从 (%s)选取", arg.Description, strings.Join(enumValues, ", "))
+						arg.Description = fmt.Sprintf("%s,其中参数只能从 [%s]选取", arg.Description, strings.Join(enumValues, ", "))
 					}
 				}
 
