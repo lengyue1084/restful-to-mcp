@@ -54,18 +54,18 @@ type Logger struct {
 }
 
 func (l *Logger) WithContext(ctx context.Context) *Logger {
-	var traceId string
+	var fields []interface{}
 	if traceIdValue := ctx.Value("traceId"); traceIdValue != nil {
-		traceId, _ = traceIdValue.(string)
+		if traceId, ok := traceIdValue.(string); ok && traceId != "" {
+			fields = append(fields, "traceId", traceId)
+		}
 	}
-	var spanId string
 	if spanIdValue := ctx.Value("spanId"); spanIdValue != nil {
-		spanId, _ = spanIdValue.(string)
+		if spanId, ok := spanIdValue.(string); ok && spanId != "" {
+			fields = append(fields, "spanId", spanId)
+		}
 	}
-	l.SugaredLogger = l.SugaredLogger.With(
-		zap.String("traceId", traceId),
-		zap.String("spanId", spanId),
-	)
+	l.SugaredLogger = l.SugaredLogger.With(fields...)
 	return l
 }
 
