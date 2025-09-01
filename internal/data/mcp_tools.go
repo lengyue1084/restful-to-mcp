@@ -40,7 +40,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 	}
 
 	// 1、批量删除本次没有包含的工具
-	err = db.WithContext(ctx).Where("mcp_server_id = ? and uuid = ? and name not in ?", mcpServerId, uuid, allTools).
+	err = db.WithContext(ctx).Where("mcp_server_id = ? and mcp_server_uuid = ? and name not in ?", mcpServerId, uuid, allTools).
 		Delete(&model.McpTools{}).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch delete error: %v", err)
@@ -51,8 +51,8 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 	for _, tool := range mcpToolInfo {
 		var mcpTool model.McpTools
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
-			Where("mcp_server_id = ? AND uuid = ? AND name = ?",
-				tool.McpServerId, tool.UUID, tool.Name).
+			Where("mcp_server_id = ? AND mcp_server_uuid = ? AND name = ?",
+				tool.McpServerId, tool.McpServerUUID, tool.Name).
 			Find(&mcpTool).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find error: %v", err)
@@ -96,7 +96,7 @@ func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string
 }
 
 func (m *McpToolsRepo) GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
-	err = m.data.Db.WithContext(ctx).Where("uuid = ?", uuid).Find(&mcpTools).Error
+	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Find(&mcpTools).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server tools error: %v", err)
 		return
