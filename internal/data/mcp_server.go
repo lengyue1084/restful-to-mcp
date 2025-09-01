@@ -64,7 +64,7 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 		//更新
 		err = db.WithContext(ctx).
 			Where("uuid = ? and id = ?", serverInfo.UUID, serverMcpInfo.ID).
-			Omit("ServiceToken", "PlatformToken").
+			Omit("ServiceToken", "PlatformToken", "SerialNumber").
 			Updates(serverInfo).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
@@ -129,11 +129,11 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 }
 
 func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error) {
-	updateMap := make(map[string]string)
-	if name == "" {
+	updateMap := make(map[string]interface{})
+	if name != "" {
 		updateMap["name"] = name
 	}
-	if description == "" {
+	if description != "" {
 		updateMap["description"] = description
 	}
 	err = m.data.Db.WithContext(ctx).
@@ -146,4 +146,16 @@ func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, d
 	}
 	return
 
+}
+
+func (m *McpServerRepo) GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error) {
+	err = m.data.Db.WithContext(ctx).
+		Model(&model.McpServer{}).
+		Where("serial_number = ?", serialNumber).
+		Count(&count).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetCountMcpServerInfoBySerialNumber error: %v", err)
+		return
+	}
+	return
 }

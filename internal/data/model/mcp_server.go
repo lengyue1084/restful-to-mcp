@@ -15,9 +15,10 @@ type McpServer struct {
 	ServiceToken  string                 `json:"serviceToken" gorm:"column:service_token;type:text;default:'';comment:服务认证Token，用于访问用户提供的接口"`
 	PlatformToken string                 `json:"platformToken" gorm:"column:platform_token;type:text;default:'';comment:平台认证Token，平台添加的认证令牌"`
 
-	Security string              `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"` //认证的原始信息
-	Status   _const.ServerStatus `json:"status" gorm:"column:status;type:SMALLINT;default:1;comment:服务器状态,0未知，1没有设置token，2设置了token，3正常工作"`
-	Tools    []*McpTools         `json:"tools" gorm:"foreignKey:McpServerId"`
+	Security     string              `json:"security" gorm:"column:security;type:text;default:'';comment:认证信息"` //认证的原始信息
+	Status       _const.ServerStatus `json:"status" gorm:"column:status;type:SMALLINT;default:1;comment:服务器状态,0未知，1没有设置token，2设置了token，3正常工作"`
+	Tools        []*McpTools         `json:"tools" gorm:"foreignKey:McpServerId"`
+	SerialNumber string              `json:"serialNumber" gorm:"column:serial_number;type:varchar(36);default:'';comment:服务序列号"` //不可重复
 }
 
 func (m *McpServer) TableName() string {

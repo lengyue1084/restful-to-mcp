@@ -7,3 +7,11 @@ type UpdateMcpServerByUUIDRequest struct {
 }
 type UpdateMcpServerByUUIDResponse struct {
 }
+
+type GetMcpConnectTokenByUUIDRequest struct {
+	UUID string `json:"uuid" binding:"required"`
+}
+
+type GetMcpConnectTokenByUUIDResponse struct {
+	ConnectToken string `json:"connectToken" binding:"required"`
+}
