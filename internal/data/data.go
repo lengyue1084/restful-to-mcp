@@ -9,4 +9,5 @@ var ProviderSet = wire.NewSet(
 	NewMcpFileRepo,
 	NewMcpToolsRepo,
 	NewMcpServerRepo,
+	NewMcpConnectToken,
 )

@@ -11,6 +11,7 @@ import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
 	"flow-bridge-mcp/internal/data/database"
+	"flow-bridge-mcp/internal/mcp/server"
 	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/pkg/cache"
 	"flow-bridge-mcp/internal/service"
@@ -51,12 +52,31 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	mcpToolsRepo := data.NewMcpToolsRepo(databaseData, loggerLogger)
 	openapiUseCase := biz.NewOpenapiUserCase(transformer, loggerLogger, transaction, mcpServerRepo, mcpFileUserCase, mcpToolsRepo, config)
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
-	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, loggerLogger)
-	mcpServerSverService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
+	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
+	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, mcpConnectTokenRepo, loggerLogger)
+	mcpServerService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
 	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger)
 	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
-	engine := router.NewRouter(app, openapiService, mcpServerSverService, mcpToosService)
+	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
+	streamableHttpTransprot, cleanup4, err := server.NewMcpTransport(loggerLogger)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	mcpServerManager, err := server.NewMcpServerManager(streamableHttpTransprot, loggerLogger)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerManager, loggerLogger)
+	engine := router.NewRouter(app, openapiService, mcpServerService, mcpToosService, mcpGatewayService)
 	return engine, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

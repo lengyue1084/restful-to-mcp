@@ -68,6 +68,7 @@ func NewPgClient(config *conf.Conf, log2 *logger.GormLogger, log *logger.Logger)
 		model.McpServer{},
 		model.McpTools{},
 		model.McpFile{},
+		model.McpConnectToken{},
 	); err != nil {
 		log.Error("auto migrate postgresql error:%+v", zap.Error(err))
 		return nil, nil, err

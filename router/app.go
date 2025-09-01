@@ -37,11 +37,11 @@ func NewApp(
 	}
 
 	r.Use(
-		middleware.TraceIdMiddleware(),              // 追踪ID - 最优先
-		middleware.CorsMiddleware(),                 // CORS - 尽早处理，避免不必要的处理
-		middleware.RecoveryMiddleware(),             // panic恢复 - 尽早放置，捕获所有panic
-		middleware.TimeoutMiddleware(timeoutSecond), // 超时控制 - 在主要业务逻辑前
-		middleware.LoggerMiddleware(),               // 日志记录 - 记录完整处理过程
+		middleware.TraceIdMiddleware(),  // 追踪ID - 最优先
+		middleware.CorsMiddleware(),     // CORS - 尽早处理，避免不必要的处理
+		middleware.RecoveryMiddleware(), // panic恢复 - 尽早放置，捕获所有panic
+		//middleware.TimeoutMiddleware(timeoutSecond), // 超时控制 - 在主要业务逻辑前
+		middleware.LoggerMiddleware(), // 日志记录 - 记录完整处理过程
 	)
 	return &App{
 		app: r,

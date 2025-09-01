@@ -8,19 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type McpServerSverService struct {
+type McpServerService struct {
 	msUc *biz.McpServerUseCase
 	log  *logger.Logger
 }
 
-func NewMcpServerService(msUc *biz.McpServerUseCase, log *logger.Logger) *McpServerSverService {
-	return &McpServerSverService{
+func NewMcpServerService(msUc *biz.McpServerUseCase, log *logger.Logger) *McpServerService {
+	return &McpServerService{
 		msUc: msUc,
 		log:  log,
 	}
 }
 
-func (o *McpServerSverService) UpdateMcpServerByUUID(ctx *gin.Context) {
+func (o *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
 	var req *api.UpdateMcpServerByUUIDRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		o.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
@@ -35,4 +35,22 @@ func (o *McpServerSverService) UpdateMcpServerByUUID(ctx *gin.Context) {
 	}
 	response.Success(ctx, "更新成功", resp)
 
+}
+
+func (o *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
+
+	var req api.GetMcpConnectTokenByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
+		response.Error(c, "参数错误", err)
+		return
+	}
+	resp, err := o.msUc.GetMcpConnectTokenByUUID(c, req.UUID)
+	if err != nil {
+		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
+		response.Error(c, "获取失败", err)
+		return
+	}
+	response.Success(c, "获取成功", resp)
+	return
 }

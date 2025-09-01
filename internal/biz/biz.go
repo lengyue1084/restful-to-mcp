@@ -11,6 +11,7 @@ var ProviderSet = wire.NewSet(
 	NewMcpFileUserCase,
 	NewMcpServerUseCase,
 	NewMcpToolsUserCase,
+	NewMcpGatewayUseCase,
 )
 
 type Transaction interface {

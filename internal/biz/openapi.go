@@ -128,6 +128,31 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "mcpConfig.Security json转换错误，err:%+v", err)
 		return nil, err
 	}
+	var (
+		serialNumber = ""
+		maxRetries   = 5
+		retryCount   = 0
+	)
+	for retryCount < maxRetries {
+		serialNumber = tool.RandStringWithLowercaseAndDigits(6)
+		number, err := o.mcpServerRepo.GetCountMcpServerInfoBySerialNumber(ctx, serialNumber)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "查询序列号失败，err:%+v", err)
+			return nil, err
+		}
+		if number == 0 {
+			// 找到唯一的序列号
+			break
+		}
+		retryCount++
+		o.log.WarnWithContext(ctx, "序列号已存在，重新生成，尝试次数: %d", retryCount)
+	}
+
+	// 检查是否成功生成唯一序列号
+	if retryCount >= maxRetries || serialNumber == "" {
+		o.log.ErrorWithContext(ctx, "生成唯一序列号失败，已达到最大重试次数: %d", maxRetries)
+		return nil, fmt.Errorf("生成唯一序列号失败，请稍后重试")
+	}
 
 	var mcpServerId = int64(0)
 	err = o.Tx.ExecTx(ctx, func(ctx context.Context) (err error) {
@@ -144,6 +169,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			PlatformToken: "",
 			Security:      string(security),
 			Status:        _const.ServerNotSetToken,
+			SerialNumber:  serialNumber,
 		}
 		mcpServerId, err = o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
@@ -187,7 +213,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 
 			var toolInfo = &model.McpTools{
 				McpServerId:    mcpServerId,
-				UUID:           req.UUID,
+				McpServerUUID:  req.UUID,
 				Name:           val.Name,
 				Description:    val.Description,
 				McpServerType:  _const.McpServerTypeOpenapi,
@@ -243,7 +269,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		toolsList = append(toolsList, &api.ToolInfo{
 			ID:             val.ID,
 			McpServerId:    val.McpServerId,
-			UUID:           val.UUID,
+			UUID:           val.McpServerUUID,
 			Name:           val.Name,
 			Description:    val.Description,
 			Method:         val.Method,
