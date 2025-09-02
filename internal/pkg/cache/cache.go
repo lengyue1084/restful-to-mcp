@@ -91,3 +91,8 @@ func (m *MemoryCache) LoadMcpServer(typeCache TypeCache) (mcpServerInfo *model.M
 	}
 	return nil, false
 }
+
+func (m *MemoryCache) ClearCache(typeCache TypeCache) {
+	m.StoreMcpServer(typeCache, nil)
+
+}
