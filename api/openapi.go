@@ -1,9 +1,9 @@
 package api
 
 import (
-	"flow-bridge-mcp/internal/mcp/config"
 	"flow-bridge-mcp/internal/pkg/gormtype"
 	"flow-bridge-mcp/pkg/const"
+	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 )
 
 type OpenapiUploadRequest struct {
@@ -41,7 +41,7 @@ type ToolInfo struct {
 	Args           string                     `json:"args"`
 	RequestBody    string                     `json:"requestBody"`
 	ResponseBody   string                     `json:"responseBody"`
-	ToolSchema     *config.ToolSchema         `json:"toolSchema"`
+	ToolSchema     *protocol.InputSchema      `json:"toolSchema"`
 	Annotations    string                     `json:"annotations"`
 	Security       string                     `json:"security"`
 	IsAuth         _const.AuthStatus          `json:"isAuth"`

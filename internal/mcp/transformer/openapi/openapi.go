@@ -539,7 +539,11 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				bodyTemplate.WriteString("}")
 				tool.RequestBody = bodyTemplate.String()
 			}
-			tool.ToolSchema = tool.ToToolSchema()
+			tool.ToolSchema = tool.ArgsToInputSchema()
+			tool.Annotations = map[string]any{
+				"title":       tool.Name,
+				"description": tool.Description,
+			}
 			toolsSlice = append(toolsSlice, tool)
 		}
 	}

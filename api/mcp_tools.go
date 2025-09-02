@@ -1,13 +1,16 @@
 package api
 
-import "flow-bridge-mcp/internal/mcp/config"
+import (
+	"flow-bridge-mcp/internal/mcp/config"
+	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+)
 
 type GetMcpServerToolsRequest struct {
 	UUID string `json:"uuid" binding:"required"`
 }
 
 type GetMcpServerToolsResponse struct {
-	Tools []*config.ToolSchema `json:"tools"`
+	Tools []*protocol.Tool `json:"tools"`
 }
 
 type ToolItemInfo struct {

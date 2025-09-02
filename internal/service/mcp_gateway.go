@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"flow-bridge-mcp/internal/biz"
 	mcpServer "flow-bridge-mcp/internal/mcp/server"
 	"flow-bridge-mcp/pkg/logger"
@@ -15,6 +16,7 @@ type McpGatewayService struct {
 	McpGateWayUc     *biz.McpGatewayUseCase
 	log              *logger.Logger
 	mcpServerManager *mcpServer.McpServerManager
+	mcpServerUseCase *biz.McpServerUseCase
 }
 
 func NewMcpGatewayService(msUc *biz.McpGatewayUseCase, mcpServerManager *mcpServer.McpServerManager, log *logger.Logger) *McpGatewayService {
@@ -38,22 +40,41 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 	serviceToken := c.GetHeader("service-token")
 	fmt.Printf("platformToken:%s\n,serviceToken:%s\n", platformToken, serviceToken)
 
-	type currentTimeInputSchema struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Data        struct {
-			Time int64 `json:"time"`
-		} `json:"object"`
-	}
-
-	// 注册示例工具
-	tool, err := protocol.NewTool("current_time", "获取指定时区的当前时间", &currentTimeInputSchema{})
+	var inputStr = `{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Name of pet that needs to be updated"
+		},
+		"petId": {
+			"type": "integer",
+			"description": "ID of pet that needs to be updated"
+		},
+		"status": {
+			"type": "string",
+			"description": "Status of pet that needs to be updated"
+		}
+	},
+	"required": ["petId"]
+}`
+	var toolSchema protocol.InputSchema
+	err := json.Unmarshal([]byte(inputStr), &toolSchema)
 	if err != nil {
-		m.log.Errorf("Failed to create tool: %v", err)
-		c.JSON(500, gin.H{"error": "Failed to create tool"})
+		m.log.Errorf("Failed to unmarshal tool schema: %v", err)
+		c.JSON(500, gin.H{"error": "Failed to unmarshal tool schema"})
 		return
 	}
-	m.mcpServerManager.Server.RegisterTool(tool, handleTimeRequest)
+
+	toolInfo := &protocol.Tool{
+		Name:           "createUsersWithListInput",
+		Description:    "Creates list of users with given input array.",
+		InputSchema:    toolSchema,
+		OutputSchema:   protocol.OutputSchema{},
+		Annotations:    nil,
+		RawInputSchema: nil,
+	}
+	m.mcpServerManager.Server.RegisterTool(toolInfo, handleTimeRequest)
 	//m.mcpServerManager.Server.UnregisterTool("current_time")
 	// 使用已预启动的服务器管理器处理连接
 	m.mcpServerManager.HandleConnection(c)

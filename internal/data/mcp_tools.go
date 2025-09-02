@@ -6,6 +6,7 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/data/database"
 	"flow-bridge-mcp/internal/data/model"
+	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 )
 
@@ -60,6 +61,15 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 		}
 		if mcpTool.ID == 0 {
 			// 插入
+			var toolInfo model.McpTools
+			err = db.WithContext(ctx).Where("name = ?", tool.Name).Find(&toolInfo).Error
+			if err != nil {
+				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find serial_number error: %v", err)
+				return
+			}
+			if toolInfo.ID > 0 {
+				tool.IsRepeat = _const.StatusDisplay //重复
+			}
 			err = db.WithContext(ctx).Create(tool).Error
 			if err != nil {
 				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)
@@ -69,6 +79,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 		}
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
 			Where("id = ?", mcpTool.ID).
+			Omit("SerialNumber", "McpServerId", "McpServerType", "McpServerUUID", "ID").
 			Updates(tool).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch update error: %v", err)

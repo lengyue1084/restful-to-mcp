@@ -13,6 +13,7 @@ import (
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
+	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 )
 
 type OpenapiUseCase struct {
@@ -206,6 +207,15 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				}
 				toolSchema = string(inputSchemaByte)
 			}
+			annotations := ""
+			if val.Annotations != nil {
+				annotationsByte, err := json.Marshal(val.Annotations)
+				if err != nil {
+					o.log.ErrorWithContext(ctx, "mcpConfig.Tools.Annotations json转换错误，err:%+v", err)
+					return fmt.Errorf("mcpConfig.Tools.Annotations json转换错误")
+				}
+				annotations = string(annotationsByte)
+			}
 			isShow := _const.StatusDisplay
 			if !val.IsShow {
 				isShow = _const.StatusHidden
@@ -224,12 +234,13 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				RequestBody:    val.RequestBody,
 				ResponseBody:   val.ResponseBody,
 				ToolSchema:     toolSchema,
-				Annotations:    "", //暂时不做支持，如果需要可以考虑后期支持
+				Annotations:    annotations, //暂时不做支持，如果需要可以考虑后期支持
 				Security:       string(toolSecurity),
 				IsAuth:         isAuth,
 				AuthMode:       val.SecurityMode.String(),
 				IsPlatformAuth: _const.IsAuthNo, //默认不启用平台权限控制
 				IsShow:         isShow,
+				SerialNumber:   serialNumber,
 			}
 			mcpTools = append(mcpTools, toolInfo)
 
@@ -258,7 +269,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	}
 	var toolsList []*api.ToolInfo
 	for _, val := range mcpServerInfo.Tools {
-		var toolSchema *config.ToolSchema
+		var toolSchema *protocol.InputSchema
 		if val.ToolSchema != "" {
 			err = json.Unmarshal([]byte(val.ToolSchema), &toolSchema)
 			if err != nil {

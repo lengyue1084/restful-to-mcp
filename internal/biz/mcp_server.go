@@ -13,6 +13,7 @@ import (
 type McpServerRepo interface {
 	Create(ctx context.Context, serverInfo *model.McpServer) (err error)
 	GetMcpServerInfo(ctx context.Context, UUID string) (serverInfo *model.McpServer, err error)
+	GetMcpServerInfoWithAllTools(ctx context.Context) (serverInfo *model.McpServer, err error)
 	CreateWithTx(ctx context.Context, serverInfo *model.McpServer) (id int64, err error)
 	GetMcpServerInfoByID(ctx context.Context, id int64) (mcpServerInfo *model.McpServer, err error)
 	GetMcpServerInfoByUUID(ctx context.Context, id string) (mcpServerInfo *model.McpServer, err error)
@@ -71,6 +72,15 @@ func (m *McpServerUseCase) GetMcpConnectTokenByUUID(ctx context.Context, uuid st
 	}
 	resp = &api.GetMcpConnectTokenByUUIDResponse{
 		ConnectToken: connectToken,
+	}
+	return
+}
+
+func (m *McpServerUseCase) GetMcpServerInfoWithAllTools(ctx context.Context) (mcpServerInfo *model.McpServer, err error) {
+	mcpServerInfo, err = m.msRepo.GetMcpServerInfoWithAllTools(ctx)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoWithTools error: %v", err)
+		return nil, err
 	}
 	return
 }

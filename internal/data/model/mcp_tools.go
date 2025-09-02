@@ -24,6 +24,9 @@ type McpTools struct {
 	AuthMode       string            `json:"authMode" gorm:"column:auth_mode;type:varchar(20);default:'';comment:认证模式"`
 	IsPlatformAuth _const.AuthStatus `json:"isPlatformAuth" gorm:"column:is_platform_auth;type:SMALLINT;default:1;comment:是否平台认证"`
 	IsShow         _const.Status     `json:"isShow" gorm:"column:is_show;type:SMALLINT;default:1;comment:是否显示"`
+	SerialNumber   string            `json:"serialNumber" gorm:"column:serial_number;type:varchar(36);default:'';comment:服务序列号"` //来源于server 的serialNumber
+	//是否重复
+	IsRepeat _const.Status `json:"isRepeat" gorm:"column:is_repeat;type:SMALLINT;default:1;comment:是否重复"`
 }
 
 func (m *McpTools) TableName() string {
