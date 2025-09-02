@@ -47,7 +47,8 @@ func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(
 }
 
 type MemoryCache struct {
-	McpServer atomic.Value
+	McpServer    atomic.Value
+	OldMcpServer atomic.Value
 }
 
 func NewMemoryCache() *MemoryCache {
@@ -56,14 +57,36 @@ func NewMemoryCache() *MemoryCache {
 	}
 }
 
-func (m *MemoryCache) StoreMcpServer(mcpServerInfo *model.McpServer) {
-	m.McpServer.Store(mcpServerInfo)
+type TypeCache int
+
+const (
+	NewMcpValue TypeCache = iota
+	OldMcpValue
+)
+
+func (m *MemoryCache) StoreMcpServer(typeCache TypeCache, mcpServerInfo *model.McpServer) {
+	switch typeCache {
+	case NewMcpValue:
+		m.McpServer.Store(mcpServerInfo)
+	case OldMcpValue:
+		m.OldMcpServer.Store(mcpServerInfo)
+	}
 }
 
-func (m *MemoryCache) LoadMcpServer() (mcpServerInfo *model.McpServer, ok bool) {
-	if value := m.McpServer.Load(); value != nil {
-		if serverInfo, ok := value.(*model.McpServer); ok {
-			return serverInfo, ok
+func (m *MemoryCache) LoadMcpServer(typeCache TypeCache) (mcpServerInfo *model.McpServer, ok bool) {
+
+	switch typeCache {
+	case NewMcpValue:
+		if value := m.McpServer.Load(); value != nil {
+			if serverInfo, ok := value.(*model.McpServer); ok {
+				return serverInfo, ok
+			}
+		}
+	case OldMcpValue:
+		if value := m.OldMcpServer.Load(); value != nil {
+			if serverInfo, ok := value.(*model.McpServer); ok {
+				return serverInfo, ok
+			}
 		}
 	}
 	return nil, false
