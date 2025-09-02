@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/internal/pkg/cache"
 	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
@@ -20,12 +21,14 @@ type McpToolsRepo interface {
 type McpToolsUserCase struct {
 	mtRepo McpToolsRepo
 	log    *logger.Logger
+	cache  *cache.MemoryCache
 }
 
-func NewMcpToolsUserCase(mtRepo McpToolsRepo, log *logger.Logger) *McpToolsUserCase {
+func NewMcpToolsUserCase(mtRepo McpToolsRepo, log *logger.Logger, cache *cache.MemoryCache) *McpToolsUserCase {
 	return &McpToolsUserCase{
 		mtRepo: mtRepo,
 		log:    log,
+		cache:  cache,
 	}
 }
 
@@ -63,5 +66,6 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 	resp = &api.GetMcpServerToolsResponse{
 		Tools: toolsList,
 	}
+
 	return resp, nil
 }

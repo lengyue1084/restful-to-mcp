@@ -8,7 +8,9 @@ import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/internal/mcp/config"
+	mcpServer "flow-bridge-mcp/internal/mcp/server"
 	"flow-bridge-mcp/internal/mcp/transformer"
+	"flow-bridge-mcp/internal/pkg/cache"
 	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
@@ -17,13 +19,15 @@ import (
 )
 
 type OpenapiUseCase struct {
-	log           *logger.Logger
-	transformer   transformer.Transformer
-	Tx            Transaction
-	mcpServerRepo McpServerRepo
-	mfUc          *McpFileUserCase
-	mcpToolsRepo  McpToolsRepo
-	conf          *conf.Conf
+	log              *logger.Logger
+	transformer      transformer.Transformer
+	Tx               Transaction
+	mcpServerRepo    McpServerRepo
+	mfUc             *McpFileUserCase
+	mcpToolsRepo     McpToolsRepo
+	conf             *conf.Conf
+	cache            *cache.MemoryCache
+	mcpServerManager *mcpServer.McpServerManager
 }
 
 func NewOpenapiUserCase(
@@ -34,15 +38,19 @@ func NewOpenapiUserCase(
 	mfUc *McpFileUserCase,
 	mcpToolsRepo McpToolsRepo,
 	conf *conf.Conf,
+	cache *cache.MemoryCache,
+	mcpServerManager *mcpServer.McpServerManager,
 ) *OpenapiUseCase {
 	return &OpenapiUseCase{
-		log:           log,
-		transformer:   transformer,
-		Tx:            tx,
-		mcpServerRepo: mcpServerRepo,
-		mfUc:          mfUc,
-		mcpToolsRepo:  mcpToolsRepo,
-		conf:          conf,
+		log:              log,
+		transformer:      transformer,
+		Tx:               tx,
+		mcpServerRepo:    mcpServerRepo,
+		mfUc:             mfUc,
+		mcpToolsRepo:     mcpToolsRepo,
+		conf:             conf,
+		cache:            cache,
+		mcpServerManager: mcpServerManager,
 	}
 }
 
@@ -334,8 +342,26 @@ func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpda
 		o.log.ErrorWithContext(ctx, "更新token 信息失败,err:%+v", err)
 		return nil, fmt.Errorf("更新失败，err:%+v", err)
 	}
+	go func(ctx2 context.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				o.log.ErrorWithContext(ctx, "panic: %+v", err)
+			}
+		}()
+		o.UpdateToolsForCache(ctx2)
+		o.mcpServerManager.RegisterToolFromCache()
+	}(ctx)
 
 	return
+}
+func (o *OpenapiUseCase) UpdateToolsForCache(ctx context.Context) {
+
+	mcpServerInfo, err := o.mcpServerRepo.GetMcpServerInfoWithAllTools(ctx)
+	if err != nil {
+		o.log.ErrorWithContext(context.Background(), "GetMcpServerInfoWithTools error: %v", err)
+		return
+	}
+	o.cache.StoreMcpServer(mcpServerInfo)
 }
 
 func (o *OpenapiUseCase) ValidateBase64String(ctx context.Context, fileContent string) bool {

@@ -50,14 +50,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	mcpFileRepo := data.NewMcpFileRepo(databaseData, loggerLogger)
 	mcpFileUserCase := biz.NewMcpFileUserCase(mcpFileRepo, loggerLogger)
 	mcpToolsRepo := data.NewMcpToolsRepo(databaseData, loggerLogger)
-	openapiUseCase := biz.NewOpenapiUserCase(transformer, loggerLogger, transaction, mcpServerRepo, mcpFileUserCase, mcpToolsRepo, config)
-	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
-	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
-	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, mcpConnectTokenRepo, loggerLogger)
-	mcpServerService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
-	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger)
-	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
-	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
+	memoryCache := cache.NewMemoryCache()
 	streamableHttpTransprot, cleanup4, err := server.NewMcpTransport(loggerLogger)
 	if err != nil {
 		cleanup3()
@@ -65,7 +58,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	mcpServerManager, err := server.NewMcpServerManager(streamableHttpTransprot, loggerLogger)
+	mcpServerManager, err := server.NewMcpServerManager(streamableHttpTransprot, loggerLogger, memoryCache)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -73,6 +66,14 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	openapiUseCase := biz.NewOpenapiUserCase(transformer, loggerLogger, transaction, mcpServerRepo, mcpFileUserCase, mcpToolsRepo, config, memoryCache, mcpServerManager)
+	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
+	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
+	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, mcpConnectTokenRepo, loggerLogger)
+	mcpServerService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
+	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger, memoryCache)
+	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
+	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
 	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerManager, loggerLogger)
 	engine := router.NewRouter(app, openapiService, mcpServerService, mcpToosService, mcpGatewayService)
 	return engine, func() {

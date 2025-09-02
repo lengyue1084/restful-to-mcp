@@ -3,9 +3,17 @@ package cache
 import (
 	"context"
 	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/wire"
+	"sync/atomic"
+)
+
+var ProviderSet = wire.NewSet(
+	NewRedisClient,
+	NewMemoryCache,
 )
 
 func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(), error) {
@@ -36,4 +44,27 @@ func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(
 
 	log.Infof("open redis success")
 	return rdb, cleanup, nil
+}
+
+type MemoryCache struct {
+	McpServer atomic.Value
+}
+
+func NewMemoryCache() *MemoryCache {
+	return &MemoryCache{
+		McpServer: atomic.Value{},
+	}
+}
+
+func (m *MemoryCache) StoreMcpServer(mcpServerInfo *model.McpServer) {
+	m.McpServer.Store(mcpServerInfo)
+}
+
+func (m *MemoryCache) LoadMcpServer() (mcpServerInfo *model.McpServer, ok bool) {
+	if value := m.McpServer.Load(); value != nil {
+		if serverInfo, ok := value.(*model.McpServer); ok {
+			return serverInfo, ok
+		}
+	}
+	return nil, false
 }
