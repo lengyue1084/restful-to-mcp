@@ -349,6 +349,7 @@ func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpda
 			}
 		}()
 		o.UpdateToolsForCache(ctx2)
+		//理解刷新注册工具
 		o.mcpServerManager.RegisterToolFromCache()
 	}(ctx)
 

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flow-bridge-mcp/internal/pkg/cache"
 	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
@@ -54,15 +53,15 @@ func (m *McpServerManager) Run(ctx context.Context) error {
 	// 启动 MCP 服务器
 	serverErrChan := make(chan error, 1)
 	go func() {
-		m.log.Info("Starting MCP server")
+		m.log.WithContext(ctx).Info("Starting MCP server")
 		serverErrChan <- m.Server.Run()
 	}()
 	select {
 	case err := <-serverErrChan:
-		m.log.Error("MCP server error: %v", err)
+		m.log.WithContext(ctx).Error("MCP server error: %v", err)
 		return err
 	case <-ctx.Done():
-		m.log.Info("Shutting down MCP server")
+		m.log.WithContext(ctx).Info("Shutting down MCP server")
 		m.Server.Shutdown(context.Background())
 		return ctx.Err()
 	}
@@ -84,12 +83,12 @@ func (m *McpServerManager) HandleConnection(c *gin.Context) {
 	m.streamableHttpTransprot.StreamableHandler.HandleMCP().ServeHTTP(c.Writer, c.Request)
 }
 
-func (m *McpServerManager) RegisterToolFromCache() (err error) {
+func (m *McpServerManager) RegisterToolFromCache() {
 
 	serverInfo, ok := m.cache.LoadMcpServer()
 	if !ok {
-		m.log.Errorf("LoadMcpServer error: %v", err)
-		return errors.New("RegisterToolFromCache LoadMcpServer error")
+		m.log.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
+		return
 	}
 	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
 		return
@@ -114,7 +113,7 @@ func (m *McpServerManager) RegisterToolFromCache() (err error) {
 	//}`
 	for _, tool := range serverInfo.Tools {
 		var toolSchema protocol.InputSchema
-		err = json.Unmarshal([]byte(tool.ToolSchema), &toolSchema)
+		err := json.Unmarshal([]byte(tool.ToolSchema), &toolSchema)
 		if err != nil {
 			m.log.Errorf("Failed to unmarshal tool schema: %v", err)
 			continue
@@ -133,7 +132,7 @@ func (m *McpServerManager) RegisterToolFromCache() (err error) {
 		}
 		m.Server.RegisterTool(toolInfo, handleTimeRequest)
 	}
-	return nil
+	return
 }
 
 func handleTimeRequest(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
