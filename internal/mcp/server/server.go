@@ -84,8 +84,8 @@ func (m *McpServerManager) HandleConnection(c *gin.Context) {
 }
 
 func (m *McpServerManager) RegisterToolFromCache() {
-
-	serverInfo, ok := m.cache.LoadMcpServer()
+	m.UnRegisterToolFromCache()
+	serverInfo, ok := m.cache.LoadMcpServer(cache.NewMcpValue)
 	if !ok {
 		m.log.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
 		return
@@ -93,24 +93,6 @@ func (m *McpServerManager) RegisterToolFromCache() {
 	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
 		return
 	}
-	//	var inputStr = `{
-	//	"type": "object",
-	//	"properties": {
-	//		"name": {
-	//			"type": "string",
-	//			"description": "Name of pet that needs to be updated"
-	//		},
-	//		"petId": {
-	//			"type": "integer",
-	//			"description": "ID of pet that needs to be updated"
-	//		},
-	//		"status": {
-	//			"type": "string",
-	//			"description": "Status of pet that needs to be updated"
-	//		}
-	//	},
-	//	"required": ["petId"]
-	//}`
 	for _, tool := range serverInfo.Tools {
 		var toolSchema protocol.InputSchema
 		err := json.Unmarshal([]byte(tool.ToolSchema), &toolSchema)
@@ -131,6 +113,27 @@ func (m *McpServerManager) RegisterToolFromCache() {
 			RawInputSchema: nil,
 		}
 		m.Server.RegisterTool(toolInfo, handleTimeRequest)
+	}
+	m.cache.ClearCache(cache.OldMcpValue)
+
+	return
+}
+
+func (m *McpServerManager) UnRegisterToolFromCache() {
+	serverInfo, ok := m.cache.LoadMcpServer(cache.OldMcpValue)
+	if !ok {
+		m.log.Errorf("UnRegisterToolFromCache error: %v", "加载内存Old cache serverInfo缓存信息失败")
+		return
+	}
+	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
+		return
+	}
+	for _, tool := range serverInfo.Tools {
+		name := tool.Name
+		if tool.IsRepeat == _const.StatusDisplay {
+			name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+		}
+		m.Server.UnregisterTool(name)
 	}
 	return
 }
