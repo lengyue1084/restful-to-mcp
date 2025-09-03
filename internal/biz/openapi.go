@@ -325,6 +325,8 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 
 func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpdateForAuthRequest) (resp *api.OpenapiUpdateForAuthResponse, err error) {
 
+	//更新老的接口到缓存
+	o.UpdateToolsForOldCache(ctx)
 	err = o.Tx.ExecTx(ctx, func(ctx context.Context) error {
 		err = o.mcpServerRepo.UpdateMcpServerForAuthWithTx(ctx, req.UUID, req.IsAuth, req.ServiceToken, req.PlatformToken)
 		if err != nil {
@@ -345,15 +347,22 @@ func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpda
 	go func(ctx2 context.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				o.log.ErrorWithContext(ctx, "panic: %+v", err)
+				o.log.ErrorWithContext(ctx2, "panic: %+v", err)
 			}
 		}()
 		o.UpdateToolsForCache(ctx2)
-		//理解刷新注册工具
 		o.mcpServerManager.RegisterToolFromCache()
 	}(ctx)
 
 	return
+}
+func (o *OpenapiUseCase) UpdateToolsForOldCache(ctx context.Context) {
+	mcpServerInfo, err := o.mcpServerRepo.GetMcpServerInfoWithAllTools(ctx)
+	if err != nil {
+		o.log.ErrorWithContext(context.Background(), "UpdateToolsForOldCache GetMcpServerInfoWithTools error: %v", err)
+		return
+	}
+	o.cache.StoreMcpServer(cache.OldMcpValue, mcpServerInfo)
 }
 func (o *OpenapiUseCase) UpdateToolsForCache(ctx context.Context) {
 
@@ -362,7 +371,7 @@ func (o *OpenapiUseCase) UpdateToolsForCache(ctx context.Context) {
 		o.log.ErrorWithContext(context.Background(), "GetMcpServerInfoWithTools error: %v", err)
 		return
 	}
-	o.cache.StoreMcpServer(mcpServerInfo)
+	o.cache.StoreMcpServer(cache.NewMcpValue, mcpServerInfo)
 }
 
 func (o *OpenapiUseCase) ValidateBase64String(ctx context.Context, fileContent string) bool {

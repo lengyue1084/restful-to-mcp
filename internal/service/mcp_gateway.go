@@ -37,7 +37,6 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 	serviceToken := c.GetHeader("service-token")
 	fmt.Printf("platformToken:%s\n,serviceToken:%s\n", platformToken, serviceToken)
 
-	//m.mcpServerManager.Server.UnregisterTool("current_time")
 	// 使用已预启动的服务器管理器处理连接
 	m.mcpServerManager.HandleConnection(c)
 

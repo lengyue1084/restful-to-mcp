@@ -13,6 +13,7 @@ import (
 	"flow-bridge-mcp/internal/mcp/server"
 	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/pkg/cache"
+	"flow-bridge-mcp/internal/pkg/startup"
 	"flow-bridge-mcp/internal/service"
 	"flow-bridge-mcp/middleware"
 	"flow-bridge-mcp/pkg/logger"
@@ -34,5 +35,6 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		database.ProviderSet,
 		server.ProviderSet,
 		cache.ProviderSet,
+		startup.ProviderSet,
 	))
 }

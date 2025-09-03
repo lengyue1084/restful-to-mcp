@@ -91,6 +91,7 @@ func (m *McpServerManager) RegisterToolFromCache() {
 		return
 	}
 	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
+		m.log.Errorf("LoadMcpServer error,serverInfo:%+v", serverInfo)
 		return
 	}
 	for _, tool := range serverInfo.Tools {
