@@ -53,7 +53,8 @@ type MemoryCache struct {
 
 func NewMemoryCache() *MemoryCache {
 	return &MemoryCache{
-		McpServer: atomic.Value{},
+		McpServer:    atomic.Value{},
+		OldMcpServer: atomic.Value{},
 	}
 }
 
