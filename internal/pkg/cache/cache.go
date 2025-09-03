@@ -65,7 +65,7 @@ const (
 	OldMcpValue
 )
 
-func (m *MemoryCache) StoreMcpServer(typeCache TypeCache, mcpServerInfo *model.McpServer) {
+func (m *MemoryCache) StoreMcpServer(typeCache TypeCache, mcpServerInfo []*model.McpServer) {
 	switch typeCache {
 	case NewMcpValue:
 		m.McpServer.Store(mcpServerInfo)
@@ -74,18 +74,18 @@ func (m *MemoryCache) StoreMcpServer(typeCache TypeCache, mcpServerInfo *model.M
 	}
 }
 
-func (m *MemoryCache) LoadMcpServer(typeCache TypeCache) (mcpServerInfo *model.McpServer, ok bool) {
+func (m *MemoryCache) LoadMcpServer(typeCache TypeCache) (mcpServerList []*model.McpServer, ok bool) {
 
 	switch typeCache {
 	case NewMcpValue:
 		if value := m.McpServer.Load(); value != nil {
-			if serverInfo, ok := value.(*model.McpServer); ok {
+			if serverInfo, ok := value.([]*model.McpServer); ok {
 				return serverInfo, ok
 			}
 		}
 	case OldMcpValue:
 		if value := m.OldMcpServer.Load(); value != nil {
-			if serverInfo, ok := value.(*model.McpServer); ok {
+			if serverInfo, ok := value.([]*model.McpServer); ok {
 				return serverInfo, ok
 			}
 		}

@@ -86,35 +86,44 @@ func (m *McpServerManager) HandleConnection(c *gin.Context) {
 
 func (m *McpServerManager) RegisterToolFromCache() {
 	m.UnRegisterToolFromCache()
-	serverInfo, ok := m.cache.LoadMcpServer(cache.NewMcpValue)
+	serverInfoList, ok := m.cache.LoadMcpServer(cache.NewMcpValue)
 	if !ok {
 		m.log.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
 		return
 	}
-	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
-		m.log.Errorf("LoadMcpServer error,serverInfo:%+v", serverInfo)
+	if len(serverInfoList) == 0 {
+		m.log.Errorf("LoadMcpServer error: %v", "没有获取到serverInfoList信息")
 		return
 	}
-	for _, tool := range serverInfo.Tools {
-		var toolSchema protocol.InputSchema
-		err := json.Unmarshal([]byte(tool.ToolSchema), &toolSchema)
-		if err != nil {
-			m.log.Errorf("Failed to unmarshal tool schema: %v", err)
-			continue
+	for _, serverInfo := range serverInfoList {
+		if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
+			m.log.Errorf("LoadMcpServer error,serverInfo:%+v", serverInfo)
+			return
 		}
-		name := tool.Name
-		if tool.IsRepeat == _const.StatusDisplay {
-			name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+		for _, tool := range serverInfo.Tools {
+			if tool.IsShow != _const.StatusDisplay {
+				continue
+			}
+			var toolSchema protocol.InputSchema
+			err := json.Unmarshal([]byte(tool.ToolSchema), &toolSchema)
+			if err != nil {
+				m.log.Errorf("Failed to unmarshal tool schema: %v", err)
+				continue
+			}
+			name := tool.Name
+			if tool.IsRepeat == _const.CommonStatusYes {
+				name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+			}
+			toolInfo := &protocol.Tool{
+				Name:           name,
+				Description:    tool.Description,
+				InputSchema:    toolSchema,
+				OutputSchema:   protocol.OutputSchema{},
+				Annotations:    nil,
+				RawInputSchema: nil,
+			}
+			m.Server.RegisterTool(toolInfo, m.httpProxy.HandleHttpProxy)
 		}
-		toolInfo := &protocol.Tool{
-			Name:           name,
-			Description:    tool.Description,
-			InputSchema:    toolSchema,
-			OutputSchema:   protocol.OutputSchema{},
-			Annotations:    nil,
-			RawInputSchema: nil,
-		}
-		m.Server.RegisterTool(toolInfo, m.httpProxy.HandleHttpProxy)
 	}
 	m.cache.ClearCache(cache.OldMcpValue)
 
@@ -122,20 +131,26 @@ func (m *McpServerManager) RegisterToolFromCache() {
 }
 
 func (m *McpServerManager) UnRegisterToolFromCache() {
-	serverInfo, ok := m.cache.LoadMcpServer(cache.OldMcpValue)
+	serverInfoList, ok := m.cache.LoadMcpServer(cache.OldMcpValue)
 	if !ok {
-		m.log.Errorf("UnRegisterToolFromCache error: %v", "加载内存Old cache serverInfo缓存信息失败")
+		m.log.Errorf("UnRegisterToolFromCache error: %v", "加载内存Old cache serverInfoList缓存信息失败")
 		return
 	}
-	if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
+	if len(serverInfoList) == 0 {
+		m.log.Errorf("UnRegisterToolFromCache error: %v", "没有获取到serverInfoList信息")
 		return
 	}
-	for _, tool := range serverInfo.Tools {
-		name := tool.Name
-		if tool.IsRepeat == _const.StatusDisplay {
-			name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+	for _, serverInfo := range serverInfoList {
+		if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
+			return
 		}
-		m.Server.UnregisterTool(name)
+		for _, tool := range serverInfo.Tools {
+			name := tool.Name
+			if tool.IsRepeat == _const.CommonStatusYes {
+				name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+			}
+			m.Server.UnregisterTool(name)
+		}
 	}
 	return
 }

@@ -160,9 +160,9 @@ func (m *McpServerRepo) GetCountMcpServerInfoBySerialNumber(ctx context.Context,
 	return
 }
 
-func (m *McpServerRepo) GetMcpServerInfoWithAllTools(ctx context.Context) (serverInfo *model.McpServer, err error) {
+func (m *McpServerRepo) GetMcpServerInfoWithAllTools(ctx context.Context) (serverInfo []*model.McpServer, err error) {
 	err = m.data.Db.WithContext(ctx).
-		Where("status = ?", _const.ServerHadSetToken).
+		Where("status in ?", []int{int(_const.ServerHadSetToken), int(_const.ServerTokenIsWorking)}).
 		Preload("Tools").
 		Find(&serverInfo).Error
 	if err != nil {

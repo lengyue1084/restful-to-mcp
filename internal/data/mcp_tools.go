@@ -68,7 +68,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 				return
 			}
 			if toolInfo.ID > 0 {
-				tool.IsRepeat = _const.StatusDisplay //重复
+				tool.IsRepeat = _const.CommonStatusYes //重复
 			}
 			err = db.WithContext(ctx).Create(tool).Error
 			if err != nil {

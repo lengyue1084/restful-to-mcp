@@ -249,6 +249,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				IsPlatformAuth: _const.IsAuthNo, //默认不启用平台权限控制
 				IsShow:         isShow,
 				SerialNumber:   serialNumber,
+				IsRepeat:       _const.CommonStatusNo,
 			}
 			mcpTools = append(mcpTools, toolInfo)
 

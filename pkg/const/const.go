@@ -8,6 +8,7 @@ type (
 	McpServerTypeStatus int8
 	Status              int8
 	ServerStatus        int8
+	CommonStatus        int8
 )
 
 const (
@@ -19,8 +20,10 @@ const (
 	McpServerTypeGrpc    McpServerTypeStatus = 2
 
 	// StatusDisplay 通用的是否显示
-	StatusDisplay Status = 1
-	StatusHidden  Status = 2
+	StatusHidden    Status       = 1
+	StatusDisplay   Status       = 2
+	CommonStatusNo  CommonStatus = 1
+	CommonStatusYes CommonStatus = 2
 
 	ServerNotSetToken    ServerStatus = 1
 	ServerHadSetToken    ServerStatus = 2
