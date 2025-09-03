@@ -47,9 +47,9 @@ func NewApp(
 	)
 	err := initializer.Initialize()
 	if err != nil {
-		initializer.Log.Infof("初始化基础数据失败: %v", err)
+		initializer.Log.Infof("更新全量mcp工具数据失败: %v", err)
 	}
-	initializer.Log.Info("初始化基础数据成功")
+	initializer.Log.Info("加载全量mcp工具成功")
 	return &App{
 		app: r,
 	}

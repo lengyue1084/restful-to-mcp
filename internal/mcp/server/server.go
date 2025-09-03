@@ -3,16 +3,15 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"flow-bridge-mcp/internal/mcp/proxy"
 	"flow-bridge-mcp/internal/pkg/cache"
 	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
-	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"strconv"
-	"time"
 )
 
 // ProviderSet is data providers.
@@ -34,9 +33,10 @@ type McpServerManager struct {
 	log                     *logger.Logger
 	streamableHttpTransprot *StreamableHttpTransprot
 	cache                   *cache.MemoryCache
+	httpProxy               *proxy.HttpProxy
 }
 
-func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, log *logger.Logger, cache *cache.MemoryCache) (mcpServerManager *McpServerManager, err error) {
+func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, httpProxy *proxy.HttpProxy, log *logger.Logger, cache *cache.MemoryCache) (mcpServerManager *McpServerManager, err error) {
 	// 创建 streamable server
 	streamableServer, err := server.NewServer(streamableHttpTransprot.StreamableTransport)
 	if err != nil {
@@ -47,6 +47,7 @@ func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, log *
 		log:                     log,
 		streamableHttpTransprot: streamableHttpTransprot,
 		cache:                   cache,
+		httpProxy:               httpProxy,
 	}, err
 }
 func (m *McpServerManager) Run(ctx context.Context) error {
@@ -113,7 +114,7 @@ func (m *McpServerManager) RegisterToolFromCache() {
 			Annotations:    nil,
 			RawInputSchema: nil,
 		}
-		m.Server.RegisterTool(toolInfo, handleTimeRequest)
+		m.Server.RegisterTool(toolInfo, m.httpProxy.HandleHttpProxy)
 	}
 	m.cache.ClearCache(cache.OldMcpValue)
 
@@ -137,21 +138,4 @@ func (m *McpServerManager) UnRegisterToolFromCache() {
 		m.Server.UnregisterTool(name)
 	}
 	return
-}
-
-func handleTimeRequest(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
-
-	loc, err := time.LoadLocation("UTC")
-	if err != nil {
-		return nil, fmt.Errorf("无效的时区: %v", err)
-	}
-
-	return &protocol.CallToolResult{
-		Content: []protocol.Content{
-			&protocol.TextContent{
-				Type: "text",
-				Text: time.Now().In(loc).String(),
-			},
-		},
-	}, nil
 }

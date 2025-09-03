@@ -11,6 +11,7 @@ import (
 	"flow-bridge-mcp/internal/conf"
 	"flow-bridge-mcp/internal/data"
 	"flow-bridge-mcp/internal/data/database"
+	"flow-bridge-mcp/internal/mcp/proxy"
 	"flow-bridge-mcp/internal/mcp/server"
 	"flow-bridge-mcp/internal/mcp/transformer/openapi"
 	"flow-bridge-mcp/internal/pkg/cache"
@@ -58,7 +59,8 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	mcpServerManager, err := server.NewMcpServerManager(streamableHttpTransprot, loggerLogger, memoryCache)
+	httpProxy := proxy.NewHttpProxy(loggerLogger, memoryCache)
+	mcpServerManager, err := server.NewMcpServerManager(streamableHttpTransprot, httpProxy, loggerLogger, memoryCache)
 	if err != nil {
 		cleanup4()
 		cleanup3()
