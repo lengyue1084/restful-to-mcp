@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
@@ -94,8 +95,8 @@ func (m *Middleware) LoggerMiddleware() gin.HandlerFunc {
 
 		// 创建基础日志字段
 		baseFields := []zap.Field{
-			zap.String("traceId", c.GetString("traceId")),
-			zap.String("spanId", c.GetString("spanId")),
+			zap.String(_const.TraceId, c.GetString(_const.TraceId)),
+			zap.String(_const.SpanId, c.GetString(_const.SpanId)),
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),
 			zap.String("query", query),
