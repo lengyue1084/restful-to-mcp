@@ -353,6 +353,9 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				IsShow:        isShow,
 				Security:      securityInfo,
 			}
+			//if tool.Name == "addPet" {
+			//	fmt.Printf("operation.OperationID is empty")
+			//}
 
 			// 添加默认请求头
 			tool.Headers["Content-Type"] = "application/json"
@@ -480,6 +483,16 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 										Type:        "string",                                               // 设置默认参数类型为字符串
 										Description: prop.Value.Description,
 									}
+									// 处理 schema 引用
+									if prop.Ref != "" {
+										refName := strings.TrimPrefix(prop.Ref, "#/components/schemas/")
+										if refSchema, ok := components.Schemas[refName]; ok {
+											// 使用引用的 schema 信息
+											if refSchema.Value != nil {
+												prop = refSchema // 替换为引用的 schema
+											}
+										}
+									}
 
 									// 如果属性有类型定义
 									if prop.Value != nil && prop.Value.Type != nil {
@@ -489,6 +502,9 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 											// 如果是数组类型且有 items 定义
 											if arg.Type == "array" && prop.Value.Items != nil && prop.Value.Items.Value != nil {
 												arg.Items = buildNestedArg(prop.Value.Items.Value)
+											} else if arg.Type == "object" && prop.Value.Properties != nil {
+												// 处理对象类型
+												arg.Items = buildNestedArg(prop.Value)
 											}
 										}
 									}
