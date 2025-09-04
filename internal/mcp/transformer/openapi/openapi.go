@@ -442,7 +442,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 			// 处理请求体
 			if operation.RequestBody != nil {
 				// 获取请求体是否必需的标志,否则会400错误，如果为true可以给一个空的json {}
-				requestBodyRequired := operation.RequestBody.Value.Required
+				//requestBodyRequired := operation.RequestBody.Value.Required
 				// 遍历请求体支持的内容类型
 				for contentType, contentValue := range operation.RequestBody.Value.Content {
 					if contentType == "application/json" { //只处理application/json，过滤其他类型包括二进制文件的类型
@@ -477,10 +477,11 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 
 									// 创建请求体参数配置
 									arg := config.ArgConfig{
-										Name:        name, //字段名
-										Position:    "body",
-										Required:    requestBodyRequired || contains(schema.Required, name), // 判断属性是否必需，如果全局没有设置，则取，则判断ref中required是否定义了字段
-										Type:        "string",                                               // 设置默认参数类型为字符串
+										Name:     name, //字段名
+										Position: "body",
+										//Required:    requestBodyRequired || contains(schema.Required, name), // 判断属性是否必需，如果全局没有设置，则取，则判断ref中required是否定义了字段
+										Required:    contains(schema.Required, name), // 判断属性是否必需，如果全局没有设置，则取，则判断ref中required是否定义了字段
+										Type:        "string",                        // 设置默认参数类型为字符串
 										Description: prop.Value.Description,
 									}
 									// 处理 schema 引用
