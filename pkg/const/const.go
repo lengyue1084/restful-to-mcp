@@ -35,6 +35,15 @@ const (
 	CommonContextTimeOut       = 5
 )
 
+const (
+	PlatformToken = "x-mcp-platform-token"
+	ServiceToken  = "x-mcp-service-token"
+)
+const (
+	TraceId = "traceId"
+	SpanId  = "spanId"
+)
+
 func (s ServerStatus) Sting() string {
 	switch s {
 	case ServerNotSetToken:
