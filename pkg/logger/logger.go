@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	_const "flow-bridge-mcp/pkg/const"
 
 	"flow-bridge-mcp/internal/conf"
 
@@ -55,14 +56,14 @@ type Logger struct {
 
 func (l *Logger) WithContext(ctx context.Context) *Logger {
 	var fields []interface{}
-	if traceIdValue := ctx.Value("traceId"); traceIdValue != nil {
+	if traceIdValue := ctx.Value(_const.TraceId); traceIdValue != nil {
 		if traceId, ok := traceIdValue.(string); ok && traceId != "" {
-			fields = append(fields, "traceId", traceId)
+			fields = append(fields, _const.TraceId, traceId)
 		}
 	}
-	if spanIdValue := ctx.Value("spanId"); spanIdValue != nil {
+	if spanIdValue := ctx.Value(_const.SpanId); spanIdValue != nil {
 		if spanId, ok := spanIdValue.(string); ok && spanId != "" {
-			fields = append(fields, "spanId", spanId)
+			fields = append(fields, _const.SpanId, spanId)
 		}
 	}
 	l.SugaredLogger = l.SugaredLogger.With(fields...)
