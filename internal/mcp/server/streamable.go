@@ -13,7 +13,10 @@ type StreamableHttpTransprot struct {
 
 func NewMcpTransport(log *logger.Logger) (*StreamableHttpTransprot, func(), error) {
 	ctx := context.Background()
-	streamableTransport, handler, err := transport.NewStreamableHTTPServerTransportAndHandler()
+	streamableTransport, streamableHandler, err := transport.NewStreamableHTTPServerTransportAndHandler(
+		transport.WithStreamableHTTPServerTransportAndHandlerOptionLogger(log),
+	)
+
 	if err != nil {
 		log.WithContext(ctx).Errorf("Failed to create streamable server: %v", err)
 		return nil, nil, err
@@ -27,7 +30,7 @@ func NewMcpTransport(log *logger.Logger) (*StreamableHttpTransprot, func(), erro
 	}
 	return &StreamableHttpTransprot{
 		StreamableTransport: streamableTransport,
-		StreamableHandler:   handler,
+		StreamableHandler:   streamableHandler,
 	}, clean, nil
 
 }

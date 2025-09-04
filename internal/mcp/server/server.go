@@ -7,6 +7,7 @@ import (
 	"flow-bridge-mcp/internal/pkg/cache"
 	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
+	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/gin-gonic/gin"
@@ -52,6 +53,7 @@ func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, httpP
 }
 func (m *McpServerManager) Run(ctx context.Context) error {
 	// 启动 MCP 服务器
+	//m.Server.Use(m.AuthMiddleware())
 	serverErrChan := make(chan error, 1)
 	go func() {
 		m.log.WithContext(ctx).Info("Starting MCP server")
@@ -122,12 +124,54 @@ func (m *McpServerManager) RegisterToolFromCache() {
 				Annotations:    nil,
 				RawInputSchema: nil,
 			}
-			m.Server.RegisterTool(toolInfo, m.httpProxy.HandleHttpProxy)
+			authentication := m.authenticationMiddleware()
+			// 创建带上下文信息的处理函数
+			handler := m.createContextAwareHandler()
+			m.Server.RegisterTool(toolInfo, handler, authentication)
 		}
 	}
-	m.cache.ClearCache(cache.OldMcpValue)
 
+	m.cache.ClearCache(cache.OldMcpValue)
 	return
+}
+
+func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
+	return func(next server.ToolHandlerFunc) server.ToolHandlerFunc {
+		return func(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+			platformToken, ok := ctx.Value(_const.PlatformToken).(string)
+			if !ok {
+				return nil, fmt.Errorf("无效的%s", _const.PlatformToken)
+			}
+			//serviceToken, ok := ctx.Value(_const.ServiceToken).(string)
+			//if !ok {
+			//	return nil, fmt.Errorf("无效的%s", _const.ServiceToken)
+			//}
+			mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue)
+			if !ok {
+				return nil, fmt.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
+			}
+			for _, serverInfo := range mcpServerList {
+				if len(serverInfo.Tools) > 0 {
+					for _, tool := range serverInfo.Tools {
+						if req.Name == tool.Name {
+							if tool.IsPlatformAuth == _const.IsAuthYes && serverInfo.PlatformToken != platformToken {
+								m.log.WithContext(ctx).Errorf("授权平台token%s:%s无效,方法:%s", _const.PlatformToken, platformToken, req.Name)
+								return nil, fmt.Errorf("授权平台token%s无效", _const.PlatformToken)
+							}
+						}
+					}
+				}
+			}
+			return next(ctx, req)
+		}
+	}
+}
+
+// 创建带上下文信息的处理函数
+func (m *McpServerManager) createContextAwareHandler() func(context.Context, *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	return func(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+		return m.httpProxy.HandleHttpProxy(ctx, req)
+	}
 }
 
 func (m *McpServerManager) UnRegisterToolFromCache() {

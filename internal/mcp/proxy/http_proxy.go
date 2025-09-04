@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"flow-bridge-mcp/internal/pkg/cache"
+	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
@@ -45,14 +46,15 @@ func (h *HttpProxy) ctToArgs(ctMap map[string]interface{}) []*ArgStruct {
 	}
 	return args
 }
-func (h HttpProxy) toHttpTansport(ctMap map[string]interface{}) {
-
-}
 
 func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
 
+	if serviceToken, ok := ctx.Value(_const.ServiceToken).(string); ok {
+		h.log.Infof("Service Token: %s", serviceToken)
+	}
 	name := req.Name
 	args := h.ctToArgs(req.Arguments)
+
 	fmt.Printf("name: %v", name)
 	fmt.Printf("args: %v", args)
 	loc, err := time.LoadLocation("UTC")

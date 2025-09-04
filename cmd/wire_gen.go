@@ -79,7 +79,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger, memoryCache)
 	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
 	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
-	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerManager, loggerLogger)
+	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerUseCase, mcpServerManager, loggerLogger, memoryCache)
 	engine := router.NewRouter(app, openapiService, mcpServerService, mcpToosService, mcpGatewayService)
 	return engine, func() {
 		cleanup4()
