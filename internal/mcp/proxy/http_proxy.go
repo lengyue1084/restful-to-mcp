@@ -134,9 +134,6 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 		}
 	}
 
-	mcpServerList, ok := h.cache.LoadMcpServer(cache.NewMcpValue)
-	fmt.Printf("McpServerList: %v", mcpServerList)
-
 	return &protocol.CallToolResult{
 		IsError: false,
 		Content: []protocol.Content{
