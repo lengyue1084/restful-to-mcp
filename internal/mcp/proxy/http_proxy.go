@@ -150,6 +150,7 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 func (h *HttpProxy) findToolInfo(toolName string) (*model.McpTools, error) {
 	mcpServerList, ok := h.cache.LoadMcpServer(cache.NewMcpValue)
 	if !ok {
+		h.log.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
 		return nil, fmt.Errorf("加载内存serverInfo缓存信息失败")
 	}
 	var toolInfo model.McpTools
@@ -165,11 +166,13 @@ func (h *HttpProxy) findToolInfo(toolName string) (*model.McpTools, error) {
 
 				if toolName == actualToolName {
 					if tool.McpServerType != _const.McpServerTypeOpenapi {
+						h.log.Errorf("该工具只支持%s类型", _const.McpServerTypeOpenapi)
 						return nil, fmt.Errorf("该工具只支持%s类型", _const.McpServerTypeOpenapi)
 					}
 					var urls []string
 					err := json.Unmarshal([]byte(mcpServer.Urls), &urls)
 					if err != nil {
+						h.log.Errorf("mcpServerInfo.Urls json转换错误，err:%+v", err)
 						return nil, err
 					}
 					var tmpEndpoint string
