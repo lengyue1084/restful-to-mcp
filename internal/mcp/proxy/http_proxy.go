@@ -114,7 +114,7 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 			break
 		}
 		retryCount++
-		h.log.Warnf("请求失败，重试次数: %d, 错误: %v", retryCount, err)
+		h.log.Warnf("请求%s失败，重试次数: %d, 错误: %v", requestParams.URL, retryCount, err)
 
 		// 如果达到最大重试次数，尝试备用URL
 		if retryCount >= maxRetries && len(toolMetadata.Urls) > 1 {
@@ -127,6 +127,7 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 			if err != nil {
 				// 备用URL也失败，恢复原始URL并返回错误
 				requestParams.URL = originalURL
+				h.log.Errorf("所有URL:%s尝试失败，主URL错误: %v, 备用URL错误: %v", requestParams.URL, err, err)
 				return nil, fmt.Errorf("所有URL尝试失败，主URL错误: %w, 备用URL错误: %v", err, err)
 			}
 			// 备用URL成功
