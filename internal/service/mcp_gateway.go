@@ -46,7 +46,7 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 		ctx = context.WithValue(ctx, _const.ServiceToken, serviceToken)
 	}
 	if traceId := c.Value(_const.TraceId); traceId != "" {
-		ctx = context.WithValue(ctx, _const.ServiceToken, traceId)
+		ctx = context.WithValue(ctx, _const.TraceId, traceId)
 	}
 	if spanId := c.Value(_const.SpanId); spanId != "" {
 		ctx = context.WithValue(ctx, _const.SpanId, spanId)

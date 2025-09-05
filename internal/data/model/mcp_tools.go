@@ -26,7 +26,7 @@ type McpTools struct {
 	IsShow         _const.Status     `json:"isShow" gorm:"column:is_show;type:SMALLINT;default:1;comment:是否显示"`
 	SerialNumber   string            `json:"serialNumber" gorm:"column:serial_number;type:varchar(36);default:'';comment:服务序列号"` //来源于server 的serialNumber
 	//是否重复
-	IsRepeat _const.CommonStatus `json:"isRepeat" gorm:"column:is_repeat;type:SMALLINT;default:1;comment:是否重复"` //1 不重复 2重复
+	IsRepeat _const.CommonStatus `json:"isRepeat" gorm:"column:is_repeat;type:SMALLINT;default:1;comment:是否重复"`
 }
 
 func (m *McpTools) TableName() string {

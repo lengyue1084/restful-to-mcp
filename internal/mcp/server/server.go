@@ -142,10 +142,10 @@ func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
 			if !ok {
 				return nil, fmt.Errorf("无效的%s", _const.PlatformToken)
 			}
-			//serviceToken, ok := ctx.Value(_const.ServiceToken).(string)
-			//if !ok {
-			//	return nil, fmt.Errorf("无效的%s", _const.ServiceToken)
-			//}
+			serviceToken, ok := ctx.Value(_const.ServiceToken).(string)
+			if !ok {
+				return nil, fmt.Errorf("无效的%s", _const.ServiceToken)
+			}
 			mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue)
 			if !ok {
 				return nil, fmt.Errorf("LoadMcpServer error: %v", "加载内存serverInfo缓存信息失败")
@@ -153,11 +153,24 @@ func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
 			for _, serverInfo := range mcpServerList {
 				if len(serverInfo.Tools) > 0 {
 					for _, tool := range serverInfo.Tools {
-						if req.Name == tool.Name {
+						toolName := tool.Name
+						if tool.IsRepeat == _const.CommonStatusYes && tool.SerialNumber != "" {
+							toolName = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+						}
+						if req.Name == toolName {
 							if tool.IsPlatformAuth == _const.IsAuthYes && serverInfo.PlatformToken != platformToken {
 								m.log.WithContext(ctx).Errorf("授权平台token%s:%s无效,方法:%s", _const.PlatformToken, platformToken, req.Name)
 								return nil, fmt.Errorf("授权平台token%s无效", _const.PlatformToken)
 							}
+							if tool.IsAuth == _const.IsAuthYes && serverInfo.ServiceToken != serviceToken {
+								m.log.WithContext(ctx).Errorf("授权服务token%s:%s无效,方法:%s", _const.ServiceToken, serviceToken, req.Name)
+								return nil, fmt.Errorf("授权服务token%s无效", _const.ServiceToken)
+							}
+							if tool.IsShow == _const.StatusHidden {
+								m.log.WithContext(ctx).Errorf("隐藏方法%s", req.Name)
+								return nil, fmt.Errorf("该方法%s不可用,请核对后再试", req.Name)
+							}
+							break
 						}
 					}
 				}
