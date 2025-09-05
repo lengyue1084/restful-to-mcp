@@ -65,7 +65,8 @@ type RequestParams struct {
 
 func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
 	// 从上下文获取服务令牌
-	if serviceToken, ok := ctx.Value(_const.ServiceToken).(string); ok {
+	serviceToken, ok := ctx.Value(_const.ServiceToken).(string)
+	if ok {
 		h.log.Infof("Service Token: %s", serviceToken)
 	}
 
@@ -86,18 +87,55 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 	if err != nil {
 		return nil, fmt.Errorf("获取工具元数据失败: %w", err)
 	}
+	var security *config.Security
+	if toolInfo.IsAuth == _const.IsAuthYes && toolInfo.Security != "" {
+		err := json.Unmarshal([]byte(toolInfo.Security), &security)
+		if err != nil {
+			return nil, fmt.Errorf("解析工具安全配置失败: %w", err)
+		}
+	}
 
 	// 构建HTTP请求参数
-	requestParams, err := h.buildRequestParams(req.Arguments, argsSlice, toolMetadata)
+	requestParams, err := h.buildRequestParams(req.Arguments, argsSlice, toolMetadata, security, serviceToken)
 	if err != nil {
 		return nil, fmt.Errorf("构建请求参数失败: %w", err)
 	}
 
-	// 发送HTTP请求
-	response, err := h.sendHttpRequest(ctx, requestParams)
-	if err != nil {
-		return nil, fmt.Errorf("发送HTTP请求失败: %w", err)
+	var (
+		//重试次数
+		retryCount = 0
+		//最大重试次数
+		maxRetries = 3
+		response   []byte
+	)
+	for retryCount < maxRetries {
+		response, err = h.sendHttpRequest(ctx, requestParams)
+		if err == nil {
+			break
+		}
+		retryCount++
+		h.log.Warnf("请求失败，重试次数: %d, 错误: %v", retryCount, err)
+
+		// 如果达到最大重试次数，尝试备用URL
+		if retryCount >= maxRetries && len(toolMetadata.Urls) > 1 {
+			h.log.Infof("主URL重试失败，尝试备用URL")
+			// 保存原始URL用于恢复
+			originalURL := requestParams.URL
+			// 使用备用URL
+			requestParams.URL = toolMetadata.Urls[1]
+			response, err = h.sendHttpRequest(ctx, requestParams)
+			if err != nil {
+				// 备用URL也失败，恢复原始URL并返回错误
+				requestParams.URL = originalURL
+				return nil, fmt.Errorf("所有URL尝试失败，主URL错误: %w, 备用URL错误: %v", err, err)
+			}
+			// 备用URL成功
+			break
+		}
 	}
+
+	mcpServerList, ok := h.cache.LoadMcpServer(cache.NewMcpValue)
+	fmt.Printf("McpServerList: %v", mcpServerList)
 
 	return &protocol.CallToolResult{
 		IsError: false,
@@ -116,9 +154,11 @@ func (h *HttpProxy) findToolInfo(toolName string) (*model.McpTools, error) {
 	if !ok {
 		return nil, fmt.Errorf("加载内存serverInfo缓存信息失败")
 	}
+	var toolInfo model.McpTools
 	for _, mcpServer := range mcpServerList {
 		if len(mcpServer.Tools) > 0 {
 			for _, tool := range mcpServer.Tools {
+				toolInfo = *tool
 				// 处理重复工具名称
 				actualToolName := tool.Name
 				if tool.IsRepeat == _const.CommonStatusYes && tool.SerialNumber != "" {
@@ -144,8 +184,8 @@ func (h *HttpProxy) findToolInfo(toolName string) (*model.McpTools, error) {
 					}
 
 					tmpEndpoint = strings.TrimSuffix(tmpEndpoint, "|")
-					tool.Endpoint = tmpEndpoint
-					return tool, nil
+					toolInfo.Endpoint = tmpEndpoint
+					return &toolInfo, nil
 				}
 
 			}
@@ -212,7 +252,7 @@ func (h *HttpProxy) getToolMetadata(toolInfo *model.McpTools) (*ToolMetadata, er
 }
 
 // buildRequestParams 构建请求参数
-func (h *HttpProxy) buildRequestParams(inputArgs map[string]interface{}, argsSlice []*config.ArgConfig, toolMetadata *ToolMetadata) (*RequestParams, error) {
+func (h *HttpProxy) buildRequestParams(inputArgs map[string]interface{}, argsSlice []*config.ArgConfig, toolMetadata *ToolMetadata, security *config.Security, serviceToken string) (*RequestParams, error) {
 	params := &RequestParams{
 		URL:     toolMetadata.Endpoint,
 		Method:  toolMetadata.Method,
@@ -224,11 +264,26 @@ func (h *HttpProxy) buildRequestParams(inputArgs map[string]interface{}, argsSli
 		params.Headers[key] = value
 	}
 
-	// 分类参数
+	// 处理鉴权参数
 	pathParams := make(map[string]string)
 	queryParams := make(url.Values)
 	headerParams := make(map[string]string)
 	bodyParams := make(map[string]interface{})
+	switch security.Mode {
+	case config.AuthModeApiKey:
+		switch security.In {
+		case config.AuthPositionHeader:
+			params.Headers[security.Name] = serviceToken
+		case config.AuthPositionQuery:
+			queryParams.Add(security.Name, serviceToken)
+		default:
+			return nil, fmt.Errorf("不支持的API密钥位置: %s", security.In)
+		}
+	case config.AuthModeHttp:
+		params.Headers[security.Name] = fmt.Sprintf("%s %s", security.Scheme, serviceToken)
+	default:
+		return nil, fmt.Errorf("不支持的鉴权模式: %s", security.Mode)
+	}
 
 	// 根据参数位置分类
 	for _, argConfig := range argsSlice {
