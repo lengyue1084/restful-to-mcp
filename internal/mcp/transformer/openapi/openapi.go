@@ -268,18 +268,6 @@ func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, secu
 	return isAllNotAllowed, nil
 }
 
-//func (c Converter) GetSecurity(security openapi3.SecuritySchemes)  {
-//	if security != nil && len(security) > 0 && security[0] {
-//		//for _, sec := range doc.Security {
-//		// todo 暂时这里不考虑到多种授权的方式，只考虑默认一种
-//		for name := range security[0] {
-//			security = name
-//			break
-//		}
-//	}
-//
-//}
-
 func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Components, docSecuritykey string, authSecuritySchemes []*config.Security) (toolsSlice []*config.ToolConfig, err error) {
 	var securityLevel = config.SecurityLevelPublic
 	if docSecuritykey != "" {

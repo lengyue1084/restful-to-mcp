@@ -22,6 +22,7 @@ func NewRouter(
 		//router.GET("/sse/:serverId", OpenapiService.Upload)
 		//router.POST("/message", OpenapiService.Upload)
 		router.POST("/gateway/mcp", mcpGateWayService.McpStreamable)
+		router.POST("/gateway/:serverToken/mcp", mcpGateWayService.McpStreamable)
 	}
 	// 作为api服务对外提供服务
 	router = router.Group("/v1")

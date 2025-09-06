@@ -51,6 +51,12 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 	if spanId := c.Value(_const.SpanId); spanId != "" {
 		ctx = context.WithValue(ctx, _const.SpanId, spanId)
 	}
+
+	serverToken := c.Param(_const.ServerToken)
+	if serverToken != "" {
+		ctx = context.WithValue(ctx, _const.ServerToken, serverToken)
+	}
+
 	c.Request = c.Request.WithContext(ctx)
 	// 使用已预启动的服务器管理器处理连接
 	m.mcpServerManager.HandleConnection(c)

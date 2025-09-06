@@ -40,8 +40,9 @@ const (
 	ServiceToken  = "x-mcp-service-token"
 )
 const (
-	TraceId = "traceId"
-	SpanId  = "spanId"
+	TraceId     = "traceId"
+	SpanId      = "spanId"
+	ServerToken = "serverToken"
 )
 
 func (s ServerStatus) Sting() string {

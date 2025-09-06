@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/internal/mcp/proxy"
 	"flow-bridge-mcp/internal/pkg/cache"
 	_const "flow-bridge-mcp/pkg/const"
@@ -12,6 +13,7 @@ import (
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"log"
 	"strconv"
 )
 
@@ -53,7 +55,8 @@ func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, httpP
 }
 func (m *McpServerManager) Run(ctx context.Context) error {
 	// 启动 MCP 服务器
-	//m.Server.Use(m.AuthMiddleware())
+	//m.Server.Use(m.PanicRecoveryMiddleware(), m.ServerToolListByServerIdMiddleware()) //动态加载工具，全局的中间件会失效
+	m.Server.AddToolFilter(m.FilterToolsByServer)
 	serverErrChan := make(chan error, 1)
 	go func() {
 		m.log.WithContext(ctx).Info("Starting MCP server")
@@ -69,6 +72,70 @@ func (m *McpServerManager) Run(ctx context.Context) error {
 		return ctx.Err()
 	}
 
+}
+func (m *McpServerManager) FilterToolsByServer(ctx context.Context, tools []*protocol.Tool) []*protocol.Tool {
+
+	filterTools := make([]*protocol.Tool, 0)
+
+	if value, ok := ctx.Value(_const.ServerToken).(string); ok {
+		if mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue); ok {
+			var mcpServerTools []*model.McpTools
+			for _, mcpServer := range mcpServerList {
+				if mcpServer.UUID == value {
+					mcpServerTools = mcpServer.Tools
+					break
+				}
+			}
+			if len(mcpServerTools) > 0 {
+				for _, tool := range mcpServerTools {
+					if tool.IsShow == _const.StatusDisplay {
+						toolName := tool.Name
+						if tool.IsRepeat == _const.CommonStatusYes {
+							toolName = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+						}
+						for _, toolIem := range tools {
+							if toolIem.Name == toolName {
+								filterTools = append(filterTools, toolIem)
+							}
+						}
+					}
+				}
+			} else {
+				return tools
+			}
+
+		}
+	} else {
+		return tools
+	}
+
+	return filterTools
+}
+
+func (m *McpServerManager) ServerToolListByServerIdMiddleware() server.ToolMiddleware {
+	return func(next server.ToolHandlerFunc) server.ToolHandlerFunc {
+		return func(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+
+			m.log.WithContext(ctx).Info("HandleHttpProxy: %v", req)
+
+			return next(ctx, req)
+		}
+	}
+}
+
+// PanicRecoveryMiddleware returns a panic recovery middleware
+func (m *McpServerManager) PanicRecoveryMiddleware() server.ToolMiddleware {
+	return func(next server.ToolHandlerFunc) server.ToolHandlerFunc {
+		return func(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("[Middleware] Recovered from panic in tool %s: %v", req.Name, r)
+				}
+			}()
+
+			return next(ctx, req)
+		}
+	}
 }
 
 // HandleConnection 专门处理HTTP连接
@@ -116,6 +183,7 @@ func (m *McpServerManager) RegisterToolFromCache() {
 			if tool.IsRepeat == _const.CommonStatusYes {
 				name = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
 			}
+			//m.Server.Use(m.PanicRecoveryMiddleware(), m.ServerToolListByServerIdMiddleware()) //动态加载工具，全局的中间件会失效
 			toolInfo := &protocol.Tool{
 				Name:           name,
 				Description:    tool.Description,
