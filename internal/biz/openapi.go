@@ -116,10 +116,10 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		return nil, err
 	}
 	var tools []string
-	isHaveTools := false
+	haveTools := _const.HaveToolsNo
 	for _, val := range mcpInfo.Tools {
 		if val.IsShow {
-			isHaveTools = true
+			haveTools = _const.HaveToolsYes
 		}
 		tools = append(tools, val.Name)
 	}
@@ -127,10 +127,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "mcpConfig.Tools allowedTools json转换错误，err:%+v", err)
 		return nil, err
-	}
-	haveTools := _const.HaveToolsNo
-	if isHaveTools {
-		haveTools = _const.HaveToolsYes
 	}
 	security, err := json.Marshal(mcpInfo.SecurityList)
 	if err != nil {
@@ -197,11 +193,16 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				o.log.ErrorWithContext(ctx, "mcpConfig.Tools.Args json转换错误，err:%+v", err)
 				return fmt.Errorf("mcpConfig.Tools.Args json转换错误")
 			}
-			toolSecurity, err := json.Marshal(val.Security)
-			if err != nil {
-				o.log.ErrorWithContext(ctx, "mcpConfig.Tools.Security json转换错误，err:%+v", err)
-				return fmt.Errorf("mcpConfig.Tools.Security json转换错误")
+			var toolSecurity = ""
+			if val.Security != nil {
+				toolSecurityByte, err := json.Marshal(val.Security)
+				if err != nil {
+					o.log.ErrorWithContext(ctx, "mcpConfig.Tools.Security json转换错误，err:%+v", err)
+					return fmt.Errorf("mcpConfig.Tools.Security json转换错误")
+				}
+				toolSecurity = string(toolSecurityByte)
 			}
+
 			isAuth := _const.IsAuthYes
 			if val.SecurityLevel == config.SecurityLevelPublic {
 				isAuth = _const.IsAuthNo
@@ -243,7 +244,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				ResponseBody:   val.ResponseBody,
 				ToolSchema:     toolSchema,
 				Annotations:    annotations, //暂时不做支持，如果需要可以考虑后期支持
-				Security:       string(toolSecurity),
+				Security:       toolSecurity,
 				IsAuth:         isAuth,
 				AuthMode:       val.SecurityMode.String(),
 				IsPlatformAuth: _const.IsAuthNo, //默认不启用平台权限控制
