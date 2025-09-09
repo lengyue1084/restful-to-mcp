@@ -222,12 +222,12 @@ func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
 						}
 						if req.Name == toolName {
 							if tool.IsPlatformAuth == _const.IsAuthYes && serverInfo.PlatformToken != platformToken {
-								m.log.WithContext(ctx).Errorf("授权平台token%s:%s无效,方法:%s", _const.PlatformToken, platformToken, req.Name)
-								return nil, fmt.Errorf("授权平台token%s无效", _const.PlatformToken)
+								m.log.WithContext(ctx).Errorf("授权平台token,%s:%s无效,方法:%s", _const.PlatformToken, platformToken, req.Name)
+								return nil, fmt.Errorf("授权平台token,%s无效", _const.PlatformToken)
 							}
 							if tool.IsAuth == _const.IsAuthYes && serverInfo.ServiceToken != serviceToken {
-								m.log.WithContext(ctx).Errorf("授权服务token%s:%s无效,方法:%s", _const.ServiceToken, serviceToken, req.Name)
-								return nil, fmt.Errorf("授权服务token%s无效", _const.ServiceToken)
+								m.log.WithContext(ctx).Errorf("授权服务token,%s:%s无效,方法:%s", _const.ServiceToken, serviceToken, req.Name)
+								return nil, fmt.Errorf("授权服务token,%s无效", _const.ServiceToken)
 							}
 							if tool.IsShow == _const.StatusHidden {
 								m.log.WithContext(ctx).Errorf("隐藏方法%s", req.Name)
