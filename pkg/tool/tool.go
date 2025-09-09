@@ -19,7 +19,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
+
+func Capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
 
 // FileExists 检查文件是否存在
 func FileExists(filename string) (bool, error) {
