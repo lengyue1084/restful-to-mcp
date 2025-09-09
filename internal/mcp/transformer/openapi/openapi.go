@@ -244,7 +244,7 @@ func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, secu
 	isAllNotAllowed = false
 	if len(security) > 1 {
 		// or
-		return true, errors.New("only one security is allowed")
+		return true, errors.New("api only one security is allowed")
 	}
 	var securityMap = make(map[string]*config.Security)
 	for _, val := range securitySlice {
@@ -253,7 +253,7 @@ func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, secu
 	for _, sec := range security {
 		// and
 		if len(sec) > 1 {
-			return true, errors.New("only one security is allowed")
+			return true, errors.New("api only one security is allowed")
 		}
 		for name := range sec {
 			if v, ok := securityMap[name]; ok {
@@ -300,8 +300,10 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				}
 				operation.OperationID = fmt.Sprintf("%s_%s", strings.ToLower(method), strings.Join(pathParts, "_"))
 			}
-			var securityInfo *config.Security
-			var pathSecurityMode config.AuthMode
+			var securityInfo *config.Security = nil
+			var pathSecurityMode = config.AuthModeEmpty
+			pathSecurityKey = ""
+			pathSecurityLevel = config.SecurityLevelPublic
 			security := operation.Security
 			if security != nil {
 				pathSecurityLevel = config.SecurityLevelApi
@@ -347,7 +349,6 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 
 			// 添加默认请求头
 			tool.Headers["Content-Type"] = "application/json"
-			//tool.Headers["Authorization"] = "{{.Request.Headers.Authorization}}"
 
 			// 定义不同位置的参数切片
 			var bodyArgs []config.ArgConfig

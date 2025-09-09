@@ -56,7 +56,7 @@ func NewMcpServerManager(streamableHttpTransprot *StreamableHttpTransprot, httpP
 func (m *McpServerManager) Run(ctx context.Context) error {
 	// 启动 MCP 服务器
 	//m.Server.Use(m.PanicRecoveryMiddleware(), m.ServerToolListByServerIdMiddleware()) //动态加载工具，全局的中间件会失效
-	m.Server.AddToolFilter(m.FilterToolsByServer)
+	m.Server.SetToolFilter(m.FilterToolsByServer)
 	serverErrChan := make(chan error, 1)
 	go func() {
 		m.log.WithContext(ctx).Info("Starting MCP server")
@@ -100,13 +100,8 @@ func (m *McpServerManager) FilterToolsByServer(ctx context.Context, tools []*pro
 						}
 					}
 				}
-			} else {
-				return tools
 			}
-
 		}
-	} else {
-		return tools
 	}
 
 	return filterTools

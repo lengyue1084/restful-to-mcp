@@ -39,6 +39,7 @@ const (
 	AuthModeHttp          AuthMode = "http"
 	AuthModeOauth2        AuthMode = "oauth2"
 	AuthModeOpenIdConnect AuthMode = "openIdConnect"
+	AuthModeEmpty         AuthMode = ""
 )
 
 func (a AuthMode) String() string {
