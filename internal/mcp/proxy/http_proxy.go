@@ -9,6 +9,7 @@ import (
 	"flow-bridge-mcp/internal/pkg/cache"
 	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
+	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"io"
 	"net/http"
@@ -270,20 +271,22 @@ func (h *HttpProxy) buildRequestParams(inputArgs map[string]interface{}, argsSli
 	queryParams := make(url.Values)
 	headerParams := make(map[string]string)
 	bodyParams := make(map[string]interface{})
-	switch security.Mode {
-	case config.AuthModeApiKey:
-		switch security.In {
-		case config.AuthPositionHeader:
-			params.Headers[security.Name] = serviceToken
-		case config.AuthPositionQuery:
-			queryParams.Add(security.Name, serviceToken)
+	if security != nil {
+		switch security.Mode {
+		case config.AuthModeApiKey:
+			switch security.In {
+			case config.AuthPositionHeader:
+				params.Headers[security.Name] = serviceToken
+			case config.AuthPositionQuery:
+				queryParams.Add(security.Name, serviceToken)
+			default:
+				return nil, fmt.Errorf("不支持的API密钥位置: %s", security.In)
+			}
+		case config.AuthModeHttp:
+			params.Headers["Authorization"] = fmt.Sprintf("%s %s", tool.Capitalize(security.Scheme), serviceToken)
 		default:
-			return nil, fmt.Errorf("不支持的API密钥位置: %s", security.In)
+			return nil, fmt.Errorf("不支持的鉴权模式: %s", security.Mode)
 		}
-	case config.AuthModeHttp:
-		params.Headers[security.Name] = fmt.Sprintf("%s %s", security.Scheme, serviceToken)
-	default:
-		return nil, fmt.Errorf("不支持的鉴权模式: %s", security.Mode)
 	}
 
 	// 根据参数位置分类
