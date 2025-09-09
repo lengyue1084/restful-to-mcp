@@ -6,7 +6,6 @@ package openapi
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flow-bridge-mcp/internal/mcp/config"
 	"flow-bridge-mcp/internal/mcp/transformer"
 	"flow-bridge-mcp/pkg/logger"
@@ -188,7 +187,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 
 	if doc.Security != nil && len(doc.Security) > 0 {
 		//for _, sec := range doc.Security {
-		// todo 暂时这里不考虑到多种授权的方式，只考虑默认一种
+		// 只要有一种授权方式，不支持，则返回错误
 		ok, err := c.isAllNotAllowed(doc.Security, authSecuritySchemes)
 		if err != nil {
 			return nil, fmt.Errorf("doc security isAllNotAllowed failed: %w", err)
@@ -196,7 +195,7 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		if ok {
 			return nil, fmt.Errorf("doc security only support:%s and%s  methods，", config.AuthModeHttp, config.AuthModeApiKey)
 		}
-		//如果有多个，则只取第一个
+		//对于文档级别的鉴权方式，如果有多个鉴权方式，只取第一个
 		securityKey = c.getFirstSecurityName(doc.Security)
 	}
 
@@ -242,24 +241,25 @@ func (c *Converter) getFirstSecurityName(security openapi3.SecurityRequirements)
 }
 func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, securitySlice []*config.Security) (isAllNotAllowed bool, err error) {
 	isAllNotAllowed = false
-	if len(security) > 1 {
-		// or
-		return true, errors.New("api only one security is allowed")
-	}
+	//if len(security) > 1 {
+	//	// or
+	//	return true, errors.New("api only one security is allowed")
+	//}
 	var securityMap = make(map[string]*config.Security)
 	for _, val := range securitySlice {
 		securityMap[val.SecurityKey] = val
 	}
 	for _, sec := range security {
 		// and
-		if len(sec) > 1 {
-			return true, errors.New("api only one security is allowed")
-		}
+		//if len(sec) > 1 {
+		//	return true, errors.New("api only one security is allowed")
+		//}
 		for name := range sec {
 			if v, ok := securityMap[name]; ok {
 				securityMap[name] = v
 				if v.Mode != config.AuthModeHttp && v.Mode != config.AuthModeApiKey {
 					isAllNotAllowed = true
+					return isAllNotAllowed, fmt.Errorf("api only support:%s and%s  methods，", config.AuthModeHttp, config.AuthModeApiKey)
 				}
 			}
 
@@ -276,13 +276,14 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 	var (
 		pathSecurityLevel = securityLevel
 		pathSecurityKey   = docSecuritykey
-		isShow            = false
+		//接口是否显示，对于不符合规则的接口，默认不显示，不会注册到mcp server中
+		isShow = true
 	)
 
 	// 将文档中的路径转换为工具配置
 	for path, pathItem := range paths.Map() {
 
-		isShow = false
+		isShow = true
 		// 为每个 HTTP 方法创建一个工具配置
 		for method, operation := range pathItem.Operations() {
 			if method == "options" {
@@ -291,19 +292,20 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 
 			//判断OperationID 是否为空，则根据方法和路径生成一个操作 OperationID
 			if operation.OperationID == "" {
-				// 转换路径为操作 ID 格式，例如：/users/email/{email} -> users_email_argemail
+				// 如果OperationID 格式，例如：/user/order/{userid} -> users_email_arguserid
 				pathParts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 				for i, part := range pathParts {
 					if strings.HasPrefix(part, "{") && strings.HasSuffix(part, "}") {
 						pathParts[i] = "arg" + strings.TrimSuffix(strings.TrimPrefix(part, "{"), "}")
 					}
 				}
+				// OperationID = get_users_email_arguserid
 				operation.OperationID = fmt.Sprintf("%s_%s", strings.ToLower(method), strings.Join(pathParts, "_"))
 			}
 			var securityInfo *config.Security = nil
 			var pathSecurityMode = config.AuthModeEmpty
-			pathSecurityKey = ""
-			pathSecurityLevel = config.SecurityLevelPublic
+			pathSecurityKey = docSecuritykey
+			pathSecurityLevel = securityLevel
 			security := operation.Security
 			if security != nil {
 				pathSecurityLevel = config.SecurityLevelApi
@@ -315,15 +317,14 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 					return nil, fmt.Errorf("path:%s,security not allowed", path)
 				}
 				pathSecurityKey = c.getFirstSecurityName(*security)
-
 			}
 
 			for _, val := range authSecuritySchemes {
 				if pathSecurityKey == val.SecurityKey {
 					pathSecurityMode = val.Mode
 					securityInfo = val
-					if pathSecurityMode == config.AuthModeHttp || val.Mode == config.AuthModeApiKey {
-						isShow = true
+					if pathSecurityLevel != config.SecurityLevelPublic && (pathSecurityMode != config.AuthModeHttp && val.Mode != config.AuthModeApiKey) {
+						isShow = false
 					}
 					break
 				}
@@ -409,6 +410,24 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 						// 如果有扩展字段可以存储枚举信息
 						arg.Enum = enumValues
 						arg.Description = fmt.Sprintf("%s,其中参数只能从 [%s]选取", arg.Description, strings.Join(enumValues, ", "))
+					}
+					if arg.Description == "" {
+						arg.Description = "参数描述"
+					}
+					if schema.Min != nil {
+						arg.Description = fmt.Sprintf("%s,参数最小值是%v", arg.Description, *schema.Min)
+					}
+					if schema.Max != nil {
+						arg.Description = fmt.Sprintf("%s,参数最大值是%v", arg.Description, *schema.Max)
+					}
+					if schema.MinLength != 0 {
+						arg.Description = fmt.Sprintf("%s,参数最小长度是%v", arg.Description, schema.MinLength)
+					}
+					if schema.MaxLength != nil {
+						arg.Description = fmt.Sprintf("%s,参数最大长度是%v", arg.Description, schema.MaxLength)
+					}
+					if schema.Example != nil {
+						arg.Description = fmt.Sprintf("%s,参数示例是%v", arg.Description, schema.Example)
 					}
 				}
 
