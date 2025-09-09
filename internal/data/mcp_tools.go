@@ -78,7 +78,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 			continue
 		}
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
-			Where("id = ?", mcpTool.ID).
+			Where("id = ?", mcpTool.ID).Select("*").
 			Omit("SerialNumber", "McpServerId", "McpServerType", "McpServerUUID", "ID").
 			Updates(tool).Error
 		if err != nil {
