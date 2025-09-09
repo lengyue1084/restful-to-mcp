@@ -9,7 +9,7 @@ import (
 type OpenapiUploadRequest struct {
 	UUID        string `json:"uuid" binding:"required"`
 	Name        string `json:"name" binding:"required,min=1,max=200"`
-	FileContent string `json:"file_content" binding:"required"`
+	FileContent string `json:"fileContent" binding:"required"`
 	Description string `json:"description"`
 	Suffix      string `json:"suffix" binding:"required"`
 }
