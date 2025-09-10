@@ -331,7 +331,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 			}
 
 			// 创建工具配置
-			tool := &config.ToolConfig{
+			toolInfo := &config.ToolConfig{
 				Name:          operation.OperationID,
 				Description:   tool.FirstNonEmpty(operation.Description, operation.Summary),
 				Method:        method,
@@ -344,18 +344,20 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				IsShow:        isShow,
 				Security:      securityInfo,
 			}
-			//if tool.Name == "addPet" {
+			//if toolInfo.Name == "addPet" {
 			//	fmt.Printf("operation.OperationID is empty")
 			//}
 
 			// 添加默认请求头
-			tool.Headers["Content-Type"] = "application/json"
+			toolInfo.Headers["Content-Type"] = "application/json"
 
 			// 定义不同位置的参数切片
-			var bodyArgs []config.ArgConfig
-			var pathArgs []config.ArgConfig
-			var queryArgs []config.ArgConfig
-			var headerArgs []config.ArgConfig
+			var (
+				bodyArgs   []config.ArgConfig
+				pathArgs   []config.ArgConfig
+				queryArgs  []config.ArgConfig
+				headerArgs []config.ArgConfig
+			)
 
 			// 处理操作中的参数
 			for _, param := range operation.Parameters {
@@ -438,11 +440,11 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 					arg.Required = true
 					pathArgs = append(pathArgs, arg)
 					// 更新端点中的路径参数占位符
-					tool.Endpoint = strings.ReplaceAll(tool.Endpoint, fmt.Sprintf("{%s}", arg.Name), fmt.Sprintf("{{.Args.%s}}", arg.Name))
+					toolInfo.Endpoint = strings.ReplaceAll(toolInfo.Endpoint, fmt.Sprintf("{%s}", arg.Name), fmt.Sprintf("{{.Args.%s}}", arg.Name))
 				case "query":
 					queryArgs = append(queryArgs, arg)
 				case "header":
-					tool.Headers[arg.Name] = fmt.Sprintf("{{.Args.%s}}", arg.Name)
+					toolInfo.Headers[arg.Name] = fmt.Sprintf("{{.Args.%s}}", arg.Name)
 					headerArgs = append(headerArgs, arg)
 				}
 			}
@@ -454,9 +456,9 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				// 遍历请求体支持的内容类型
 				for contentType, contentValue := range operation.RequestBody.Value.Content {
 					if contentType == "application/json" { //只处理application/json，过滤其他类型包括二进制文件的类型
-						tool.RequestBody = contentType
-						tool.ContentType = contentType
-						tool.IsShow = true
+						toolInfo.RequestBody = contentType
+						toolInfo.ContentType = contentType
+						toolInfo.IsShow = true
 						// 添加请求体参数
 						if contentValue.Schema != nil {
 							schema := contentValue.Schema.Value
@@ -529,18 +531,18 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 						}
 						break
 					} else { //其他类型的不显示，比如multipart/form-data、application/x-www-form-urlencoded、text/plain、application/octet-stream
-						tool.IsShow = false
-						tool.ContentType = contentType //如果非application/json，则取最后一次的类型
+						toolInfo.IsShow = false
+						toolInfo.ContentType = contentType //如果非application/json，则取最后一次的类型
 					}
 
 				}
 			}
 
 			// 合并所有参数
-			tool.Args = append(tool.Args, pathArgs...)
-			tool.Args = append(tool.Args, queryArgs...)
-			tool.Args = append(tool.Args, bodyArgs...)
-			tool.Args = append(tool.Args, headerArgs...)
+			toolInfo.Args = append(toolInfo.Args, pathArgs...)
+			toolInfo.Args = append(toolInfo.Args, queryArgs...)
+			toolInfo.Args = append(toolInfo.Args, bodyArgs...)
+			toolInfo.Args = append(toolInfo.Args, headerArgs...)
 
 			// 如果有请求体参数，构建请求体模板,格式为json，如果参数为quantity，shipDate，status，complete，petId，则模板为：
 			//{
@@ -562,14 +564,14 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 					}
 				}
 				bodyTemplate.WriteString("}")
-				tool.RequestBody = bodyTemplate.String()
+				toolInfo.RequestBody = bodyTemplate.String()
 			}
-			tool.ToolSchema = tool.ArgsToInputSchema()
-			tool.Annotations = map[string]any{
-				"title":       tool.Name,
-				"description": tool.Description,
+			toolInfo.ToolSchema = toolInfo.ArgsToInputSchema()
+			toolInfo.Annotations = map[string]any{
+				"title":       toolInfo.Name,
+				"description": toolInfo.Description,
 			}
-			toolsSlice = append(toolsSlice, tool)
+			toolsSlice = append(toolsSlice, toolInfo)
 		}
 	}
 	return toolsSlice, nil
