@@ -8,6 +8,7 @@ import (
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
+	"fmt"
 )
 
 var _ biz.McpServerRepo = (*McpServerRepo)(nil)
@@ -113,6 +114,15 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 		m.log.ErrorWithContext(ctx, "get tx error: %v", err)
 		return
 	}
+	var mcpServerInfo = &model.McpServer{}
+	err = db.WithContext(ctx).Where("uuid = ?", uuid).Find(&mcpServerInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	if mcpServerInfo.ID <= 0 {
+		return fmt.Errorf("没有查询到该server信息")
+	}
 	err = db.WithContext(ctx).
 		Where("uuid = ?", uuid).
 		Updates(model.McpServer{
@@ -129,6 +139,16 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 }
 
 func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error) {
+	var mcpServerInfo = &model.McpServer{}
+	err = m.data.Db.WithContext(ctx).Where("uuid = ?", uuid).Find(&mcpServerInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	if mcpServerInfo.ID <= 0 {
+		return nil, fmt.Errorf("没有查询到该server信息")
+	}
+
 	updateMap := make(map[string]interface{})
 	if name != "" {
 		updateMap["name"] = name

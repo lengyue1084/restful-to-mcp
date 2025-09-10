@@ -5,6 +5,7 @@ import (
 	"flow-bridge-mcp/internal/biz"
 	"flow-bridge-mcp/internal/pkg/response"
 	"flow-bridge-mcp/pkg/logger"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,7 +31,7 @@ func (o *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
 	resp, err := o.msUc.UpdateMcpServerByUUID(ctx, req.UUID, req.Name, req.Description)
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
-		response.Error(ctx, "更新失败", nil)
+		response.Error(ctx, fmt.Sprintf("更新失败，err:%+v", err), nil)
 		return
 	}
 	response.Success(ctx, "更新成功", resp)
