@@ -65,7 +65,8 @@ func (m *McpServerRepo) CreateWithTx(ctx context.Context, serverInfo *model.McpS
 		//更新
 		err = db.WithContext(ctx).
 			Where("uuid = ? and id = ?", serverInfo.UUID, serverMcpInfo.ID).
-			Omit("ServiceToken", "PlatformToken", "SerialNumber").
+			Select("*").
+			Omit("ServiceToken", "PlatformToken", "SerialNumber", "ID", "UUID", "CreatedAt").
 			Updates(serverInfo).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)

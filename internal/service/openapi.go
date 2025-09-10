@@ -44,7 +44,7 @@ func (o *OpenapiService) Upload(c *gin.Context) {
 func (o *OpenapiService) UpdateForAuth(c *gin.Context) {
 	var req *api.OpenapiUpdateForAuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, "参数错误", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
 		return
 	}
 	resp, err := o.oaUc.UpdateForAuth(c, req)

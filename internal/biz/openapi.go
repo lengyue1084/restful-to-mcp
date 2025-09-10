@@ -128,11 +128,16 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "mcpConfig.Tools allowedTools json转换错误，err:%+v", err)
 		return nil, err
 	}
-	security, err := json.Marshal(mcpInfo.SecurityList)
-	if err != nil {
-		o.log.ErrorWithContext(ctx, "mcpConfig.Security json转换错误，err:%+v", err)
-		return nil, err
+	security := ""
+	if mcpInfo.SecurityList != nil {
+		securityByte, err := json.Marshal(mcpInfo.SecurityList)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "mcpConfig.Security json转换错误，err:%+v", err)
+			return nil, err
+		}
+		security = string(securityByte)
 	}
+
 	var (
 		serialNumber = ""
 		maxRetries   = 5
@@ -172,7 +177,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			IsAuth:        _const.IsAuthNo, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
 			ServiceToken:  "",
 			PlatformToken: "",
-			Security:      string(security),
+			Security:      security,
 			Status:        _const.ServerNotSetToken,
 			SerialNumber:  serialNumber,
 		}

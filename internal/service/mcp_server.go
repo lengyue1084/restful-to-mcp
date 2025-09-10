@@ -25,7 +25,7 @@ func (o *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
 	var req *api.UpdateMcpServerByUUIDRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		o.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
-		response.Error(ctx, "参数错误", err)
+		response.Error(ctx, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
 	resp, err := o.msUc.UpdateMcpServerByUUID(ctx, req.UUID, req.Name, req.Description)
@@ -43,13 +43,13 @@ func (o *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
 	var req api.GetMcpConnectTokenByUUIDRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
-		response.Error(c, "参数错误", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
 	resp, err := o.msUc.GetMcpConnectTokenByUUID(c, req.UUID)
 	if err != nil {
 		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
-		response.Error(c, "获取失败", err)
+		response.Error(c, fmt.Sprintf("获取失败,err:%+v", err), nil)
 		return
 	}
 	response.Success(c, "获取成功", resp)
