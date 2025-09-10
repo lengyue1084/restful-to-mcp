@@ -93,10 +93,11 @@ func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string
 	db, err := m.data.GetDb(ctx)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "UpdateToolsForAuthWithTx get tx error: %v", err)
+		return
 	}
 	for _, tool := range tools {
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
-			Where("id = ?", tool.ID).
+			Where("id = ? and mcp_server_uuid = ?", tool.ID, uuid).
 			Update("is_platform_auth", tool.IsAuth).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "UpdateToolsForAuthWithTx update error: %v", err)
