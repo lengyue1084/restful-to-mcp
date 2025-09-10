@@ -38,7 +38,7 @@ func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(
 		log.Infof("close redis success")
 	}
 	if err != nil {
-		log.Error("open redis error:%+v", err)
+		panic(fmt.Errorf("open redis error:%+v", err))
 		return nil, cleanup, err
 	}
 
