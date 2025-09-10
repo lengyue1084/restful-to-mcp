@@ -57,7 +57,7 @@ type OpenapiUpdateForAuthRequest struct {
 	IsAuth        _const.AuthStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
 	ServiceToken  string            `json:"serviceToken" binding:"omitempty,min=1,max=200"`
 	PlatformToken string            `json:"platformToken" binding:"omitempty,min=1,max=200"`
-	Tools         []*Tools          `json:"tools" binding:"required"`
+	Tools         []*Tools          `json:"tools"`
 }
 type OpenapiUpdateForAuthResponse struct {
 }

@@ -76,28 +76,35 @@ func (m *McpServerManager) Run(ctx context.Context) error {
 func (m *McpServerManager) FilterToolsByServer(ctx context.Context, tools []*protocol.Tool) []*protocol.Tool {
 
 	filterTools := make([]*protocol.Tool, 0)
-
-	if value, ok := ctx.Value(_const.ServerToken).(string); ok {
-		if mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue); ok {
-			var mcpServerTools []*model.McpTools
+	var mcpServerTools []*model.McpTools
+	if mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue); ok {
+		if value, ok := ctx.Value(_const.ServerToken).(string); ok {
 			for _, mcpServer := range mcpServerList {
 				if mcpServer.UUID == value {
 					mcpServerTools = mcpServer.Tools
 					break
 				}
 			}
-			if len(mcpServerTools) > 0 {
-				for _, tool := range mcpServerTools {
-					if tool.IsShow == _const.StatusDisplay {
-						toolName := tool.Name
-						if tool.IsRepeat == _const.CommonStatusYes {
-							toolName = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
-						}
-						for _, toolIem := range tools {
-							if toolIem.Name == toolName {
-								filterTools = append(filterTools, toolIem)
-							}
-						}
+		} else {
+			if len(mcpServerTools) == 0 {
+				for _, mcpServer := range mcpServerList {
+					for _, tool := range mcpServer.Tools {
+						mcpServerTools = append(mcpServerTools, tool)
+					}
+				}
+			}
+		}
+	}
+	if len(mcpServerTools) > 0 {
+		for _, tool := range mcpServerTools {
+			if tool.IsShow == _const.StatusDisplay {
+				toolName := tool.Name
+				if tool.IsRepeat == _const.CommonStatusYes {
+					toolName = tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+				}
+				for _, toolIem := range tools {
+					if toolIem.Name == toolName {
+						filterTools = append(filterTools, toolIem)
 					}
 				}
 			}

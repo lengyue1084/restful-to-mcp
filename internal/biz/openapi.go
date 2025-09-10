@@ -340,6 +340,9 @@ func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpda
 			o.log.ErrorWithContext(ctx, "更新server token 失败,err:%+v", err)
 			return fmt.Errorf("更新失败，err:%+v", err)
 		}
+		if len(req.Tools) == 0 {
+			return nil
+		}
 		err = o.mcpToolsRepo.UpdateToolsForAuthWithTx(ctx, req.UUID, req.Tools)
 		if err != nil {
 			o.log.ErrorWithContext(ctx, "更新tool token 失败,err:%+v", err)
