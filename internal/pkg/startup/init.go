@@ -11,7 +11,7 @@ import (
 )
 
 // ProviderSet is initializer providers.
-var ProviderSet = wire.NewSet(NewInitializer, NewTicker)
+var ProviderSet = wire.NewSet(NewInitializer, NewTicker, NewRegistry)
 
 type Initializer struct {
 	openapiUserCase                 *biz.OpenapiUseCase
@@ -22,9 +22,10 @@ type Initializer struct {
 	mux                             sync.Mutex
 	mcpServerCacheRefreshTickerStop chan bool
 	ticker                          *Ticker
+	registry                        *Registry
 }
 
-func NewInitializer(conf *conf.Conf, ticker *Ticker, log *logger.Logger, mcpServerManager *mcpServer.McpServerManager, openapiUserCase *biz.OpenapiUseCase) *Initializer {
+func NewInitializer(conf *conf.Conf, registry *Registry, ticker *Ticker, log *logger.Logger, mcpServerManager *mcpServer.McpServerManager, openapiUserCase *biz.OpenapiUseCase) *Initializer {
 
 	return &Initializer{
 		conf:             conf,
@@ -34,6 +35,7 @@ func NewInitializer(conf *conf.Conf, ticker *Ticker, log *logger.Logger, mcpServ
 		mux:              sync.Mutex{},
 		mcpServerManager: mcpServerManager,
 		ticker:           ticker,
+		registry:         registry,
 	}
 }
 func (i *Initializer) Initialize() (err error) {
@@ -55,7 +57,7 @@ func (i *Initializer) Initialize() (err error) {
 		}()
 		i.ticker.StartMcpServerCacheRefreshTicker()
 	}()
-
+	i.registry.register()
 	i.Log.Info("Application initialization completed")
 	return
 }

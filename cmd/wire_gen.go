@@ -29,6 +29,7 @@ import (
 func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	loggerLogger := logger.NewLogger(config)
 	middlewareMiddleware := middleware.NewMiddleware(loggerLogger)
+	registry := startup.NewRegistry(config, loggerLogger)
 	transformer := openapi.NewConverter(loggerLogger)
 	gormLogger := logger.NewGormLogger(loggerLogger)
 	db, cleanup, err := database.NewPgClient(config, gormLogger, loggerLogger)
@@ -70,7 +71,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	}
 	openapiUseCase := biz.NewOpenapiUserCase(transformer, loggerLogger, transaction, mcpServerRepo, mcpFileUserCase, mcpToolsRepo, config, memoryCache, mcpServerManager)
 	ticker := startup.NewTicker(openapiUseCase, mcpServerManager)
-	initializer := startup.NewInitializer(config, ticker, loggerLogger, mcpServerManager, openapiUseCase)
+	initializer := startup.NewInitializer(config, registry, ticker, loggerLogger, mcpServerManager, openapiUseCase)
 	app := router.NewApp(middlewareMiddleware, config, initializer)
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
 	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
