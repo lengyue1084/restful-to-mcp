@@ -50,7 +50,8 @@ func NewRegistry(conf *conf.Conf, log *logger.Logger) *Registry {
 		},
 	)
 	if err != nil {
-		panic(fmt.Errorf("NewConfigClient error: %v", err))
+		//panic(fmt.Errorf("NewConfigClient error: %v", err))
+		log.Errorf("NewConfigClient error: %v", err)
 	}
 	return &Registry{
 		conf:         conf,
