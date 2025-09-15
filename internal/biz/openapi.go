@@ -180,6 +180,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			Security:      security,
 			Status:        _const.ServerNotSetToken,
 			SerialNumber:  serialNumber,
+			McpServerType: _const.McpServerTypeOpenapi,
 		}
 		mcpServerId, err = o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
