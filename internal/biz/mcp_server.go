@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"encoding/json"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
 	_const "flow-bridge-mcp/pkg/const"
@@ -20,6 +21,7 @@ type McpServerRepo interface {
 	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthStatus, serviceToken, platformToken string) (err error)
 	UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error)
 	GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error)
+	CreateMcpServerByForm(ctx context.Context, serverInfo *model.McpServer) (mcpServer *model.McpServer, err error)
 }
 
 type McpServerUseCase struct {
@@ -80,6 +82,62 @@ func (m *McpServerUseCase) GetMcpServerInfoWithAllTools(ctx context.Context) (mc
 	mcpServerInfo, err = m.msRepo.GetMcpServerInfoWithAllTools(ctx)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoWithTools error: %v", err)
+		return nil, err
+	}
+	return
+}
+
+func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.CreateMcpServerByFormRequest) (resp *api.CreateMcpServerByFormResponse, err error) {
+
+	var urls []string
+	urls = append(urls, req.Url)
+	urlsStr, err := json.Marshal(urls)
+	if err != nil {
+		return nil, err
+	}
+	var (
+		serialNumber = ""
+	)
+	for i := 0; i < _const.CommonRetryTimes; i++ {
+		serialNumber = tool.RandStringWithLowercaseAndDigits(6)
+		count, err := m.msRepo.GetCountMcpServerInfoBySerialNumber(ctx, serialNumber)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
+			return nil, err
+		}
+		if count == 0 {
+			break
+		}
+		if i == _const.CommonRetryTimes-1 {
+			return nil, fmt.Errorf("生成序列号失败")
+		}
+	}
+
+	var mcpServerInfo = &model.McpServer{
+		UUID:          req.UUID,
+		Name:          req.Name,
+		Description:   req.Description,
+		Urls:          string(urlsStr),
+		AllTools:      "",
+		Version:       req.Version,
+		McpServerType: _const.McpServerTypeOpenapi,
+		HaveTools:     _const.HaveToolsNo,
+		IsAuth:        _const.AuthStatus(req.IsAuth),
+		ServiceToken:  "",
+		PlatformToken: req.PlatformToken,
+		Security:      "",
+		Status:        _const.ServerHadSetToken,
+		SerialNumber:  serialNumber,
+		Source:        _const.SourceTypeForm,
+	}
+	mcpServerInfo, err = m.msRepo.CreateMcpServerByForm(ctx, mcpServerInfo)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
+		return nil, err
+	}
+
+	if err = tool.Copy(&resp, req); err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm data copy error: %v", err)
 		return nil, err
 	}
 	return

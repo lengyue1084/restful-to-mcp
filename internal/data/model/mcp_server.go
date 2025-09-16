@@ -20,6 +20,7 @@ type McpServer struct {
 	Status       _const.ServerStatus `json:"status" gorm:"column:status;type:SMALLINT;default:1;comment:服务器状态,0未知，1没有设置token，2设置了token，3正常工作"`
 	Tools        []*McpTools         `json:"tools" gorm:"foreignKey:McpServerId"`
 	SerialNumber string              `json:"serialNumber" gorm:"column:serial_number;type:varchar(36);default:'';comment:服务序列号"` //不可重复
+	Source       _const.SourceType   `json:"source" gorm:"column:source;type:SMALLINT;default:1;comment:数据来源,1:yaml文件,2:表单添加"`
 }
 
 func (m *McpServer) TableName() string {

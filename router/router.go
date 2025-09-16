@@ -10,13 +10,13 @@ var ProviderSet = wire.NewSet(NewApp, NewRouter)
 
 func NewRouter(
 	app *App,
-	OpenapiService *service.OpenapiService,
-	serverService *service.McpServerService,
-	toosService *service.McpToosService,
+	openapiService *service.OpenapiService,
+	mcpServerService *service.McpServerService,
+	mcpToolsService *service.McpToosService,
 	mcpGateWayService *service.McpGatewayService,
 ) *gin.Engine {
 
-	// 作为mcp服务对外提供服务
+	// MCP网关服务路由
 	router := app.app.Group("/")
 	{
 		//router.GET("/sse/:serverId", OpenapiService.Upload)
@@ -24,14 +24,25 @@ func NewRouter(
 		router.POST("/gateway/mcp", mcpGateWayService.McpStreamable)
 		router.POST("/gateway/:serverToken/mcp", mcpGateWayService.McpStreamable)
 	}
-	// 作为api服务对外提供服务
-	router = router.Group("/v1")
+	// API服务路由 (v1版本)
+	apiV1 := router.Group("/v1")
 	{
-		router.POST("/openapi/upload", OpenapiService.Upload)
-		router.POST("/openapi/updateForAuth", OpenapiService.UpdateForAuth)
-		router.POST("/mcpServer/updateByUUID", serverService.UpdateMcpServerByUUID)
-		router.POST("/mcpServer/getMcpServerTools", toosService.GetMcpServerTools)
-		router.POST("/mcpServer/getMcpConnectTokenByUUID", serverService.GetMcpConnectTokenByUUID)
+		//基于openapi文档创建mcpServer
+		// OpenAPI文档相关
+		apiV1.POST("/openapi/upload", openapiService.Upload)
+		apiV1.POST("/openapi/updateForAuth", openapiService.UpdateForAuth)
+
+		// MCP Server管理相关
+		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
+		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
+		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
+
+		// 表单创建MCP Server
+		apiV1.POST("/mcpServer/CreateByForm", mcpServerService.CreateMcpServerByForm)
+		// 可以考虑添加其他CRUD操作
+		// apiV1.GET("/mcpServer/form/:id", openapiService.GetFormServer)
+		// apiV1.PUT("/mcpServer/form/:id", openapiService.UpdateFormServer)
+
 	}
 
 	return app.app
