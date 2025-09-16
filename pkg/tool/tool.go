@@ -77,6 +77,7 @@ func RemoveStringLastChar(str string) string {
 }
 
 // Copy 从一个结构体复制到另一个结构体
+// 注意：只会复制可JSON序列化的字段，私有字段不会被复制
 func Copy(to, from interface{}) error {
 	b, err := json.Marshal(from)
 	if err != nil {
@@ -220,18 +221,14 @@ func RandIntByLen(n int) int {
 // RandStringWithLowercaseAndDigits 生成包含小写字母和数字的随机字符串
 func RandStringWithLowercaseAndDigits(n int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
-	const charsetLen = len(charset)
-	// 预先创建一个随机数生成器，避免重复创建
+	// 将随机数生成器提升为全局变量或单例，避免重复创建
 	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
-	// 使用更高效的字节切片预分配
-	b := make([]byte, n)
-	// 添加边界检查
 	if n <= 0 {
 		return ""
 	}
-	// 优化循环，减少重复计算
+	b := make([]byte, n)
 	for i := range b {
-		b[i] = charset[seededRand.Intn(charsetLen)]
+		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
 }
