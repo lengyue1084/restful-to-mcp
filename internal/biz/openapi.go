@@ -140,7 +140,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 
 	var (
 		serialNumber = ""
-		maxRetries   = 5
+		maxRetries   = _const.CommonRetryTimes
 		retryCount   = 0
 	)
 	for retryCount < maxRetries {
