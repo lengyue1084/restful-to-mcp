@@ -9,6 +9,7 @@ type (
 	Status              int8
 	ServerStatus        int8
 	CommonStatus        int8
+	SourceType          int8
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 	McpServerTypeOpenapi McpServerTypeStatus = 1
 	McpServerTypeGrpc    McpServerTypeStatus = 2
 
-	// StatusDisplay 通用的是否显示
+	// StatusHidden 通用的是否显示
 	StatusHidden    Status       = 1
 	StatusDisplay   Status       = 2
 	CommonStatusNo  CommonStatus = 1
@@ -28,6 +29,9 @@ const (
 	ServerNotSetToken    ServerStatus = 1
 	ServerHadSetToken    ServerStatus = 2
 	ServerTokenIsWorking ServerStatus = 3
+
+	SourceTypeFile SourceType = 1
+	SourceTypeForm SourceType = 2
 )
 
 const (
@@ -108,7 +112,8 @@ func (m McpServerTypeStatus) String() string {
 type contextKey string
 
 const (
-	TxKey contextKey = "tx"
+	TxKey            contextKey = "tx"
+	CommonRetryTimes            = 5
 )
 
 var (
