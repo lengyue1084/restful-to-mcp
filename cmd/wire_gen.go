@@ -52,7 +52,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	mcpFileRepo := data.NewMcpFileRepo(databaseData, loggerLogger)
 	mcpFileUserCase := biz.NewMcpFileUserCase(mcpFileRepo, loggerLogger)
 	mcpToolsRepo := data.NewMcpToolsRepo(databaseData, loggerLogger)
-	memoryCache := cache.NewMemoryCache()
+	memoryCache := cache.NewMemoryCache(loggerLogger)
 	streamableHttpTransprot, cleanup4, err := server.NewMcpTransport(loggerLogger)
 	if err != nil {
 		cleanup3()

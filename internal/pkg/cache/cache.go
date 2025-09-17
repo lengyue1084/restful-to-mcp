@@ -49,12 +49,14 @@ func NewRedisClient(config *conf.Conf, log *logger.Logger) (*redis.Client, func(
 type MemoryCache struct {
 	McpServer    atomic.Value
 	OldMcpServer atomic.Value
+	log          *logger.Logger
 }
 
-func NewMemoryCache() *MemoryCache {
+func NewMemoryCache(log *logger.Logger) *MemoryCache {
 	return &MemoryCache{
 		McpServer:    atomic.Value{},
 		OldMcpServer: atomic.Value{},
+		log:          log,
 	}
 }
 
@@ -71,6 +73,8 @@ func (m *MemoryCache) StoreMcpServer(typeCache TypeCache, mcpServerInfo []*model
 		m.McpServer.Store(mcpServerInfo)
 	case OldMcpValue:
 		m.OldMcpServer.Store(mcpServerInfo)
+	default:
+		return
 	}
 }
 
@@ -89,6 +93,8 @@ func (m *MemoryCache) LoadMcpServer(typeCache TypeCache) (mcpServerList []*model
 				return serverInfo, ok
 			}
 		}
+	default:
+		return nil, false
 	}
 	return nil, false
 }
