@@ -40,6 +40,40 @@ func NewMcpServerUseCase(msRepo McpServerRepo, mctRepo McpConnectTokenRepo, log 
 	}
 
 }
+func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid string) (resp *api.GetMcpServerInfoByUUIDResponse, err error) {
+
+	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, uuid)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
+		return
+	}
+	if mcpServerInfo.ID == 0 {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
+		return nil, fmt.Errorf("没有查询到该server信息")
+	}
+	var urls []string
+	err = json.Unmarshal([]byte(mcpServerInfo.Urls), &urls)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
+		return
+	}
+	resp = &api.GetMcpServerInfoByUUIDResponse{
+		ID:        mcpServerInfo.ID,
+		CreatedAt: mcpServerInfo.CreatedAt.String(),
+		UpdatedAt: mcpServerInfo.UpdatedAt.String(),
+		CommonMcpServerByForm: api.CommonMcpServerByForm{
+			UUID:          mcpServerInfo.UUID,
+			Name:          mcpServerInfo.Name,
+			Description:   mcpServerInfo.Description,
+			Urls:          urls,
+			Version:       mcpServerInfo.Version,
+			IsAuth:        int8(mcpServerInfo.IsAuth),
+			PlatformToken: mcpServerInfo.PlatformToken,
+		},
+	}
+
+	return
+}
 
 func (m *McpServerUseCase) UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error) {
 
@@ -100,9 +134,11 @@ func (m *McpServerUseCase) DeleteMcpServerByUUID(ctx context.Context, uuid strin
 }
 
 func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.CreateMcpServerByFormRequest) (resp *api.CreateMcpServerByFormResponse, err error) {
-	var urls []string
-	urls = append(urls, req.Url)
-	urlsStr, err := json.Marshal(urls)
+
+	if len(req.Urls) == 0 {
+		return nil, fmt.Errorf("至少填写一个url")
+	}
+	urlsStr, err := json.Marshal(req.Urls)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +182,6 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
 		return nil, err
 	}
-
 	if err = tool.Copy(&resp, mcpServerInfo); err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm data copy error: %v", err)
 		return nil, err
@@ -155,9 +190,8 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 }
 
 func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.UpdateMcpServerByFormRequest) (resp *api.UpdateMcpServerByFormResponse, err error) {
-	var urls []string
-	urls = append(urls, req.Url)
-	urlsStr, err := json.Marshal(urls)
+
+	urlsStr, err := json.Marshal(req.Urls)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +217,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 			UUID:          mcpServerInfo.UUID,
 			Name:          mcpServerInfo.Name,
 			Description:   mcpServerInfo.Description,
-			Url:           mcpServerInfo.Urls,
+			Urls:          req.Urls,
 			Version:       mcpServerInfo.Version,
 			IsAuth:        int8(mcpServerInfo.IsAuth),
 			PlatformToken: mcpServerInfo.PlatformToken,

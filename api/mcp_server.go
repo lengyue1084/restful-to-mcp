@@ -1,5 +1,16 @@
 package api
 
+type GetMcpServerInfoByUUIDRequest struct {
+	UUID string `json:"uuid" binding:"required"`
+}
+
+type GetMcpServerInfoByUUIDResponse struct {
+	ID        uint   `json:"id"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	CommonMcpServerByForm
+}
+
 type UpdateMcpServerByUUIDRequest struct {
 	UUID        string `json:"uuid" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -23,13 +34,13 @@ type DeleteMcpServerByUUIDResponse struct {
 }
 
 type CommonMcpServerByForm struct {
-	UUID          string `json:"uuid" binding:"required"`
-	Name          string `json:"name" binding:"required"`
-	Description   string `json:"description" binding:"required"`
-	Url           string `json:"url" binding:"required"`
-	Version       string `json:"version" binding:"required"`
-	IsAuth        int8   `json:"isAuth" binding:"required"`
-	PlatformToken string `json:"platformToken"`
+	UUID          string   `json:"uuid" binding:"required"`
+	Name          string   `json:"name" binding:"required"`
+	Description   string   `json:"description" binding:"required"`
+	Urls          []string `json:"urls" binding:"required"`
+	Version       string   `json:"version" binding:"required"`
+	IsAuth        int8     `json:"isAuth" binding:"required"`
+	PlatformToken string   `json:"platformToken"`
 }
 
 type CreateMcpServerByFormRequest struct {

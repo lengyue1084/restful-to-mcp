@@ -20,21 +20,37 @@ func NewMcpServerService(msUc *biz.McpServerUseCase, log *logger.Logger) *McpSer
 		log:  log,
 	}
 }
-
-func (m *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
-	var req *api.UpdateMcpServerByUUIDRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		m.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
-		response.Error(ctx, fmt.Sprintf("参数错误,err:%+v", err), err)
+func (m *McpServerService) GetMcpServerInfoByUUID(c *gin.Context) {
+	var req api.GetMcpServerInfoByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		m.log.ErrorWithContext(c, "GetMcpServerInfoByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
-	resp, err := m.msUc.UpdateMcpServerByUUID(ctx, req.UUID, req.Name, req.Description)
+	resp, err := m.msUc.GetMcpServerInfoByUUID(c, req.UUID)
 	if err != nil {
-		m.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
-		response.Error(ctx, fmt.Sprintf("更新失败，err:%+v", err), nil)
+		m.log.ErrorWithContext(c, "GetMcpServerInfoByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("获取失败,err:%+v", err), nil)
 		return
 	}
-	response.Success(ctx, "更新成功", resp)
+	response.Success(c, "获取成功", resp)
+
+}
+
+func (m *McpServerService) UpdateMcpServerByUUID(c *gin.Context) {
+	var req *api.UpdateMcpServerByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		m.log.ErrorWithContext(c, "UpdateMcpServerByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
+		return
+	}
+	resp, err := m.msUc.UpdateMcpServerByUUID(c, req.UUID, req.Name, req.Description)
+	if err != nil {
+		m.log.ErrorWithContext(c, "UpdateMcpServerByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("更新失败，err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "更新成功", resp)
 }
 
 func (m *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {

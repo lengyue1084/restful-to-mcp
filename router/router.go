@@ -34,9 +34,10 @@ func NewRouter(
 
 		// MCP Server管理相关
 		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
-		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
+		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools) // 获取MCP Server的工具 符合mcp tools/list的返回结构
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
 		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
+		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
 
 		// 表单创建MCP Server
 		apiV1.POST("/mcpServer/createByForm", mcpServerService.CreateMcpServerByForm)
