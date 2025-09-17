@@ -169,7 +169,7 @@ func (m *McpServerManager) RegisterToolFromCache() {
 	for _, serverInfo := range serverInfoList {
 		if serverInfo == nil || serverInfo.Tools == nil || len(serverInfo.Tools) == 0 {
 			m.log.Errorf("LoadMcpServer error,serverInfo:%+v", serverInfo)
-			return
+			continue
 		}
 		for _, tool := range serverInfo.Tools {
 			if tool.IsShow != _const.StatusDisplay {
