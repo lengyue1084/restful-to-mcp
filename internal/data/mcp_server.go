@@ -9,6 +9,7 @@ import (
 	"flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"fmt"
+	"gorm.io/gorm"
 )
 
 var _ biz.McpServerRepo = (*McpServerRepo)(nil)
@@ -169,6 +170,41 @@ func (m *McpServerRepo) UpdateMcpServerByUUID(ctx context.Context, uuid, name, d
 
 }
 
+func (m *McpServerRepo) DeleteMcpServerByUUID(ctx context.Context, uuid string) (err error) {
+	err = m.data.Db.Transaction(func(tx *gorm.DB) error {
+		var mcpServerInfo model.McpServer
+		err = tx.Where("uuid = ?", uuid).Find(&mcpServerInfo).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "get mcp server by uuid error: %v", err)
+			return err
+		}
+		if mcpServerInfo.ID <= 0 {
+			return fmt.Errorf("没有查询到该server信息")
+		}
+		err = tx.WithContext(ctx).
+			Where("uuid = ?", uuid).
+			Delete(&model.McpServer{}).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "delete mcp server error: %v", err)
+			return err
+		}
+		err = tx.WithContext(ctx).
+			Where("mcp_server_id = ?", mcpServerInfo.ID).
+			Delete(&model.McpTools{}).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "delete mcp tools error: %v", err)
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "delete mcp server error: %v", err)
+		return err
+	}
+
+	return
+}
+
 func (m *McpServerRepo) GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error) {
 	err = m.data.Db.WithContext(ctx).
 		Model(&model.McpServer{}).
@@ -209,6 +245,50 @@ func (m *McpServerRepo) CreateMcpServerByForm(ctx context.Context, serverInfo *m
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "create mcp server error: %v", err)
 		return
+	}
+	return serverInfo, nil
+}
+
+func (m *McpServerRepo) UpdateMcpServerByForm(ctx context.Context, serverInfo *model.McpServer) (mcpServer *model.McpServer, err error) {
+
+	var mcpServerInfo = &model.McpServer{}
+	err = m.data.Db.WithContext(ctx).Where("uuid = ?", serverInfo.UUID).Find(&mcpServerInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	if mcpServerInfo.ID <= 0 {
+		return nil, fmt.Errorf("没有查询到该server信息")
+	}
+	db := m.data.Db.Model(&model.McpServer{}).Where("uuid = ?", serverInfo.UUID)
+	updateStr := ""
+	if serverInfo.Name != "" {
+		updateStr += "Name"
+	}
+	if serverInfo.Description != "" {
+		updateStr += "Description"
+	}
+	if serverInfo.Urls != "" {
+		updateStr += "Urls"
+	}
+	if serverInfo.Version != "" {
+		updateStr += "Version"
+	}
+	if serverInfo.IsAuth != 0 {
+		updateStr += "IsAuth"
+	}
+	if serverInfo.PlatformToken != "" {
+		updateStr += "PlatformToken"
+	}
+	if updateStr != "" {
+		db = db.Select(updateStr)
+	}
+	err = db.
+		Where("uuid = ?", serverInfo.UUID).
+		Updates(serverInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
+		return nil, err
 	}
 	return serverInfo, nil
 }

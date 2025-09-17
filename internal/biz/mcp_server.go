@@ -20,8 +20,10 @@ type McpServerRepo interface {
 	GetMcpServerInfoByUUID(ctx context.Context, id string) (mcpServerInfo *model.McpServer, err error)
 	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthStatus, serviceToken, platformToken string) (err error)
 	UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error)
+	DeleteMcpServerByUUID(ctx context.Context, uuid string) (err error)
 	GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error)
 	CreateMcpServerByForm(ctx context.Context, serverInfo *model.McpServer) (mcpServer *model.McpServer, err error)
+	UpdateMcpServerByForm(ctx context.Context, serverInfo *model.McpServer) (mcpServer *model.McpServer, err error)
 }
 
 type McpServerUseCase struct {
@@ -87,8 +89,17 @@ func (m *McpServerUseCase) GetMcpServerInfoWithAllTools(ctx context.Context) (mc
 	return
 }
 
-func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.CreateMcpServerByFormRequest) (resp *api.CreateMcpServerByFormResponse, err error) {
+func (m *McpServerUseCase) DeleteMcpServerByUUID(ctx context.Context, uuid string) (err error) {
 
+	err = m.msRepo.DeleteMcpServerByUUID(ctx, uuid)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "DeleteMcpServerByUUID error: %v", err)
+		return err
+	}
+	return
+}
+
+func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.CreateMcpServerByFormRequest) (resp *api.CreateMcpServerByFormResponse, err error) {
 	var urls []string
 	urls = append(urls, req.Url)
 	urlsStr, err := json.Marshal(urls)
@@ -139,6 +150,44 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 	if err = tool.Copy(&resp, req); err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm data copy error: %v", err)
 		return nil, err
+	}
+	return
+}
+
+func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.UpdateMcpServerByFormRequest) (resp *api.UpdateMcpServerByFormResponse, err error) {
+	var urls []string
+	urls = append(urls, req.Url)
+	urlsStr, err := json.Marshal(urls)
+	if err != nil {
+		return nil, err
+	}
+	var mcpServerInfo = &model.McpServer{
+		UUID:          req.UUID,
+		Name:          req.Name,
+		Description:   req.Description,
+		Urls:          string(urlsStr),
+		Version:       req.Version,
+		IsAuth:        _const.AuthStatus(req.IsAuth),
+		PlatformToken: req.PlatformToken,
+	}
+	mcpServerInfo, err = m.msRepo.UpdateMcpServerByForm(ctx, mcpServerInfo)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerByForm error: %v", err)
+		return nil, err
+	}
+	resp = &api.UpdateMcpServerByFormResponse{
+		ID:        mcpServerInfo.ID,
+		CreatedAt: mcpServerInfo.CreatedAt.String(),
+		UpdatedAt: mcpServerInfo.UpdatedAt.String(),
+		CommonMcpServerByForm: api.CommonMcpServerByForm{
+			UUID:          mcpServerInfo.UUID,
+			Name:          mcpServerInfo.Name,
+			Description:   mcpServerInfo.Description,
+			Url:           mcpServerInfo.Urls,
+			Version:       mcpServerInfo.Version,
+			IsAuth:        int8(mcpServerInfo.IsAuth),
+			PlatformToken: mcpServerInfo.PlatformToken,
+		},
 	}
 	return
 }

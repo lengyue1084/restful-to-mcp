@@ -21,55 +21,85 @@ func NewMcpServerService(msUc *biz.McpServerUseCase, log *logger.Logger) *McpSer
 	}
 }
 
-func (o *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
+func (m *McpServerService) UpdateMcpServerByUUID(ctx *gin.Context) {
 	var req *api.UpdateMcpServerByUUIDRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		o.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
 		response.Error(ctx, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
-	resp, err := o.msUc.UpdateMcpServerByUUID(ctx, req.UUID, req.Name, req.Description)
+	resp, err := m.msUc.UpdateMcpServerByUUID(ctx, req.UUID, req.Name, req.Description)
 	if err != nil {
-		o.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerByUUID error: %+v", err)
 		response.Error(ctx, fmt.Sprintf("更新失败，err:%+v", err), nil)
 		return
 	}
 	response.Success(ctx, "更新成功", resp)
-
 }
 
-func (o *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
+func (m *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
 
 	var req api.GetMcpConnectTokenByUUIDRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
+		m.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
-	resp, err := o.msUc.GetMcpConnectTokenByUUID(c, req.UUID)
+	resp, err := m.msUc.GetMcpConnectTokenByUUID(c, req.UUID)
 	if err != nil {
-		o.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
+		m.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
 		response.Error(c, fmt.Sprintf("获取失败,err:%+v", err), nil)
 		return
 	}
 	response.Success(c, "获取成功", resp)
-	return
 }
 
-func (o *McpServerService) CreateMcpServerByForm(c *gin.Context) {
+func (m *McpServerService) CreateMcpServerByForm(c *gin.Context) {
 
 	var req *api.CreateMcpServerByFormRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		o.log.ErrorWithContext(c, "CreateMcpServerByForm error: %+v", err)
+		m.log.ErrorWithContext(c, "CreateMcpServerByForm error: %+v", err)
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
-	resp, err := o.msUc.CreateMcpServerByForm(c, req)
+	resp, err := m.msUc.CreateMcpServerByForm(c, req)
 	if err != nil {
-		o.log.ErrorWithContext(c, "CreateMcpServerByForm error: %+v", err)
+		m.log.ErrorWithContext(c, "CreateMcpServerByForm error: %+v", err)
 		response.Error(c, fmt.Sprintf("创建失败,err:%+v", err), nil)
 		return
 	}
 	response.Success(c, "创建成功", resp)
-	return
+}
+
+func (m *McpServerService) DeleteMcpServerByUUID(c *gin.Context) {
+	var req *api.DeleteMcpServerByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		m.log.ErrorWithContext(c, "DeleteMcpServerByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
+		return
+	}
+	err := m.msUc.DeleteMcpServerByUUID(c, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(c, "DeleteMcpServerByUUID error: %+v", err)
+		response.Error(c, fmt.Sprintf("删除失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "删除成功", nil)
+
+}
+
+func (m *McpServerService) UpdateMcpServerByForm(c *gin.Context) {
+	var req *api.UpdateMcpServerByFormRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		m.log.ErrorWithContext(c, "UpdateMcpServerByForm error: %+v", err)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
+		return
+	}
+	resp, err := m.msUc.UpdateMcpServerByForm(c, req)
+	if err != nil {
+		m.log.ErrorWithContext(c, "UpdateMcpServerByForm error: %+v", err)
+		response.Error(c, fmt.Sprintf("更新失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "更新成功", resp)
 }
