@@ -1,7 +1,5 @@
 package api
 
-import "flow-bridge-mcp/internal/pkg/gormtype"
-
 type UpdateMcpServerByUUIDRequest struct {
 	UUID        string `json:"uuid" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -39,8 +37,8 @@ type CreateMcpServerByFormRequest struct {
 }
 
 type CreateMcpServerByFormResponse struct {
-	ID        uint                `json:"id"`
-	CreatedAt *gormtype.LocalTime `json:"createdAt"`
+	ID        uint   `json:"id"`
+	CreatedAt string `json:"createdAt"`
 	CommonMcpServerByForm
 }
 

@@ -147,7 +147,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		return nil, err
 	}
 
-	if err = tool.Copy(&resp, req); err != nil {
+	if err = tool.Copy(&resp, mcpServerInfo); err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm data copy error: %v", err)
 		return nil, err
 	}

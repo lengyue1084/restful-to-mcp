@@ -241,7 +241,7 @@ func (m *McpServerRepo) CreateMcpServerByForm(ctx context.Context, serverInfo *m
 	if mcpServerInfo.ID > 0 {
 		return nil, fmt.Errorf("该uuid已存在")
 	}
-	err = m.data.Db.WithContext(ctx).Create(serverInfo).Error
+	err = m.data.Db.WithContext(ctx).Select("*").Create(serverInfo).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "create mcp server error: %v", err)
 		return
@@ -290,5 +290,10 @@ func (m *McpServerRepo) UpdateMcpServerByForm(ctx context.Context, serverInfo *m
 		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
 		return nil, err
 	}
-	return serverInfo, nil
+	err = m.data.Db.Where("uuid = ?", serverInfo.UUID).First(&mcpServer).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server error: %v", err)
+		return
+	}
+	return mcpServer, nil
 }
