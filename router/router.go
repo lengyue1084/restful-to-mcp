@@ -36,14 +36,20 @@ func NewRouter(
 		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
 		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
+		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
 
 		// 表单创建MCP Server
-		apiV1.POST("/mcpServer/CreateByForm", mcpServerService.CreateMcpServerByForm)
+		apiV1.POST("/mcpServer/createByForm", mcpServerService.CreateMcpServerByForm)
+		apiV1.POST("/mcpServer/updateMcpServerByForm", mcpServerService.UpdateMcpServerByForm)
+
 		// 可以考虑添加其他CRUD操作
 		// apiV1.GET("/mcpServer/form/:id", openapiService.GetFormServer)
 		// apiV1.PUT("/mcpServer/form/:id", openapiService.UpdateFormServer)
 
 	}
+	app.app.NoRoute(func(c *gin.Context) {
+		c.JSON(404, gin.H{"message": "404 not found"})
+	})
 
 	return app.app
 }
