@@ -13,6 +13,13 @@ func (t *LocalTime) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%v\"", tTime.Format("2006-01-02 15:04:05"))), nil
 }
 
+func (t *LocalTime) String() string {
+	if t == nil {
+		return ""
+	}
+	return time.Time(*t).Format("2006-01-02 15:04:05")
+}
+
 func (t *LocalTime) MarshalJSONDate() ([]byte, error) {
 	tTime := time.Time(*t)
 	return []byte(fmt.Sprintf("\"%v\"", tTime.Format("2006-01-02"))), nil
