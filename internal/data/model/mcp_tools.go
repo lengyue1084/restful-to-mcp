@@ -4,6 +4,7 @@ import "flow-bridge-mcp/pkg/const"
 
 type McpTools struct {
 	BaseModel
+	UUID          string                     `json:"uuid" gorm:"column:uuid;uniqueIndex:idx_uuid_unique;type:varchar(36);not null;default:'';comment:工具的唯一标识"`
 	McpServerId   int64                      `json:"mcpServerId" gorm:"column:mcp_server_id;uniqueIndex:idx_mcp_tools_unique;type:bigint;not null;comment:关联的MCP服务器ID"`
 	McpServerUUID string                     `json:"mcpServerUUID" gorm:"column:mcp_server_uuid;uniqueIndex:idx_mcp_tools_unique;type:varchar(36);not null;default:'';comment:工具唯一标识"`
 	Name          string                     `json:"name" gorm:"column:name;uniqueIndex:idx_mcp_tools_unique;type:varchar(500);not null;default:'';comment:工具名称"`
