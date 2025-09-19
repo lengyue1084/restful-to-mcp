@@ -115,3 +115,12 @@ func (m *McpToolsRepo) GetMcpServerTools(ctx context.Context, uuid string) (mcpT
 	}
 	return
 }
+
+func (m *McpToolsRepo) GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
+	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Find(&mcpTools).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server tools by uuid error: %v", err)
+		return
+	}
+	return
+}

@@ -7,6 +7,7 @@ import (
 	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/internal/pkg/cache"
 	"flow-bridge-mcp/pkg/logger"
+	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 )
@@ -16,6 +17,7 @@ type McpToolsRepo interface {
 	CreateMcpToolsBatch(ctx context.Context, mcpServerId int64, uuid string, allTools []string, mcpToolInfo []*model.McpTools) (err error)
 	UpdateToolsForAuthWithTx(ctx context.Context, uuid string, tools []*api.Tools) (err error)
 	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
+	GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 }
 
 type McpToolsUserCase struct {
@@ -68,4 +70,23 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 	}
 
 	return resp, nil
+}
+
+func (m *McpToolsUserCase) GetMcpServerToolsByUUID(ctx context.Context, uuid string) (resp *api.GetMcpServerToolsByUUIDResponse, err error) {
+
+	tools, err := m.mtRepo.GetMcpServerToolsByUUID(ctx, uuid)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "查询工具列表失败,err:%+v", err)
+		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
+	}
+	var toolsList []*api.CommonToolItemInfo
+	if err = tool.Copy(&toolsList, tools); err != nil {
+		m.log.ErrorWithContext(ctx, "工具列表转换失败,err:%+v", err)
+		return nil, fmt.Errorf("工具列表转换失败,err:%+v", err)
+	}
+	resp = &api.GetMcpServerToolsByUUIDResponse{
+		Tools: toolsList,
+	}
+
+	return
 }

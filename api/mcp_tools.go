@@ -2,6 +2,7 @@ package api
 
 import (
 	"flow-bridge-mcp/internal/mcp/config"
+	_const "flow-bridge-mcp/pkg/const"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 )
 
@@ -18,4 +19,38 @@ type ToolItemInfo struct {
 	Description string                  `json:"description"`
 	InputSchema config.ToolInputSchema  `json:"inputSchema"`
 	Annotations *config.ToolAnnotations `json:"annotations,omitempty"`
+}
+
+type CommonToolItemInfo struct {
+	ID            uint                       `json:"id"`
+	CreatedAt     string                     `json:"createdAt"`
+	UpdatedAt     string                     `json:"updatedAt"`
+	McpServerId   int64                      `json:"mcpServerId"`
+	McpServerUUID string                     `json:"mcpServerUUID"`
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	McpServerType _const.McpServerTypeStatus `json:"mcpServerType"`
+	Method        string                     `json:"method"`
+	Endpoint      string                     `json:"endpoint"`
+	Headers       string                     `json:"headers"`
+	//Args          string                     `json:"args"`
+	//RequestBody   string                     `json:"requestBody"`
+	//ResponseBody  string                     `json:"responseBody"`
+	//ToolSchema     string                     `json:"toolSchema"`
+	//Annotations    string                     `json:"annotations"`
+	Security       string              `json:"security"`
+	IsAuth         _const.AuthStatus   `json:"isAuth"`
+	AuthMode       string              `json:"authMode"`
+	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth"`
+	IsShow         _const.Status       `json:"isShow"`
+	SerialNumber   string              `json:"serialNumber"`
+	IsRepeat       _const.CommonStatus `json:"isRepeat"`
+}
+
+type GetMcpServerToolsByUUIDRequest struct {
+	UUID string `json:"uuid" binding:"required"`
+}
+
+type GetMcpServerToolsByUUIDResponse struct {
+	Tools []*CommonToolItemInfo `json:"tools"`
 }

@@ -38,3 +38,19 @@ func (m *McpToosService) GetMcpServerTools(c *gin.Context) {
 	return
 
 }
+
+func (m *McpToosService) GetMcpServerToolsByUUID(c *gin.Context) {
+	var req *api.GetMcpServerToolsByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
+		return
+	}
+	resp, err := m.mtUc.GetMcpServerToolsByUUID(c, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(c, "查询工具列表失败,err:%+v", err)
+		response.Error(c, fmt.Sprintf("查询工具列表失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "查询成功", resp)
+	return
+}

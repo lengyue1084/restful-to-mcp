@@ -27,17 +27,19 @@ func NewRouter(
 	// API服务路由 (v1版本)
 	apiV1 := router.Group("/v1")
 	{
-		//基于openapi文档创建mcpServer
+		// 基于openapi文档创建mcpServer
 		// OpenAPI文档相关
 		apiV1.POST("/openapi/upload", openapiService.Upload)
 		apiV1.POST("/openapi/updateForAuth", openapiService.UpdateForAuth)
 
 		// MCP Server管理相关
 		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
-		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools) // 获取MCP Server的工具 符合mcp tools/list的返回结构
+		// 获取MCP Server的工具 符合mcp tools/list的返回结构
+		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
 		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
 		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
+		apiV1.POST("/mcpServer/getMcpServerToolsByUUID", mcpToolsService.GetMcpServerToolsByUUID)
 
 		// 表单创建MCP Server
 		apiV1.POST("/mcpServer/createByForm", mcpServerService.CreateMcpServerByForm)
