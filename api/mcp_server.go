@@ -41,6 +41,7 @@ type CommonMcpServerByForm struct {
 	Version       string   `json:"version" binding:"required"`
 	IsAuth        int8     `json:"isAuth" binding:"required"`
 	PlatformToken string   `json:"platformToken"`
+	ServiceToken  string   `json:"serviceToken"`
 }
 
 type CreateMcpServerByFormRequest struct {

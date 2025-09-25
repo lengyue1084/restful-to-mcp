@@ -140,6 +140,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 	}
 	urlsStr, err := json.Marshal(req.Urls)
 	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %+v", err)
 		return nil, err
 	}
 	var (
@@ -165,12 +166,12 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		Name:          req.Name,
 		Description:   req.Description,
 		Urls:          string(urlsStr),
-		AllTools:      "",
+		AllTools:      "[]",
 		Version:       req.Version,
 		McpServerType: _const.McpServerTypeOpenapi,
 		HaveTools:     _const.HaveToolsNo,
 		IsAuth:        _const.AuthStatus(req.IsAuth),
-		ServiceToken:  "",
+		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
 		Security:      "",
 		Status:        _const.ServerHadSetToken,
@@ -182,10 +183,25 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
 		return nil, err
 	}
-	if err = tool.Copy(&resp, mcpServerInfo); err != nil {
-		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm data copy error: %v", err)
+	resp = &api.CreateMcpServerByFormResponse{
+		ID:        mcpServerInfo.ID,
+		CreatedAt: mcpServerInfo.CreatedAt.String(),
+		CommonMcpServerByForm: api.CommonMcpServerByForm{
+			UUID:          mcpServerInfo.UUID,
+			Name:          mcpServerInfo.Name,
+			Description:   mcpServerInfo.Description,
+			Urls:          nil,
+			Version:       mcpServerInfo.Version,
+			IsAuth:        int8(mcpServerInfo.IsAuth),
+			PlatformToken: mcpServerInfo.PlatformToken,
+		},
+	}
+	var urls []string
+	if err = json.Unmarshal([]byte(mcpServerInfo.Urls), &urls); err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
 		return nil, err
 	}
+	resp.Urls = urls
 	return
 }
 
