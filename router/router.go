@@ -35,19 +35,16 @@ func NewRouter(
 		// MCP Server管理相关
 		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
 		// 获取MCP Server的工具 符合mcp tools/list的返回结构
-		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
 		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
 		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
-		apiV1.POST("/mcpServer/getMcpServerToolsByUUID", mcpToolsService.GetMcpServerToolsByUUID)
+		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
 
 		// 表单创建MCP Server
 		apiV1.POST("/mcpServer/createByForm", mcpServerService.CreateMcpServerByForm)
 		apiV1.POST("/mcpServer/updateMcpServerByForm", mcpServerService.UpdateMcpServerByForm)
-
-		// 可以考虑添加其他CRUD操作
-		// apiV1.GET("/mcpServer/form/:id", openapiService.GetFormServer)
-		// apiV1.PUT("/mcpServer/form/:id", openapiService.UpdateFormServer)
+		apiV1.POST("/mcpServer/getMcpServerToolsByUUID", mcpToolsService.GetMcpServerToolsByUUID)
+		apiV1.POST("/mcpServer/createMcpServerTool", mcpToolsService.CreateMcpServerTool)
 
 	}
 	app.app.NoRoute(func(c *gin.Context) {

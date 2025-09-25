@@ -77,7 +77,7 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
 	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, mcpConnectTokenRepo, loggerLogger)
 	mcpServerService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
-	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, loggerLogger, memoryCache)
+	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, mcpServerRepo, loggerLogger, memoryCache)
 	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
 	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
 	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerUseCase, mcpServerManager, loggerLogger, memoryCache)

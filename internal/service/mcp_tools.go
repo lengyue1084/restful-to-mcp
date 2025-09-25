@@ -54,3 +54,19 @@ func (m *McpToosService) GetMcpServerToolsByUUID(c *gin.Context) {
 	response.Success(c, "查询成功", resp)
 	return
 }
+
+func (m *McpToosService) CreateMcpServerTool(c *gin.Context) {
+	var req *api.CreateMcpServerToolRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
+		return
+	}
+	resp, err := m.mtUc.CreateMcpServerTool(c, req)
+	if err != nil {
+		m.log.ErrorWithContext(c, "创建工具失败,err:%+v", err)
+		response.Error(c, fmt.Sprintf("创建工具失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "创建成功", resp)
+	return
+}

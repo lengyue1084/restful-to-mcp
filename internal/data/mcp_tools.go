@@ -79,7 +79,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 		}
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
 			Where("id = ?", mcpTool.ID).Select("*").
-			Omit("SerialNumber", "McpServerId", "McpServerType", "McpServerUUID", "ID", "CreatedAt", "DeletedAt").
+			Omit("SerialNumber", "McpServerId", "McpServerType", "McpServerUUID", "ID", "uuid", "CreatedAt", "DeletedAt").
 			Updates(tool).Error
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch update error: %v", err)
@@ -122,5 +122,15 @@ func (m *McpToolsRepo) GetMcpServerToolsByUUID(ctx context.Context, uuid string)
 		m.log.ErrorWithContext(ctx, "get mcp server tools by uuid error: %v", err)
 		return
 	}
+	return
+}
+
+func (m *McpToolsRepo) CreateMcpServerTool(ctx context.Context, mcpToolInfo *model.McpTools) (uuid string, err error) {
+	err = m.data.Db.WithContext(ctx).Create(mcpToolInfo).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "create mcp server tool error: %v", err)
+		return
+	}
+	uuid = mcpToolInfo.UUID
 	return
 }

@@ -23,6 +23,7 @@ type ToolItemInfo struct {
 
 type CommonToolItemInfo struct {
 	ID            uint                       `json:"id"`
+	UUID          string                     `json:"uuid"`
 	CreatedAt     string                     `json:"createdAt"`
 	UpdatedAt     string                     `json:"updatedAt"`
 	McpServerId   int64                      `json:"mcpServerId"`
@@ -53,4 +54,20 @@ type GetMcpServerToolsByUUIDRequest struct {
 
 type GetMcpServerToolsByUUIDResponse struct {
 	Tools []*CommonToolItemInfo `json:"tools"`
+}
+
+type CreateMcpServerToolRequest struct {
+	McpServerUUID  string            `json:"mcpServerUUID" binding:"required"`
+	Name           string            `json:"name" binding:"required"`
+	Description    string            `json:"description" binding:"required"`
+	Method         string            `json:"method" binding:"required,oneof=GET POST PUT DELETE PATCH"`
+	Path           string            `json:"path" binding:"required"`
+	IsShow         _const.Status     `json:"isShow" binding:"required"`
+	IsPlatformAuth _const.AuthStatus `json:"isAuth" binding:"required"`
+	IsAuth         _const.AuthStatus `json:"isPlatformAuth" binding:"required"`
+	AuthMode       string            `json:"authMode" binding:"oneof=GET POST PUT DELETE PATCH"`
+}
+
+type CreateMcpServerToolResponse struct {
+	UUID string `json:"uuid"`
 }

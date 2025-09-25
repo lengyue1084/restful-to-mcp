@@ -18,17 +18,20 @@ type McpToolsRepo interface {
 	UpdateToolsForAuthWithTx(ctx context.Context, uuid string, tools []*api.Tools) (err error)
 	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
+	CreateMcpServerTool(ctx context.Context, mcpToolInfo *model.McpTools) (uuid string, err error)
 }
 
 type McpToolsUserCase struct {
 	mtRepo McpToolsRepo
+	msRepo McpServerRepo
 	log    *logger.Logger
 	cache  *cache.MemoryCache
 }
 
-func NewMcpToolsUserCase(mtRepo McpToolsRepo, log *logger.Logger, cache *cache.MemoryCache) *McpToolsUserCase {
+func NewMcpToolsUserCase(mtRepo McpToolsRepo, msRepo McpServerRepo, log *logger.Logger, cache *cache.MemoryCache) *McpToolsUserCase {
 	return &McpToolsUserCase{
 		mtRepo: mtRepo,
+		msRepo: msRepo,
 		log:    log,
 		cache:  cache,
 	}
@@ -88,5 +91,48 @@ func (m *McpToolsUserCase) GetMcpServerToolsByUUID(ctx context.Context, uuid str
 		Tools: toolsList,
 	}
 
+	return
+}
+
+func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.CreateMcpServerToolRequest) (resp *api.CreateMcpServerToolResponse, err error) {
+	if req.Path == "" {
+		return nil, fmt.Errorf("请输入正确的路径")
+	}
+	path := tool.ConvertPathToArgsFormat(req.Path)
+	if path[0] != '/' {
+		path = fmt.Sprintf("/%s", path)
+	}
+	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, req.McpServerUUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
+		return nil, err
+	}
+	if mcpServerInfo.ID == 0 {
+		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
+		return nil, fmt.Errorf("没有查询到该server信息")
+	}
+	tools := &model.McpTools{
+		UUID:           tool.NewUUID(),
+		Name:           req.Name,
+		Description:    req.Description,
+		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
+		Method:         req.Method,
+		McpServerUUID:  req.McpServerUUID,
+		McpServerId:    int64(mcpServerInfo.ID),
+		SerialNumber:   mcpServerInfo.SerialNumber,
+		IsShow:         req.IsShow,
+		IsPlatformAuth: req.IsPlatformAuth,
+		IsAuth:         req.IsAuth,
+		AuthMode:       req.AuthMode,
+	}
+
+	uuid, err := m.mtRepo.CreateMcpServerTool(ctx, tools)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "创建工具失败,err:%+v", err)
+		return nil, fmt.Errorf("创建工具失败,err:%+v", err)
+	}
+	resp = &api.CreateMcpServerToolResponse{
+		UUID: uuid,
+	}
 	return
 }
