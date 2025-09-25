@@ -181,6 +181,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			Status:        _const.ServerNotSetToken,
 			SerialNumber:  serialNumber,
 			McpServerType: _const.McpServerTypeOpenapi,
+			Source:        _const.SourceTypeFile,
 		}
 		mcpServerId, err = o.mcpServerRepo.CreateWithTx(ctx, serverInfo)
 		if err != nil {
@@ -237,6 +238,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			}
 
 			var toolInfo = &model.McpTools{
+				UUID:           tool.NewUUID(),
 				McpServerId:    mcpServerId,
 				McpServerUUID:  req.UUID,
 				Name:           val.Name,

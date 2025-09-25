@@ -556,7 +556,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				var bodyTemplate strings.Builder
 				bodyTemplate.WriteString("{\n")
 				for i, arg := range bodyArgs {
-					bodyTemplate.WriteString(fmt.Sprintf(`    "%s": {{ toJSON .Args.%s}}`, arg.Name, arg.Name))
+					bodyTemplate.WriteString(fmt.Sprintf(`"%s": {{ toJSON .Args.%s}}`, arg.Name, arg.Name))
 					if i < len(bodyArgs)-1 {
 						bodyTemplate.WriteString(",\n")
 					} else {
