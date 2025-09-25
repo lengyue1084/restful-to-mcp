@@ -5,9 +5,9 @@ import "flow-bridge-mcp/pkg/const"
 type McpTools struct {
 	BaseModel
 	UUID          string                     `json:"uuid" gorm:"column:uuid;uniqueIndex:idx_uuid_unique;type:varchar(36);not null;default:'';comment:工具的唯一标识"`
-	McpServerId   int64                      `json:"mcpServerId" gorm:"column:mcp_server_id;uniqueIndex:idx_mcp_tools_unique;type:bigint;not null;comment:关联的MCP服务器ID"`
-	McpServerUUID string                     `json:"mcpServerUUID" gorm:"column:mcp_server_uuid;uniqueIndex:idx_mcp_tools_unique;type:varchar(36);not null;default:'';comment:工具唯一标识"`
-	Name          string                     `json:"name" gorm:"column:name;uniqueIndex:idx_mcp_tools_unique;type:varchar(500);not null;default:'';comment:工具名称"`
+	McpServerId   int64                      `json:"mcpServerId" gorm:"column:mcp_server_id;type:bigint;not null;comment:关联的MCP服务器ID"`
+	McpServerUUID string                     `json:"mcpServerUUID" gorm:"column:mcp_server_uuid;type:varchar(36);not null;default:'';comment:工具唯一标识"`
+	Name          string                     `json:"name" gorm:"column:name;type:varchar(500);not null;default:'';comment:工具名称"`
 	Description   string                     `json:"description" gorm:"column:description;type:text;default:'';comment:工具描述信息"`
 	McpServerType _const.McpServerTypeStatus `json:"mcpServerType" gorm:"column:mcp_server_type;type:SMALLINT;default:1;comment:服务器类型 1:openapi 2:grpc"`
 	Method        string                     `json:"method" gorm:"column:method;type:varchar(10);default:'';comment:HTTP请求方法(GET/POST/PUT/DELETE等)"`
