@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"flow-bridge-mcp/internal/conf"
+	"flow-bridge-mcp/internal/data/model"
 	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -19,8 +20,10 @@ func NewPgClient(config *conf.Conf, log2 *logger.GormLogger, log *logger.Logger)
 		PreferSimpleProtocol: false, // 禁用简单协议，使用扩展查询协议
 	}
 
-	// GORM 配置 - 启用日志
-	gormConfig := &gorm.Config{}
+	// GORM 配置 - 禁止创建外检
+	gormConfig := &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	}
 
 	// 根据配置决定是否启用 SQL 日志
 	if config.Conf.GetBool("data.database.log_sql") {
@@ -64,10 +67,10 @@ func NewPgClient(config *conf.Conf, log2 *logger.GormLogger, log *logger.Logger)
 
 	// 自动迁移 schema
 	if err := dbOpen.AutoMigrate(
-	//model.McpServer{},
-	//model.McpTools{},
-	//model.McpFile{},
-	//model.McpConnectToken{},
+		model.McpServer{},
+		model.McpTools{},
+		model.McpFile{},
+		model.McpConnectToken{},
 	); err != nil {
 		log.Error("auto migrate postgresql error:%+v", zap.Error(err))
 		return nil, nil, err
