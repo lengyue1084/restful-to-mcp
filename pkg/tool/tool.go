@@ -90,6 +90,51 @@ func Copy(to, from interface{}) error {
 	return nil
 }
 
+var (
+	// 预编译正则表达式，匹配 {{content}} 格式
+	placeholderRegex = regexp.MustCompile(`\{\{\s*([^{}]+)\s*}}`)
+	// 预编译正则表达式，匹配 {{.Args.param}} 格式
+	argsPlaceholderRegex = regexp.MustCompile(`\{\{\s*\.Args\.\s*([^{}]+)\s*}}`)
+)
+
+// ConvertPathToArgsFormat 将路径中的 {{param}} 转换为 {{.Args.param}} 格式
+func ConvertPathToArgsFormat(path string) string {
+	// 简单替换版本
+	return placeholderRegex.ReplaceAllString(path, "{{.Args.$1}}")
+}
+
+// ConvertPathToArgsFormatV2 或者使用更复杂的处理版本
+func ConvertPathToArgsFormatV2(path string) string {
+	return placeholderRegex.ReplaceAllStringFunc(path, func(matched string) string {
+		matches := placeholderRegex.FindStringSubmatch(matched)
+		if len(matches) < 2 {
+			return matched
+		}
+		content := strings.TrimSpace(matches[1])
+		// 可以在这里添加额外的逻辑处理
+		return fmt.Sprintf("{{.Args.%s}}", content)
+	})
+}
+
+// ConvertArgsToPathFormat 将路径中的 {{.Args.param}} 转换为 {{param}} 格式（简单版本）
+func ConvertArgsToPathFormat(path string) string {
+	// 简单替换版本
+	return argsPlaceholderRegex.ReplaceAllString(path, "{{$1}}")
+}
+
+// ConvertArgsToPathFormatV2 逆向转换的复杂处理版本
+func ConvertArgsToPathFormatV2(path string) string {
+	return argsPlaceholderRegex.ReplaceAllStringFunc(path, func(matched string) string {
+		matches := argsPlaceholderRegex.FindStringSubmatch(matched)
+		if len(matches) < 2 {
+			return matched
+		}
+		content := strings.TrimSpace(matches[1])
+		// 可以在这里添加额外的逻辑处理，比如参数验证、格式化等
+		return fmt.Sprintf("{{%s}}", content)
+	})
+}
+
 func CopyStruct(src, dst interface{}) {
 	srcVal := reflect.ValueOf(src).Elem()
 	dstVal := reflect.ValueOf(dst).Elem()
@@ -191,6 +236,11 @@ func FileNameByUUid() (filename string) {
 func StringNameByUUidWithDate() (filename string) {
 	filename = CurrentDateToString("YmdHis") + RandString() + uuid.NewString()
 	return
+}
+
+// NewUUID 实现一个uuid的方法
+func NewUUID() string {
+	return uuid.NewString()
 }
 
 // RandInt 随机int
