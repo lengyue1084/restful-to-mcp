@@ -135,11 +135,20 @@ func (m *McpToolsRepo) CreateMcpServerTool(ctx context.Context, mcpToolInfo *mod
 	return
 }
 
-func (m *McpToolsRepo) GetMcpServerToolsByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error) {
+func (m *McpToolsRepo) GetMcpServerToolByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error) {
 
 	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ? and name = ?", uuid, name).Find(&tool).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server tools by name with uuid error: %v", err)
+		return
+	}
+	return
+}
+
+func (m *McpToolsRepo) GetMcpServerToolByName(ctx context.Context, name string) (tool *model.McpTools, err error) {
+	err = m.data.Db.WithContext(ctx).Where("name = ?", name).Find(&tool).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server tools by name error: %v", err)
 		return
 	}
 	return

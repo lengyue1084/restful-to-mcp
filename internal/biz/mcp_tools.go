@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/internal/mcp/config"
 	"flow-bridge-mcp/internal/pkg/cache"
+	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
@@ -19,7 +21,8 @@ type McpToolsRepo interface {
 	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	CreateMcpServerTool(ctx context.Context, mcpToolInfo *model.McpTools) (uuid string, err error)
-	GetMcpServerToolsByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error)
+	GetMcpServerToolByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error)
+	GetMcpServerToolByName(ctx context.Context, name string) (tool *model.McpTools, err error)
 }
 
 type McpToolsUserCase struct {
@@ -103,6 +106,9 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 	if path[0] != '/' {
 		path = fmt.Sprintf("/%s", path)
 	}
+	if req.IsAuth == _const.IsAuthYes && req.AuthMode == "" {
+		return nil, fmt.Errorf("请输入鉴权参数")
+	}
 	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, req.McpServerUUID)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
@@ -112,6 +118,41 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
 		return nil, fmt.Errorf("没有查询到该server信息")
 	}
+
+	toolInfo, err := m.mtRepo.GetMcpServerToolByNameWithUUID(ctx, req.McpServerUUID, req.Name)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, err
+	}
+	if toolInfo.ID != 0 {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, fmt.Errorf("工具%s已存在", req.Name)
+	}
+
+	toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, err
+	}
+	isRepeat := _const.CommonStatusNo
+	if toolInfoForName.ID != 0 {
+		isRepeat = _const.CommonStatusYes
+	}
+
+	var security = &config.Security{
+		SecurityKey: req.SecurityKey,
+		Mode:        req.AuthMode,
+		Name:        req.SecurityKey,
+		Scheme:      req.Scheme,
+		In:          req.Position,
+		Description: "",
+	}
+	securityByte, err := json.Marshal(security)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
+		return nil, err
+	}
+
 	tools := &model.McpTools{
 		UUID:           tool.NewUUID(),
 		Name:           req.Name,
@@ -124,18 +165,11 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		IsShow:         req.IsShow,
 		IsPlatformAuth: req.IsPlatformAuth,
 		IsAuth:         req.IsAuth,
-		AuthMode:       req.AuthMode,
+		AuthMode:       req.AuthMode.String(),
+		Security:       string(securityByte),
+		IsRepeat:       isRepeat,
 	}
 
-	toolInfo, err := m.mtRepo.GetMcpServerToolsByNameWithUUID(ctx, req.McpServerUUID, req.Name)
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
-		return nil, err
-	}
-	if toolInfo.ID != 0 {
-		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
-		return nil, fmt.Errorf("工具%s已存在", req.Name)
-	}
 	uuid, err := m.mtRepo.CreateMcpServerTool(ctx, tools)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "创建工具失败,err:%+v", err)
