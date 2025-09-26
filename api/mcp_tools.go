@@ -60,12 +60,12 @@ type CreateMcpServerToolRequest struct {
 	McpServerUUID  string            `json:"mcpServerUUID" binding:"required"`
 	Name           string            `json:"name" binding:"required"`
 	Description    string            `json:"description" binding:"required"`
-	Method         string            `json:"method" binding:"required,oneof=GET POST PUT DELETE PATCH"`
+	Method         string            `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
 	Path           string            `json:"path" binding:"required"`
 	IsShow         _const.Status     `json:"isShow" binding:"required"`
 	IsPlatformAuth _const.AuthStatus `json:"isAuth" binding:"required"`
 	IsAuth         _const.AuthStatus `json:"isPlatformAuth" binding:"required"`
-	AuthMode       string            `json:"authMode" binding:"oneof=GET POST PUT DELETE PATCH"`
+	AuthMode       string            `json:"authMode" binding:"oneof=apiKey http"`
 }
 
 type CreateMcpServerToolResponse struct {
