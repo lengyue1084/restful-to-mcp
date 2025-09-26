@@ -133,8 +133,8 @@ type ToolConfig struct {
 }
 
 type Security struct {
-	SecurityKey  string       `json:"securityKey"`
-	Mode         AuthMode     `json:"mode"` //Any http, apiKey, oauth2, openIdConnect
+	SecurityKey  string       `json:"securityKey"` //必选. security scheme 的类型。有效值包括 "apiKey", "http", "oauth2", "openIdConnect",只兼容前两者
+	Mode         AuthMode     `json:"mode"`        //Any http, apiKey, oauth2, openIdConnect
 	Name         string       `json:"name"`
 	Scheme       string       `json:"scheme"` //http ("bearer")
 	In           AuthPosition `json:"in"`     //"query"、"header" 或 "cookie".
