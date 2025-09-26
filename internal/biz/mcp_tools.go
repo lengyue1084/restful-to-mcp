@@ -19,6 +19,7 @@ type McpToolsRepo interface {
 	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	CreateMcpServerTool(ctx context.Context, mcpToolInfo *model.McpTools) (uuid string, err error)
+	GetMcpServerToolsByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error)
 }
 
 type McpToolsUserCase struct {
@@ -44,7 +45,7 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
 	}
 
-	var toolsList []*protocol.Tool
+	var toolsList = make([]*protocol.Tool, len(tools))
 	for _, tool := range tools {
 		var annotations *protocol.ToolAnnotations
 		if tool.Annotations != "" {
@@ -126,6 +127,15 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		AuthMode:       req.AuthMode,
 	}
 
+	toolInfo, err := m.mtRepo.GetMcpServerToolsByNameWithUUID(ctx, req.McpServerUUID, req.Name)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, err
+	}
+	if toolInfo.ID != 0 {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, fmt.Errorf("工具%s已存在", req.Name)
+	}
 	uuid, err := m.mtRepo.CreateMcpServerTool(ctx, tools)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "创建工具失败,err:%+v", err)
