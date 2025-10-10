@@ -153,6 +153,15 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		return nil, err
 	}
 
+	var annotationsMap = make(map[string]string)
+	annotationsMap["description"] = req.Description
+	annotationsMap["title"] = req.Name
+	annotationsJson, err := json.Marshal(annotationsMap)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "annotations json转换错误，err:%+v", err)
+		return nil, err
+	}
+
 	tools := &model.McpTools{
 		UUID:           tool.NewUUID(),
 		Name:           req.Name,
@@ -168,6 +177,8 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		AuthMode:       req.AuthMode.String(),
 		Security:       string(securityByte),
 		IsRepeat:       isRepeat,
+		ResponseBody:   "{{.Response.Body}}",
+		Annotations:    string(annotationsJson),
 	}
 
 	uuid, err := m.mtRepo.CreateMcpServerTool(ctx, tools)
