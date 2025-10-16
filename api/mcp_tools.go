@@ -74,3 +74,21 @@ type CreateMcpServerToolRequest struct {
 type CreateMcpServerToolResponse struct {
 	UUID string `json:"uuid"`
 }
+
+type UpdateMcpServerToolRequest struct {
+	UUID           string              `json:"uuid" binding:"required"`
+	Name           string              `json:"name" binding:"required"`
+	Description    string              `json:"description" binding:"required"`
+	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
+	Path           string              `json:"path" binding:"required"`
+	IsShow         _const.Status       `json:"isShow" binding:"required"`
+	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
+	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
+	AuthMode       config.AuthMode     `json:"authMode" binding:"oneof=apiKey http"`
+	SecurityKey    string              `json:"securityKey"`
+	Position       config.AuthPosition `json:"position"` // query header
+	Scheme         string              `json:"scheme"`
+}
+
+type UpdateMcpServerToolResponse struct {
+}

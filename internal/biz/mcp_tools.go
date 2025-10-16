@@ -129,6 +129,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		return nil, fmt.Errorf("工具%s已存在", req.Name)
 	}
 
+	// 判断工具名是否重复，这里不区分 server
 	toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
@@ -190,4 +191,10 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		UUID: uuid,
 	}
 	return
+}
+
+func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.UpdateMcpServerToolRequest) (resp *api.UpdateMcpServerToolResponse, err error) {
+
+	return
+
 }

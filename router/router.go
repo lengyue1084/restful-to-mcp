@@ -45,6 +45,7 @@ func NewRouter(
 		apiV1.POST("/mcpServer/updateMcpServerByForm", mcpServerService.UpdateMcpServerByForm)
 		apiV1.POST("/mcpServer/getMcpServerToolsByUUID", mcpToolsService.GetMcpServerToolsByUUID)
 		apiV1.POST("/mcpServer/createMcpServerTool", mcpToolsService.CreateMcpServerTool)
+		apiV1.POST("/mcpServer/updateMcpServerTool", mcpToolsService.UpdateMcpServerTool)
 
 	}
 	app.app.NoRoute(func(c *gin.Context) {
