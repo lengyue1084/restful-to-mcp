@@ -18,11 +18,12 @@ type McpToolsRepo interface {
 	Create(ctx context.Context, mcpToolInfo *model.McpTools) (err error)
 	CreateMcpToolsBatch(ctx context.Context, mcpServerId int64, uuid string, allTools []string, mcpToolInfo []*model.McpTools) (err error)
 	UpdateToolsForAuthWithTx(ctx context.Context, uuid string, tools []*api.Tools) (err error)
-	GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
-	GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
+	GetMcpServerToolsByServerUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error)
 	CreateMcpServerTool(ctx context.Context, mcpToolInfo *model.McpTools) (uuid string, err error)
 	GetMcpServerToolByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error)
 	GetMcpServerToolByName(ctx context.Context, name string) (tool *model.McpTools, err error)
+	GetMcpServerToolInfoByUUID(ctx context.Context, uuid string) (tool *model.McpTools, err error)
+	UpdateMcpServerTool(ctx context.Context, tool *model.McpTools, uuid string) (err error)
 }
 
 type McpToolsUserCase struct {
@@ -42,7 +43,7 @@ func NewMcpToolsUserCase(mtRepo McpToolsRepo, msRepo McpServerRepo, log *logger.
 }
 
 func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (resp *api.GetMcpServerToolsResponse, err error) {
-	tools, err := m.mtRepo.GetMcpServerTools(ctx, uuid)
+	tools, err := m.mtRepo.GetMcpServerToolsByServerUUID(ctx, uuid)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "查询工具列表失败,err:%+v", err)
 		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
@@ -81,7 +82,7 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 
 func (m *McpToolsUserCase) GetMcpServerToolsByUUID(ctx context.Context, uuid string) (resp *api.GetMcpServerToolsByUUIDResponse, err error) {
 
-	tools, err := m.mtRepo.GetMcpServerToolsByUUID(ctx, uuid)
+	tools, err := m.mtRepo.GetMcpServerToolsByServerUUID(ctx, uuid)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "查询工具列表失败,err:%+v", err)
 		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
@@ -195,6 +196,96 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 
 func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.UpdateMcpServerToolRequest) (resp *api.UpdateMcpServerToolResponse, err error) {
 
+	var path string
+	if req.Path != "" {
+		path = tool.ConvertPathToArgsFormat(req.Path)
+		if path[0] != '/' {
+			path = fmt.Sprintf("/%s", path)
+		}
+	}
+	if req.IsAuth == _const.IsAuthYes && req.AuthMode == "" {
+		return nil, fmt.Errorf("请输入鉴权参数")
+	}
+
+	toolInfo, err := m.mtRepo.GetMcpServerToolInfoByUUID(ctx, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolInfoByUUID error: %v", err)
+		return nil, err
+	}
+	if toolInfo.ID == 0 {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolInfoByUUID error: %v,tool uuid：%v", "工具不存在", req.UUID)
+		return nil, fmt.Errorf("工具不存在")
+	}
+	// todo 优化点
+	// 判断该mcp server 工具名是否重复,同一个mcp server 下不允许工具名重复
+	if toolInfo.Name != req.Name {
+		toolInfoNew, err := m.mtRepo.GetMcpServerToolByNameWithUUID(ctx, toolInfo.McpServerUUID, req.Name)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "GetMcpServerToolByNameWithUUID error: %v", err)
+			return nil, err
+		}
+		if toolInfoNew.ID != 0 {
+			m.log.ErrorWithContext(ctx, "GetMcpServerToolByNameWithUUID error: %v", err)
+			return nil, fmt.Errorf("该服务的工具%s已存在", req.Name)
+		}
+	}
+
+	// 判断工具名是否重复，这里不区分 server
+	toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
+		return nil, err
+	}
+	isRepeat := _const.CommonStatusNo
+	if toolInfoForName.ID != 0 {
+		isRepeat = _const.CommonStatusYes
+	}
+
+	var security = &config.Security{
+		SecurityKey: req.SecurityKey,
+		Mode:        req.AuthMode,
+		Name:        req.SecurityKey,
+		Scheme:      req.Scheme,
+		In:          req.Position,
+		Description: "",
+	}
+	securityByte, err := json.Marshal(security)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
+		return nil, err
+	}
+
+	var annotationsMap = make(map[string]string)
+	annotationsMap["description"] = req.Description
+	annotationsMap["title"] = req.Name
+	annotationsJson, err := json.Marshal(annotationsMap)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "annotations json转换错误，err:%+v", err)
+		return nil, err
+	}
+
+	tools := &model.McpTools{
+		UUID:           req.UUID,
+		Name:           req.Name,
+		Description:    req.Description,
+		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
+		Method:         req.Method,
+		IsShow:         req.IsShow,
+		IsPlatformAuth: req.IsPlatformAuth,
+		IsAuth:         req.IsAuth,
+		AuthMode:       req.AuthMode.String(),
+		Security:       string(securityByte),
+		IsRepeat:       isRepeat,
+		ResponseBody:   "{{.Response.Body}}",
+		Annotations:    string(annotationsJson),
+	}
+
+	err = m.mtRepo.UpdateMcpServerTool(ctx, tools, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "创建工具失败,err:%+v", err)
+		return nil, fmt.Errorf("创建工具失败,err:%+v", err)
+	}
+	resp = &api.UpdateMcpServerToolResponse{}
 	return
 
 }

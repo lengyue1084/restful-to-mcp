@@ -107,16 +107,7 @@ func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string
 	return
 }
 
-func (m *McpToolsRepo) GetMcpServerTools(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
-	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Find(&mcpTools).Error
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "get mcp server tools error: %v", err)
-		return
-	}
-	return
-}
-
-func (m *McpToolsRepo) GetMcpServerToolsByUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
+func (m *McpToolsRepo) GetMcpServerToolsByServerUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
 	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Find(&mcpTools).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server tools by uuid error: %v", err)
@@ -151,5 +142,30 @@ func (m *McpToolsRepo) GetMcpServerToolByName(ctx context.Context, name string) 
 		m.log.ErrorWithContext(ctx, "get mcp server tools by name error: %v", err)
 		return
 	}
+	return
+}
+
+func (m *McpToolsRepo) GetMcpServerToolInfoByUUID(ctx context.Context, uuid string) (tool *model.McpTools, err error) {
+	err = m.data.Db.WithContext(ctx).Where("uuid = ?", uuid).Find(&tool).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "get mcp server tools info by uuid error: %v", err)
+		return
+	}
+	return
+
+}
+
+func (m *McpToolsRepo) UpdateMcpServerTool(ctx context.Context, tool *model.McpTools, uuid string) (err error) {
+	err = m.data.Db.WithContext(ctx).Model(&model.McpTools{}).
+		Select("Name", "Description", "Endpoint", "Method", "IsShow",
+			"IsPlatformAuth", "IsAuth", "AuthMode", "Security",
+			"IsRepeat", "ResponseBody", "Annotations").
+		Where("uuid = ?", uuid).
+		Updates(tool).Error
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "update mcp server tool error: %v", err)
+		return
+	}
+
 	return
 }
