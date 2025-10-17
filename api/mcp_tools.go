@@ -3,6 +3,7 @@ package api
 import (
 	"flow-bridge-mcp/internal/mcp/config"
 	_const "flow-bridge-mcp/pkg/const"
+	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 )
 
@@ -76,18 +77,48 @@ type CreateMcpServerToolResponse struct {
 }
 
 type UpdateMcpServerToolRequest struct {
-	UUID           string              `json:"uuid" binding:"required"`
-	Name           string              `json:"name" binding:"required"`
-	Description    string              `json:"description" binding:"required"`
-	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
-	Path           string              `json:"path" binding:"required"`
-	IsShow         _const.Status       `json:"isShow" binding:"required"`
-	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
-	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
-	AuthMode       config.AuthMode     `json:"authMode" binding:"oneof=apiKey http"`
-	SecurityKey    string              `json:"securityKey"`
-	Position       config.AuthPosition `json:"position"` // query header
-	Scheme         string              `json:"scheme"`
+	UUID           string               `json:"uuid" binding:"required"`
+	Name           *string              `json:"name,omitempty"`
+	Description    *string              `json:"description,omitempty"`
+	Method         *string              `json:"method,omitempty"` //binding:"oneof= GET POST PUT DELETE"
+	Path           *string              `json:"path,omitempty"`
+	IsShow         *_const.Status       `json:"isShow,omitempty"`
+	IsPlatformAuth *_const.AuthStatus   `json:"isAuth,omitempty"`
+	IsAuth         *_const.AuthStatus   `json:"isPlatformAuth,omitempty"`
+	AuthMode       *config.AuthMode     `json:"authMode,omitempty"` //binding:"oneof= apiKey http"`
+	SecurityKey    *string              `json:"securityKey,omitempty"`
+	Position       *config.AuthPosition `json:"position,omitempty"`
+	Scheme         *string              `json:"scheme,omitempty"`
+}
+
+func ValidMethods(method *string) error {
+	if method == nil {
+		return nil
+	}
+	var methods = map[string]bool{
+		"GET":    true,
+		"POST":   true,
+		"PUT":    true,
+		"DELETE": true,
+	}
+	if _, ok := methods[*method]; !ok {
+		return fmt.Errorf("method is not valid")
+	}
+	return nil
+}
+
+func ValidAuthMode(authMode *config.AuthMode) error {
+	if authMode == nil {
+		return nil
+	}
+	var authModeMap = map[config.AuthMode]bool{
+		config.AuthModeApiKey: true,
+		config.AuthModeHttp:   true,
+	}
+	if _, ok := authModeMap[*authMode]; !ok {
+		return fmt.Errorf("authMode is not valid")
+	}
+	return nil
 }
 
 type UpdateMcpServerToolResponse struct {
