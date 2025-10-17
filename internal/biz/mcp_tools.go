@@ -209,36 +209,35 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 
 	toolInfo, err := m.mtRepo.GetMcpServerToolInfoByUUID(ctx, req.UUID)
 	if err != nil {
-		m.log.ErrorWithContext(ctx, "GetMcpServerToolInfoByUUID error: %v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool error: %v", err)
 		return nil, err
 	}
 	if toolInfo.ID == 0 {
-		m.log.ErrorWithContext(ctx, "GetMcpServerToolInfoByUUID error: %v,tool uuid：%v", "工具不存在", req.UUID)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool error: %v,tool uuid：%v", "工具不存在", req.UUID)
 		return nil, fmt.Errorf("工具不存在")
 	}
 	// todo 优化点
+	isRepeat := _const.CommonStatusNo
 	// 判断该mcp server 工具名是否重复,同一个mcp server 下不允许工具名重复
 	if toolInfo.Name != req.Name {
 		toolInfoNew, err := m.mtRepo.GetMcpServerToolByNameWithUUID(ctx, toolInfo.McpServerUUID, req.Name)
 		if err != nil {
-			m.log.ErrorWithContext(ctx, "GetMcpServerToolByNameWithUUID error: %v", err)
+			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolByNameWithUUID error: %v", err)
 			return nil, err
 		}
 		if toolInfoNew.ID != 0 {
-			m.log.ErrorWithContext(ctx, "GetMcpServerToolByNameWithUUID error: %v", err)
+			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolByNameWithUUID error: %v", err)
 			return nil, fmt.Errorf("该服务的工具%s已存在", req.Name)
 		}
-	}
-
-	// 判断工具名是否重复，这里不区分 server
-	toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "GetMcpServerToolsByName error: %v", err)
-		return nil, err
-	}
-	isRepeat := _const.CommonStatusNo
-	if toolInfoForName.ID != 0 {
-		isRepeat = _const.CommonStatusYes
+		// 判断工具名是否重复，这里不区分 server
+		toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolsByName error: %v", err)
+			return nil, err
+		}
+		if toolInfoForName.ID != 0 {
+			isRepeat = _const.CommonStatusYes
+		}
 	}
 
 	var security = &config.Security{
@@ -251,7 +250,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	}
 	securityByte, err := json.Marshal(security)
 	if err != nil {
-		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
 		return nil, err
 	}
 
@@ -260,7 +259,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	annotationsMap["title"] = req.Name
 	annotationsJson, err := json.Marshal(annotationsMap)
 	if err != nil {
-		m.log.ErrorWithContext(ctx, "annotations json转换错误，err:%+v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool annotations json转换错误，err:%+v", err)
 		return nil, err
 	}
 
@@ -282,7 +281,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 
 	err = m.mtRepo.UpdateMcpServerTool(ctx, tools, req.UUID)
 	if err != nil {
-		m.log.ErrorWithContext(ctx, "创建工具失败,err:%+v", err)
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool 创建工具失败,err:%+v", err)
 		return nil, fmt.Errorf("创建工具失败,err:%+v", err)
 	}
 	resp = &api.UpdateMcpServerToolResponse{}
