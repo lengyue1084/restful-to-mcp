@@ -155,11 +155,8 @@ func (m *McpToolsRepo) GetMcpServerToolInfoByUUID(ctx context.Context, uuid stri
 
 }
 
-func (m *McpToolsRepo) UpdateMcpServerTool(ctx context.Context, tool *model.McpTools, uuid string) (err error) {
+func (m *McpToolsRepo) UpdateMcpServerTool(ctx context.Context, tool map[string]interface{}, uuid string) (err error) {
 	err = m.data.Db.WithContext(ctx).Model(&model.McpTools{}).
-		Select("Name", "Description", "Endpoint", "Method", "IsShow",
-			"IsPlatformAuth", "IsAuth", "AuthMode", "Security",
-			"IsRepeat", "ResponseBody", "Annotations").
 		Where("uuid = ?", uuid).
 		Updates(tool).Error
 	if err != nil {
