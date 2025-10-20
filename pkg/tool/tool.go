@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"flow-bridge-mcp/internal/mcp/config"
 	"fmt"
 	"github.com/google/uuid"
 	"io/ioutil"
@@ -740,4 +741,29 @@ func SomeLetterList(letter bool, start, end int) (letterList [26]string) {
 
 	//todo
 	return
+}
+
+// ExtractArgsFromPath 提取路径中的参数 /{{.Config.url}}/api-backup/user/{{.Args.userid}}/order/{{.Args.orderId}}/list"
+func ExtractArgsFromPath(path string) []*config.ArgConfig {
+	// 使用预编译的正则表达式匹配 {{.Args.param}} 格式
+	matches := argsPlaceholderRegex.FindAllStringSubmatch(path, -1)
+
+	var args []*config.ArgConfig
+	for _, match := range matches {
+		if len(match) >= 2 {
+			arg := &config.ArgConfig{
+				Name:        strings.TrimSpace(match[1]),
+				Position:    "path",
+				Required:    true,
+				Type:        "string",
+				Description: "",
+				Default:     "",
+				Items:       config.ItemsConfig{},
+				Enum:        nil,
+				Explode:     false,
+			}
+			args = append(args, arg)
+		}
+	}
+	return args
 }
