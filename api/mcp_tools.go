@@ -83,10 +83,10 @@ type UpdateMcpServerToolRequest struct {
 	Method         *string              `json:"method,omitempty"` //binding:"oneof= GET POST PUT DELETE"
 	Path           *string              `json:"path,omitempty"`
 	IsShow         *_const.Status       `json:"isShow,omitempty"`
-	IsPlatformAuth *_const.AuthStatus   `json:"isAuth,omitempty"`
-	IsAuth         *_const.AuthStatus   `json:"isPlatformAuth,omitempty"`
-	AuthMode       *config.AuthMode     `json:"authMode,omitempty"` //binding:"oneof= apiKey http"`
+	IsPlatformAuth *_const.AuthStatus   `json:"isPlatformAuth,omitempty"`
+	IsAuth         *_const.AuthStatus   `json:"isAuth,omitempty"`
 	SecurityKey    *string              `json:"securityKey,omitempty"`
+	AuthMode       *config.AuthMode     `json:"authMode,omitempty"` //binding:"oneof= apiKey http"`
 	Position       *config.AuthPosition `json:"position,omitempty"`
 	Scheme         *string              `json:"scheme,omitempty"`
 }
