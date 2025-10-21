@@ -161,7 +161,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		}
 	}
 	var headerJson string
-	if req.Header != nil || len(req.Header) >= 0 {
+	if req.Header != nil && len(req.Header) > 0 {
 		headerBytes, err := json.Marshal(req.Header)
 		if err != nil {
 			return nil, fmt.Errorf("header json error: %v", err)
@@ -223,7 +223,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 	}
 
 	var headerJson string
-	if req.Header != nil || len(req.Header) >= 0 {
+	if req.Header != nil && len(req.Header) > 0 {
 		headerBytes, err := json.Marshal(req.Header)
 		if err != nil {
 			return nil, fmt.Errorf("header json error: %v", err)

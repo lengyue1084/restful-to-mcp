@@ -260,30 +260,8 @@ func (m *McpServerRepo) UpdateMcpServerByForm(ctx context.Context, serverInfo *m
 	if mcpServerInfo.ID <= 0 {
 		return nil, fmt.Errorf("没有查询到该server信息")
 	}
-	db := m.data.Db.Model(&model.McpServer{}).Where("uuid = ?", serverInfo.UUID)
-	updateStr := ""
-	if serverInfo.Name != "" {
-		updateStr += "Name"
-	}
-	if serverInfo.Description != "" {
-		updateStr += "Description"
-	}
-	if serverInfo.Urls != "" {
-		updateStr += "Urls"
-	}
-	if serverInfo.Version != "" {
-		updateStr += "Version"
-	}
-	if serverInfo.IsAuth != 0 {
-		updateStr += "IsAuth"
-	}
-	if serverInfo.PlatformToken != "" {
-		updateStr += "PlatformToken"
-	}
-	if updateStr != "" {
-		db = db.Select(updateStr)
-	}
-	err = db.
+	err = m.data.Db.Model(&model.McpServer{}).Where("uuid = ?", serverInfo.UUID).
+		Select("Name,Description,Urls,Version,IsAuth,PlatformToken,ServiceToken,Header").
 		Where("uuid = ?", serverInfo.UUID).
 		Updates(serverInfo).Error
 	if err != nil {
