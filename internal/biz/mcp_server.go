@@ -160,6 +160,14 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 			return nil, fmt.Errorf("生成序列号失败")
 		}
 	}
+	var headerJson string
+	if req.Header != nil || len(req.Header) >= 0 {
+		headerBytes, err := json.Marshal(req.Header)
+		if err != nil {
+			return nil, fmt.Errorf("header json error: %v", err)
+		}
+		headerJson = string(headerBytes)
+	}
 
 	var mcpServerInfo = &model.McpServer{
 		UUID:          req.UUID,
@@ -177,6 +185,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		Status:        _const.ServerHadSetToken,
 		SerialNumber:  serialNumber,
 		Source:        _const.SourceTypeForm,
+		Header:        headerJson,
 	}
 	mcpServerInfo, err = m.msRepo.CreateMcpServerByForm(ctx, mcpServerInfo)
 	if err != nil {
@@ -194,6 +203,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 			Version:       mcpServerInfo.Version,
 			IsAuth:        int8(mcpServerInfo.IsAuth),
 			PlatformToken: mcpServerInfo.PlatformToken,
+			ServiceToken:  mcpServerInfo.ServiceToken,
 		},
 	}
 	var urls []string
@@ -211,14 +221,29 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 	if err != nil {
 		return nil, err
 	}
+
+	var headerJson string
+	if req.Header != nil || len(req.Header) >= 0 {
+		headerBytes, err := json.Marshal(req.Header)
+		if err != nil {
+			return nil, fmt.Errorf("header json error: %v", err)
+		}
+		headerJson = string(headerBytes)
+	}
+
 	var mcpServerInfo = &model.McpServer{
 		UUID:          req.UUID,
 		Name:          req.Name,
 		Description:   req.Description,
 		Urls:          string(urlsStr),
+		AllTools:      "[]",
 		Version:       req.Version,
+		McpServerType: _const.McpServerTypeOpenapi,
+		HaveTools:     _const.HaveToolsNo,
 		IsAuth:        _const.AuthStatus(req.IsAuth),
+		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
+		Header:        headerJson,
 	}
 	mcpServerInfo, err = m.msRepo.UpdateMcpServerByForm(ctx, mcpServerInfo)
 	if err != nil {
@@ -237,6 +262,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 			Version:       mcpServerInfo.Version,
 			IsAuth:        int8(mcpServerInfo.IsAuth),
 			PlatformToken: mcpServerInfo.PlatformToken,
+			ServiceToken:  mcpServerInfo.ServiceToken,
 		},
 	}
 	return

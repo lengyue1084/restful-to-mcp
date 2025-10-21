@@ -34,14 +34,15 @@ type DeleteMcpServerByUUIDResponse struct {
 }
 
 type CommonMcpServerByForm struct {
-	UUID          string   `json:"uuid" binding:"required"`
-	Name          string   `json:"name" binding:"required"`
-	Description   string   `json:"description" binding:"required"`
-	Urls          []string `json:"urls" binding:"required"`
-	Version       string   `json:"version" binding:"required"`
-	IsAuth        int8     `json:"isAuth" binding:"required"`
-	PlatformToken string   `json:"platformToken"`
-	ServiceToken  string   `json:"serviceToken"`
+	UUID          string              `json:"uuid" binding:"required"`
+	Name          string              `json:"name" binding:"required"`
+	Description   string              `json:"description" binding:"required"`
+	Urls          []string            `json:"urls" binding:"required"`
+	Version       string              `json:"version" binding:"required"`
+	IsAuth        int8                `json:"isAuth" binding:"required"`
+	PlatformToken string              `json:"platformToken"`
+	ServiceToken  string              `json:"serviceToken"`
+	Header        []map[string]string `json:"header"`
 }
 
 type CreateMcpServerByFormRequest struct {

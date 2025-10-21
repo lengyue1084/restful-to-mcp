@@ -21,6 +21,7 @@ type McpServer struct {
 	Tools        []*McpTools         `json:"tools" gorm:"foreignKey:McpServerId"`
 	SerialNumber string              `json:"serialNumber" gorm:"column:serial_number;type:varchar(36);default:'';comment:服务序列号"` //不可重复
 	Source       _const.SourceType   `json:"source" gorm:"column:source;type:SMALLINT;default:1;comment:数据来源,1:yaml文件,2:表单添加"`
+	Header       string              `json:"header" gorm:"column:header;type:text;default:'';comment:请求头信息，JSON格式存储"`
 }
 
 func (m *McpServer) TableName() string {
