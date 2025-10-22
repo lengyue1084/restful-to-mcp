@@ -34,7 +34,7 @@ func NewRouter(
 
 		// MCP Server管理相关
 		apiV1.POST("/mcpServer/updateByUUID", mcpServerService.UpdateMcpServerByUUID)
-		// 获取MCP Server的工具 符合mcp tools/list的返回结构
+		// 获取MCP Server的工具 符合mcp tools/list的返回结构,也可以可以通过连接mcp之后获取tools/list
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
 		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
 		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)

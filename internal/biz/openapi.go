@@ -59,7 +59,6 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	var decodeString []byte
 	uuidStr := req.UUID
 	if uuidStr == "" {
-		o.log.ErrorWithContext(ctx, "UUID不能为空")
 		return nil, fmt.Errorf("UUID不能为空")
 	}
 	ctx = context.WithValue(ctx, "uuid", uuidStr)

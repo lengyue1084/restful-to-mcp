@@ -63,5 +63,5 @@ type OpenapiUpdateForAuthResponse struct {
 }
 type Tools struct {
 	ID     uint              `json:"id" binding:"required"`
-	IsAuth _const.AuthStatus `json:"isAuth" binding:"required"`
+	IsAuth _const.AuthStatus `json:"isAuth" binding:"required"` // 平台授权状态
 }

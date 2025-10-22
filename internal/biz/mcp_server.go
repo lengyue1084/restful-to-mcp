@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flow-bridge-mcp/api"
 	"flow-bridge-mcp/internal/data/model"
+	"flow-bridge-mcp/internal/mcp/config"
 	_const "flow-bridge-mcp/pkg/const"
 	"flow-bridge-mcp/pkg/logger"
 	"flow-bridge-mcp/pkg/tool"
@@ -57,6 +58,21 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
 		return
 	}
+	var header []map[string]string
+	if mcpServerInfo.Header != "" {
+		err = json.Unmarshal([]byte(mcpServerInfo.Header), &header)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var security config.Security
+	if err := json.Unmarshal([]byte(mcpServerInfo.Security), &security); err != nil {
+		// 处理错误，例如记录日志或返回错误
+		m.log.ErrorWithContext(ctx, "Failed to unmarshal security info: %v", err)
+		return nil, err
+	}
+
 	resp = &api.GetMcpServerInfoByUUIDResponse{
 		ID:        mcpServerInfo.ID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
@@ -67,8 +83,11 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 			Description:   mcpServerInfo.Description,
 			Urls:          urls,
 			Version:       mcpServerInfo.Version,
-			IsAuth:        int8(mcpServerInfo.IsAuth),
+			IsAuth:        _const.AuthTypeStatus(mcpServerInfo.IsAuth),
 			PlatformToken: mcpServerInfo.PlatformToken,
+			ServiceToken:  mcpServerInfo.ServiceToken,
+			Header:        header,
+			Security:      security,
 		},
 	}
 
@@ -138,6 +157,10 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 	if len(req.Urls) == 0 {
 		return nil, fmt.Errorf("至少填写一个url")
 	}
+	// 如果为api服务鉴权，则必须填写鉴权mode
+	if req.IsAuth == _const.IsAuthServiceAuth && req.Security.Mode == "" {
+		return nil, fmt.Errorf("api鉴权模式，缺少必要的鉴权参数")
+	}
 	urlsStr, err := json.Marshal(req.Urls)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %+v", err)
@@ -169,6 +192,43 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		headerJson = string(headerBytes)
 	}
 
+	securityStr := "{}"
+	if req.IsAuth == _const.IsAuthServiceAuth {
+		var security = &config.Security{}
+		security.SecurityKey = req.Security.SecurityKey
+		if req.Security.Mode == "" {
+			return nil, fmt.Errorf("请输入鉴权参数")
+		}
+		security.Mode = req.Security.Mode
+		switch req.Security.Mode {
+		case config.AuthModeHttp:
+			// http 模式下 scheme 必填
+			if req.Security.Scheme == "" {
+				return nil, fmt.Errorf("%s模式，scheme为必填项", config.AuthModeHttp)
+			}
+			security.Scheme = req.Security.Scheme
+		case config.AuthModeApiKey:
+			// apiKey 模式下 name、in 必填
+			if req.Name == "" {
+				return nil, fmt.Errorf("%s模式，name为必填项", config.AuthModeApiKey)
+			}
+			security.Name = req.Name
+			if req.Security.In == "" {
+				return nil, fmt.Errorf("%s模式，position为必填项", config.AuthModeApiKey)
+			}
+			security.In = req.Security.In
+		}
+
+		securityByte, err := json.Marshal(security)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
+			return nil, err
+		}
+		if req.Security.SecurityKey != "" {
+			securityStr = string(securityByte)
+		}
+	}
+
 	var mcpServerInfo = &model.McpServer{
 		UUID:          req.UUID,
 		Name:          req.Name,
@@ -181,7 +241,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		IsAuth:        _const.AuthStatus(req.IsAuth),
 		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
-		Security:      "",
+		Security:      securityStr,
 		Status:        _const.ServerHadSetToken,
 		SerialNumber:  serialNumber,
 		Source:        _const.SourceTypeForm,
@@ -195,33 +255,24 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 	resp = &api.CreateMcpServerByFormResponse{
 		ID:        mcpServerInfo.ID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
-		CommonMcpServerByForm: api.CommonMcpServerByForm{
-			UUID:          mcpServerInfo.UUID,
-			Name:          mcpServerInfo.Name,
-			Description:   mcpServerInfo.Description,
-			Urls:          nil,
-			Version:       mcpServerInfo.Version,
-			IsAuth:        int8(mcpServerInfo.IsAuth),
-			PlatformToken: mcpServerInfo.PlatformToken,
-			ServiceToken:  mcpServerInfo.ServiceToken,
-		},
 	}
-	var urls []string
-	if err = json.Unmarshal([]byte(mcpServerInfo.Urls), &urls); err != nil {
-		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %v", err)
-		return nil, err
-	}
-	resp.Urls = urls
 	return
 }
 
 func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.UpdateMcpServerByFormRequest) (resp *api.UpdateMcpServerByFormResponse, err error) {
 
+	if len(req.Urls) == 0 {
+		return nil, fmt.Errorf("至少填写一个url")
+	}
+	// 如果为api服务鉴权，则必须填写鉴权mode
+	if req.IsAuth == _const.IsAuthServiceAuth && req.Security.Mode == "" {
+		return nil, fmt.Errorf("api鉴权模式，缺少必要的鉴权参数")
+	}
 	urlsStr, err := json.Marshal(req.Urls)
 	if err != nil {
+		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %+v", err)
 		return nil, err
 	}
-
 	var headerJson string
 	if req.Header != nil && len(req.Header) > 0 {
 		headerBytes, err := json.Marshal(req.Header)
@@ -229,6 +280,42 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 			return nil, fmt.Errorf("header json error: %v", err)
 		}
 		headerJson = string(headerBytes)
+	}
+	securityStr := "{}"
+	if req.IsAuth == _const.IsAuthServiceAuth {
+		var security = &config.Security{}
+		security.SecurityKey = req.Security.SecurityKey
+		if req.Security.Mode == "" {
+			return nil, fmt.Errorf("请输入鉴权参数")
+		}
+		security.Mode = req.Security.Mode
+		switch req.Security.Mode {
+		case config.AuthModeHttp:
+			// http 模式下 scheme 必填
+			if req.Security.Scheme == "" {
+				return nil, fmt.Errorf("%s模式，scheme为必填项", config.AuthModeHttp)
+			}
+			security.Scheme = req.Security.Scheme
+		case config.AuthModeApiKey:
+			// apiKey 模式下 name、in 必填
+			if req.Name == "" {
+				return nil, fmt.Errorf("%s模式，name为必填项", config.AuthModeApiKey)
+			}
+			security.Name = req.Name
+			if req.Security.In == "" {
+				return nil, fmt.Errorf("%s模式，position为必填项", config.AuthModeApiKey)
+			}
+			security.In = req.Security.In
+		}
+
+		securityByte, err := json.Marshal(security)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
+			return nil, err
+		}
+		if req.Security.SecurityKey != "" {
+			securityStr = string(securityByte)
+		}
 	}
 
 	var mcpServerInfo = &model.McpServer{
@@ -244,6 +331,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
 		Header:        headerJson,
+		Security:      securityStr,
 	}
 	mcpServerInfo, err = m.msRepo.UpdateMcpServerByForm(ctx, mcpServerInfo)
 	if err != nil {
@@ -253,17 +341,6 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 	resp = &api.UpdateMcpServerByFormResponse{
 		ID:        mcpServerInfo.ID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
-		UpdatedAt: mcpServerInfo.UpdatedAt.String(),
-		CommonMcpServerByForm: api.CommonMcpServerByForm{
-			UUID:          mcpServerInfo.UUID,
-			Name:          mcpServerInfo.Name,
-			Description:   mcpServerInfo.Description,
-			Urls:          req.Urls,
-			Version:       mcpServerInfo.Version,
-			IsAuth:        int8(mcpServerInfo.IsAuth),
-			PlatformToken: mcpServerInfo.PlatformToken,
-			ServiceToken:  mcpServerInfo.ServiceToken,
-		},
 	}
 	return
 }

@@ -4,6 +4,7 @@ import "errors"
 
 type (
 	AuthStatus          int8
+	AuthTypeStatus      int8
 	HaveToolsStatus     int8
 	McpServerTypeStatus int8
 	Status              int8
@@ -13,8 +14,15 @@ type (
 )
 
 const (
-	IsAuthNo             AuthStatus          = 1
-	IsAuthYes            AuthStatus          = 2
+	IsAuthNo  AuthStatus = 1
+	IsAuthYes AuthStatus = 2
+
+	// IsAuthNoAuth 0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权'
+	IsAuthNoAuth       AuthTypeStatus = 1
+	IsAuthServiceAuth  AuthTypeStatus = 2
+	IsAuthPlatformAuth AuthTypeStatus = 3
+	IsAuthAllAuth      AuthTypeStatus = 4
+
 	HaveToolsNo          HaveToolsStatus     = 1
 	HaveToolsYes         HaveToolsStatus     = 2
 	McpServerTypeOpenapi McpServerTypeStatus = 1

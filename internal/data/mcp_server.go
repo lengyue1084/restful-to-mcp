@@ -127,6 +127,7 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 	}
 	err = db.WithContext(ctx).
 		Where("uuid = ?", uuid).
+		Select("ServiceToken", "PlatformToken", "IsAuth", "Status").
 		Updates(model.McpServer{
 			ServiceToken:  serviceToken,
 			PlatformToken: platformToken,
@@ -262,7 +263,7 @@ func (m *McpServerRepo) UpdateMcpServerByForm(ctx context.Context, serverInfo *m
 	}
 	err = m.data.Db.Model(&model.McpServer{}).
 		Where("uuid = ?", serverInfo.UUID).
-		Select("name", "description", "urls", "version", "is_auth", "platform_token", "service_token", "header").
+		Select("name", "description", "urls", "version", "is_auth", "platform_token", "service_token", "header", "all_tools", "mcp_server_type", "have_tools", "security").
 		Updates(serverInfo).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
