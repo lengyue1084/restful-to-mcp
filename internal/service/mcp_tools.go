@@ -83,11 +83,6 @@ func (m *McpToosService) UpdateMcpServerTool(c *gin.Context) {
 		return
 	}
 
-	if err := api.ValidAuthMode(req.AuthMode); err != nil {
-		response.Error(c, fmt.Sprintf("UpdateMcpServerTool 错误,auth_mode参数错误,err:%+v", err), nil)
-		return
-	}
-
 	resp, err := m.mtUc.UpdateMcpServerTool(c, req)
 	if err != nil {
 		m.log.ErrorWithContext(c, "更新工具失败,err:%+v", err)

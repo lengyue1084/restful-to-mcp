@@ -58,18 +58,28 @@ type GetMcpServerToolsByUUIDResponse struct {
 }
 
 type CreateMcpServerToolRequest struct {
-	McpServerUUID  string              `json:"mcpServerUUID" binding:"required"`
-	Name           string              `json:"name" binding:"required"`
-	Description    string              `json:"description" binding:"required"`
-	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
-	Path           string              `json:"path" binding:"required"`
-	IsShow         _const.Status       `json:"isShow" binding:"required"`
-	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
-	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
-	AuthMode       config.AuthMode     `json:"authMode" binding:"oneof=apiKey http"`
-	SecurityKey    string              `json:"securityKey"`
-	Position       config.AuthPosition `json:"position"` // query header
-	Scheme         string              `json:"scheme"`
+	McpServerUUID  string            `json:"mcpServerUUID" binding:"required"`
+	Name           string            `json:"name" binding:"required"`
+	Description    string            `json:"description" binding:"required"`
+	Method         string            `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
+	Path           string            `json:"path" binding:"required"`
+	IsPlatformAuth _const.AuthStatus `json:"isAuth" binding:"required"`
+	IsAuth         _const.AuthStatus `json:"isPlatformAuth" binding:"required"`
+	InputArgs      []*InputArgs      `json:"inputArgs"`
+}
+
+type InputArgs struct {
+	Name        string      `json:"name" binding:"required"`
+	Position    string      `json:"position" binding:"required,oneof=header query path body"`
+	Required    bool        `json:"required" binding:"required"`
+	Type        string      `json:"type" binding:"required,oneof=string number boolean object array array[string] array[number] array[boolean] array[object]"`
+	Description string      `json:"description,omitempty"`
+	Default     string      `json:"default,omitempty"`
+	Enum        []string    `json:"enum,omitempty"`
+	Explode     bool        `json:"explode"`
+	Properties  []InputArgs `json:"properties,omitempty"`
+	//Items       ItemsConfig `json:"items,omitempty" yaml:"items,omitempty"` // 数组类型参数的子项配置
+
 }
 
 type CreateMcpServerToolResponse struct {
@@ -77,18 +87,14 @@ type CreateMcpServerToolResponse struct {
 }
 
 type UpdateMcpServerToolRequest struct {
-	UUID           string               `json:"uuid" binding:"required"`
-	Name           *string              `json:"name,omitempty"`
-	Description    *string              `json:"description,omitempty"`
-	Method         *string              `json:"method,omitempty"` //binding:"oneof= GET POST PUT DELETE"
-	Path           *string              `json:"path,omitempty"`
-	IsShow         *_const.Status       `json:"isShow,omitempty"`
-	IsPlatformAuth *_const.AuthStatus   `json:"isPlatformAuth,omitempty"`
-	IsAuth         *_const.AuthStatus   `json:"isAuth,omitempty"`
-	SecurityKey    *string              `json:"securityKey,omitempty"`
-	AuthMode       *config.AuthMode     `json:"authMode,omitempty"` //binding:"oneof= apiKey http"`
-	Position       *config.AuthPosition `json:"position,omitempty"`
-	Scheme         *string              `json:"scheme,omitempty"`
+	UUID           string             `json:"uuid" binding:"required"`
+	Name           *string            `json:"name,omitempty"`
+	Description    *string            `json:"description,omitempty"`
+	Method         *string            `json:"method,omitempty"` //binding:"oneof= GET POST PUT DELETE"
+	Path           *string            `json:"path,omitempty"`
+	IsShow         *_const.Status     `json:"isShow,omitempty"`
+	IsPlatformAuth *_const.AuthStatus `json:"isPlatformAuth,omitempty"`
+	IsAuth         *_const.AuthStatus `json:"isAuth,omitempty"`
 }
 
 func ValidMethods(method *string) error {

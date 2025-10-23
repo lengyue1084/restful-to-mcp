@@ -23,7 +23,7 @@ type McpToolsRepo interface {
 	GetMcpServerToolByNameWithUUID(ctx context.Context, uuid string, name string) (tool *model.McpTools, err error)
 	GetMcpServerToolByName(ctx context.Context, name string) (tool *model.McpTools, err error)
 	GetMcpServerToolInfoByUUID(ctx context.Context, uuid string) (tool *model.McpTools, err error)
-	UpdateMcpServerTool(ctx context.Context, tool *model.McpTools, uuid string) (err error)
+	UpdateMcpServerTool(ctx context.Context, tool map[string]interface{}, uuid string) (err error)
 }
 
 type McpToolsUserCase struct {
@@ -49,7 +49,7 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
 	}
 
-	var toolsList = make([]*protocol.Tool, len(tools))
+	var toolsList = make([]*protocol.Tool, 0)
 	for _, tool := range tools {
 		var annotations *protocol.ToolAnnotations
 		if tool.Annotations != "" {
@@ -107,9 +107,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 	if path[0] != '/' {
 		path = fmt.Sprintf("/%s", path)
 	}
-	if req.IsAuth == _const.IsAuthYes && req.AuthMode == "" {
-		return nil, fmt.Errorf("请输入鉴权参数")
-	}
+
 	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, req.McpServerUUID)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
@@ -141,26 +139,25 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		isRepeat = _const.CommonStatusYes
 	}
 
-	var security = &config.Security{
-		SecurityKey: req.SecurityKey,
-		Mode:        req.AuthMode,
-		Name:        req.SecurityKey,
-		Scheme:      req.Scheme,
-		In:          req.Position,
-		Description: "",
-	}
-	securityByte, err := json.Marshal(security)
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
-		return nil, err
-	}
-
 	var annotationsMap = make(map[string]string)
 	annotationsMap["description"] = req.Description
 	annotationsMap["title"] = req.Name
 	annotationsJson, err := json.Marshal(annotationsMap)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "annotations json转换错误，err:%+v", err)
+		return nil, err
+	}
+
+	// 从path中提取参数
+	args := tool.ExtractArgsFromPath(path)
+	argsJson, err := json.Marshal(args)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "args json转换错误，err:%+v", err)
+		return nil, err
+	}
+	var authMode config.Security
+	err = json.Unmarshal([]byte(mcpServerInfo.Security), &authMode)
+	if err != nil {
 		return nil, err
 	}
 
@@ -173,14 +170,15 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		McpServerUUID:  req.McpServerUUID,
 		McpServerId:    int64(mcpServerInfo.ID),
 		SerialNumber:   mcpServerInfo.SerialNumber,
-		IsShow:         req.IsShow,
+		IsShow:         _const.StatusHidden,
 		IsPlatformAuth: req.IsPlatformAuth,
 		IsAuth:         req.IsAuth,
-		AuthMode:       req.AuthMode.String(),
-		Security:       string(securityByte),
+		AuthMode:       authMode.Mode.String(),
+		Security:       mcpServerInfo.Security,
 		IsRepeat:       isRepeat,
 		ResponseBody:   "{{.Response.Body}}",
 		Annotations:    string(annotationsJson),
+		Args:           string(argsJson),
 	}
 
 	uuid, err := m.mtRepo.CreateMcpServerTool(ctx, tools)
@@ -197,14 +195,11 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.UpdateMcpServerToolRequest) (resp *api.UpdateMcpServerToolResponse, err error) {
 
 	var path string
-	if req.Path != "" {
-		path = tool.ConvertPathToArgsFormat(req.Path)
+	if req.Path != nil && *req.Path != "" {
+		path = tool.ConvertPathToArgsFormat(*req.Path)
 		if path[0] != '/' {
 			path = fmt.Sprintf("/%s", path)
 		}
-	}
-	if req.IsAuth == _const.IsAuthYes && req.AuthMode == "" {
-		return nil, fmt.Errorf("请输入鉴权参数")
 	}
 
 	toolInfo, err := m.mtRepo.GetMcpServerToolInfoByUUID(ctx, req.UUID)
@@ -216,21 +211,21 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool error: %v,tool uuid：%v", "工具不存在", req.UUID)
 		return nil, fmt.Errorf("工具不存在")
 	}
-	// todo 优化点
-	isRepeat := _const.CommonStatusNo
+	isRepeat := toolInfo.IsRepeat
 	// 判断该mcp server 工具名是否重复,同一个mcp server 下不允许工具名重复
-	if toolInfo.Name != req.Name {
-		toolInfoNew, err := m.mtRepo.GetMcpServerToolByNameWithUUID(ctx, toolInfo.McpServerUUID, req.Name)
+	if req.Name != nil && toolInfo.Name != *req.Name {
+		toolInfoNew, err := m.mtRepo.GetMcpServerToolByNameWithUUID(ctx, toolInfo.McpServerUUID, *req.Name)
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolByNameWithUUID error: %v", err)
 			return nil, err
 		}
 		if toolInfoNew.ID != 0 {
 			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolByNameWithUUID error: %v", err)
-			return nil, fmt.Errorf("该服务的工具%s已存在", req.Name)
+			return nil, fmt.Errorf("该服务的工具%s已存在", *req.Name)
 		}
+		isRepeat = _const.CommonStatusNo
 		// 判断工具名是否重复，这里不区分 server
-		toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, req.Name)
+		toolInfoForName, err := m.mtRepo.GetMcpServerToolByName(ctx, *req.Name)
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool GetMcpServerToolsByName error: %v", err)
 			return nil, err
@@ -240,46 +235,65 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		}
 	}
 
-	var security = &config.Security{
-		SecurityKey: req.SecurityKey,
-		Mode:        req.AuthMode,
-		Name:        req.SecurityKey,
-		Scheme:      req.Scheme,
-		In:          req.Position,
-		Description: "",
-	}
-	securityByte, err := json.Marshal(security)
-	if err != nil {
-		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
-		return nil, err
+	var dataMap = make(map[string]interface{})
+	if req.IsAuth != nil {
+		dataMap["is_auth"] = *req.IsAuth
 	}
 
 	var annotationsMap = make(map[string]string)
-	annotationsMap["description"] = req.Description
-	annotationsMap["title"] = req.Name
+	if req.Description != nil {
+		annotationsMap["description"] = *req.Description
+	}
+	if req.Name != nil {
+		annotationsMap["title"] = *req.Name
+	}
 	annotationsJson, err := json.Marshal(annotationsMap)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool annotations json转换错误，err:%+v", err)
 		return nil, err
 	}
 
-	tools := &model.McpTools{
-		UUID:           req.UUID,
-		Name:           req.Name,
-		Description:    req.Description,
-		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
-		Method:         req.Method,
-		IsShow:         req.IsShow,
-		IsPlatformAuth: req.IsPlatformAuth,
-		IsAuth:         req.IsAuth,
-		AuthMode:       req.AuthMode.String(),
-		Security:       string(securityByte),
-		IsRepeat:       isRepeat,
-		ResponseBody:   "{{.Response.Body}}",
-		Annotations:    string(annotationsJson),
+	if req.Name != nil {
+		dataMap["name"] = req.Name
+	}
+	if req.Description != nil {
+		dataMap["description"] = req.Description
+	}
+	if req.Path != nil {
+		dataMap["endpoint"] = fmt.Sprintf("{{.Config.url}}%s", path)
+	}
+	if req.Method != nil {
+		dataMap["method"] = req.Method
+	}
+	if req.IsShow != nil {
+		dataMap["is_show"] = req.IsShow
+	}
+	if req.IsPlatformAuth != nil {
+		dataMap["is_platform_auth"] = req.IsPlatformAuth
+	}
+	if req.IsAuth != nil {
+		dataMap["is_auth"] = req.IsAuth
 	}
 
-	err = m.mtRepo.UpdateMcpServerTool(ctx, tools, req.UUID)
+	dataMap["is_repeat"] = isRepeat
+	dataMap["response_body"] = "{{.Response.Body}}"
+	dataMap["annotations"] = string(annotationsJson)
+	var args []*config.ArgConfig
+	if path != "" {
+		// 从path中提取参数
+		args = tool.ExtractArgsFromPath(path)
+
+	}
+	argsJson, err := json.Marshal(args)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool args json转换错误，err:%+v", err)
+		return nil, err
+	}
+	dataMap["args"] = string(argsJson)
+
+	//[{"name":"lastName","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"password","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"phone","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"userStatus","position":"body","required":false,"type":"integer","description":"User Status","default":"","items":{"type":""},"explode":false},{"name":"username","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"email","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"firstName","position":"body","required":false,"type":"string","description":"","default":"","items":{"type":""},"explode":false},{"name":"id","position":"body","required":false,"type":"integer","description":"","default":"","items":{"type":""},"explode":false}]
+
+	err = m.mtRepo.UpdateMcpServerTool(ctx, dataMap, req.UUID)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "UpdateMcpServerTool 创建工具失败,err:%+v", err)
 		return nil, fmt.Errorf("创建工具失败,err:%+v", err)
