@@ -127,3 +127,46 @@ const (
 var (
 	McpFileIsNotExist = errors.New("mcp file is not exist")
 )
+
+type (
+	FieldType string
+)
+
+const (
+	// 基础类型
+	String  FieldType = "String"
+	Number  FieldType = "Number"
+	Boolean FieldType = "Boolean"
+	Object  FieldType = "Object"
+
+	// 数组类型
+	ArrayObject  FieldType = "Array<Object>"
+	ArrayString  FieldType = "Array<String>"
+	ArrayNumber  FieldType = "Array<Number>"
+	ArrayBoolean FieldType = "Array<Boolean>"
+)
+
+// String 方法 - 实现 fmt.Stringer 接口
+func (ft FieldType) String() string {
+	return string(ft)
+}
+
+// var (
+//
+//	FieldTypeMap = map[FieldType]string{
+//		String:       "string",
+//		Number:       "number",
+//		Boolean:      "boolean",
+//		Object:       "object",
+//		ArrayObject:  "Array<object>",
+//		ArrayString:  "Array<string>",
+//		ArrayNumber:  "Array<number>",
+//		ArrayBoolean: "Array<boolean>",
+//	}
+//
+// )
+//
+//	func (ft FieldType) Type() string {
+//		return FieldTypeMap[ft]
+//	}
+//
