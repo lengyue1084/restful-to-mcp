@@ -57,6 +57,7 @@ type CreateMcpServerByFormRequest struct {
 
 type CreateMcpServerByFormResponse struct {
 	ID        uint   `json:"id"`
+	UUID      string `json:"uuid"`
 	CreatedAt string `json:"createdAt"`
 }
 
@@ -66,5 +67,6 @@ type UpdateMcpServerByFormRequest struct {
 
 type UpdateMcpServerByFormResponse struct {
 	ID        uint   `json:"id"`
+	UUID      string `json:"uuid"`
 	CreatedAt string `json:"createdAt"`
 }

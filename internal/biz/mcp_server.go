@@ -254,6 +254,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 	}
 	resp = &api.CreateMcpServerByFormResponse{
 		ID:        mcpServerInfo.ID,
+		UUID:      mcpServerInfo.UUID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
 	}
 	return
@@ -340,6 +341,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 	}
 	resp = &api.UpdateMcpServerByFormResponse{
 		ID:        mcpServerInfo.ID,
+		UUID:      mcpServerInfo.UUID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
 	}
 	return
