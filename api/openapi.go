@@ -7,11 +7,14 @@ import (
 )
 
 type OpenapiUploadRequest struct {
-	UUID        string `json:"uuid" binding:"required"`
-	Name        string `json:"name" binding:"required,min=1,max=200"`
-	FileContent string `json:"fileContent" binding:"required"`
-	Description string `json:"description"`
-	Suffix      string `json:"suffix" binding:"required"`
+	UUID          string                `json:"uuid" binding:"required"`
+	Name          string                `json:"name" binding:"required,min=1,max=200"`
+	FileContent   string                `json:"fileContent" binding:"required"`
+	Description   string                `json:"description"`
+	Suffix        string                `json:"suffix" binding:"required"`
+	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
+	ServiceToken  string                `json:"serviceToken" binding:"omitempty,min=1"`
+	PlatformToken string                `json:"platformToken" binding:"omitempty,min=1"`
 }
 
 type OpenapiUploadResponse struct {
@@ -53,11 +56,11 @@ type ToolInfo struct {
 }
 
 type OpenapiUpdateForAuthRequest struct {
-	UUID          string            `json:"uuid" binding:"required"`
-	IsAuth        _const.AuthStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
-	ServiceToken  string            `json:"serviceToken" binding:"omitempty,min=1,max=200"`
-	PlatformToken string            `json:"platformToken" binding:"omitempty,min=1,max=200"`
-	Tools         []*Tools          `json:"tools"`
+	UUID          string                `json:"uuid" binding:"required"`
+	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
+	ServiceToken  string                `json:"serviceToken" binding:"omitempty,min=1"`
+	PlatformToken string                `json:"platformToken" binding:"omitempty,min=1"`
+	Tools         []*Tools              `json:"tools"`
 }
 type OpenapiUpdateForAuthResponse struct {
 }

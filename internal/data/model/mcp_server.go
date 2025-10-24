@@ -12,7 +12,7 @@ type McpServer struct {
 	Version       string                     `json:"version" gorm:"column:version;type:varchar(20);default:v1.0.0;comment:OpenAPI版本号"`
 	McpServerType _const.McpServerTypeStatus `json:"mcpServerType" gorm:"column:mcp_server_type;type:SMALLINT;default:1;comment:服务器类型 1:openapi 2:grpc"`
 	HaveTools     _const.HaveToolsStatus     `json:"haveTools" gorm:"column:have_tools;type:SMALLINT;default:1;comment:服务器是否支持工具,0未知，1 不支持，2支持"`
-	IsAuth        _const.AuthStatus          `json:"isAuth" gorm:"column:is_auth;type:SMALLINT;default:1;comment:服务器是否需要认证,如果开启全局认证，则所有的方法都需要认证,0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权"`
+	IsAuth        _const.AuthTypeStatus      `json:"isAuth" gorm:"column:is_auth;type:SMALLINT;default:1;comment:服务器是否需要认证,如果开启全局认证，则所有的方法都需要认证,0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权"`
 	ServiceToken  string                     `json:"serviceToken" gorm:"column:service_token;type:text;default:'';comment:服务认证Token，用于访问用户提供的接口"`
 	PlatformToken string                     `json:"platformToken" gorm:"column:platform_token;type:text;default:'';comment:平台认证Token，平台添加的认证令牌"`
 

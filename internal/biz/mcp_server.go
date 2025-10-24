@@ -19,7 +19,7 @@ type McpServerRepo interface {
 	CreateWithTx(ctx context.Context, serverInfo *model.McpServer) (id int64, err error)
 	GetMcpServerInfoByID(ctx context.Context, id int64) (mcpServerInfo *model.McpServer, err error)
 	GetMcpServerInfoByUUID(ctx context.Context, id string) (mcpServerInfo *model.McpServer, err error)
-	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthStatus, serviceToken, platformToken string) (err error)
+	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthTypeStatus, serviceToken, platformToken string) (err error)
 	UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error)
 	DeleteMcpServerByUUID(ctx context.Context, uuid string) (err error)
 	GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error)
@@ -238,7 +238,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		Version:       req.Version,
 		McpServerType: _const.McpServerTypeOpenapi,
 		HaveTools:     _const.HaveToolsNo,
-		IsAuth:        _const.AuthStatus(req.IsAuth),
+		IsAuth:        req.IsAuth,
 		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
 		Security:      securityStr,
@@ -328,7 +328,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 		Version:       req.Version,
 		McpServerType: _const.McpServerTypeOpenapi,
 		HaveTools:     _const.HaveToolsNo,
-		IsAuth:        _const.AuthStatus(req.IsAuth),
+		IsAuth:        req.IsAuth,
 		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
 		Header:        headerJson,

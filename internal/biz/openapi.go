@@ -61,6 +61,21 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	if uuidStr == "" {
 		return nil, fmt.Errorf("UUID不能为空")
 	}
+	//IsAuth        _const.AuthStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
+	//ServiceToken  string            `json:"serviceToken" binding:"omitempty,min=1"`
+	//PlatformToken string            `json:"platformToken" binding:"omitempty,min=1"`
+
+	switch req.IsAuth {
+	case _const.IsAuthServiceAuth:
+		if req.ServiceToken == "" {
+			return nil, fmt.Errorf("ServiceToken不能为空")
+		}
+	case _const.IsAuthPlatformAuth:
+		if req.PlatformToken == "" {
+			return nil, fmt.Errorf("PlatformToken不能为空")
+		}
+	}
+
 	ctx = context.WithValue(ctx, "uuid", uuidStr)
 	cleanedContent := tool.CleanBase64String(req.FileContent)
 	if err := tool.ValidateBase64String(cleanedContent); err != nil {
@@ -173,9 +188,9 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			AllTools:      string(allTools),
 			Version:       mcpInfo.Version,
 			HaveTools:     haveTools,
-			IsAuth:        _const.IsAuthNo, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
-			ServiceToken:  "",
-			PlatformToken: "",
+			IsAuth:        req.IsAuth, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
+			ServiceToken:  req.ServiceToken,
+			PlatformToken: req.PlatformToken,
 			Security:      security,
 			Status:        _const.ServerNotSetToken,
 			SerialNumber:  serialNumber,

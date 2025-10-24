@@ -110,7 +110,7 @@ func (m *McpServerRepo) GetMcpServerInfoByUUID(ctx context.Context, id string) (
 	return
 }
 
-func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthStatus, serviceToken, platformToken string) (err error) {
+func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthTypeStatus, serviceToken, platformToken string) (err error) {
 	db, err := m.data.GetDb(ctx)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get tx error: %v", err)
