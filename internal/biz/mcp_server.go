@@ -66,8 +66,10 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		}
 	}
 
-	var securitySlice []*config.Security
-	var security config.Security
+	var (
+		securitySlice []*config.Security
+		security      config.Security
+	)
 	if mcpServerInfo.Security == "" {
 		if err := json.Unmarshal([]byte(mcpServerInfo.Security), &securitySlice); err != nil {
 			// 处理错误，例如记录日志或返回错误
@@ -96,7 +98,6 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 			Security:      security,
 		},
 	}
-
 	return
 }
 

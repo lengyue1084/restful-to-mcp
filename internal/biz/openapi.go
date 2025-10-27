@@ -74,6 +74,10 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		if req.PlatformToken == "" {
 			return nil, fmt.Errorf("PlatformToken不能为空")
 		}
+	case _const.IsAuthAllAuth:
+		if req.ServiceToken == "" || req.PlatformToken == "" {
+			return nil, fmt.Errorf("ServiceToken和PlatformToken不能为空")
+		}
 	}
 
 	ctx = context.WithValue(ctx, "uuid", uuidStr)
@@ -96,7 +100,11 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		return nil, errors.New("获取McpFile失败")
 	}
 	if mcpFileInfo.ID == 0 {
-		fileName := tool.FileNameByUUid() + "." + req.Suffix
+		suffix := "yaml"
+		if req.Suffix != "" {
+			suffix = req.Suffix
+		}
+		fileName := tool.FileNameByUUid() + "." + suffix
 		// 创建McpFile文件，写入记录
 		err := o.mfUc.CreateMcpFile(ctx, fileName, req.Name, req.Suffix, contentMd5Str, req.Description)
 		if err != nil {
