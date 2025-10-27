@@ -192,8 +192,9 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		headerJson = string(headerBytes)
 	}
 
-	securityStr := "{}"
+	securityStr := "[]"
 	if req.IsAuth == _const.IsAuthServiceAuth {
+		var securitySlice []*config.Security
 		var security = &config.Security{}
 		security.SecurityKey = req.Security.SecurityKey
 		if req.Security.Mode == "" {
@@ -217,9 +218,10 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 				return nil, fmt.Errorf("%s模式，position为必填项", config.AuthModeApiKey)
 			}
 			security.In = req.Security.In
+			securitySlice = append(securitySlice, security)
 		}
 
-		securityByte, err := json.Marshal(security)
+		securityByte, err := json.Marshal(securitySlice)
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
 			return nil, err
@@ -282,8 +284,9 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 		}
 		headerJson = string(headerBytes)
 	}
-	securityStr := "{}"
+	securityStr := "[]"
 	if req.IsAuth == _const.IsAuthServiceAuth {
+		var securitySlice []*config.Security
 		var security = &config.Security{}
 		security.SecurityKey = req.Security.SecurityKey
 		if req.Security.Mode == "" {
@@ -303,13 +306,14 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 				return nil, fmt.Errorf("%s模式，name为必填项", config.AuthModeApiKey)
 			}
 			security.Name = req.Name
-			if req.Security.In == "" {
-				return nil, fmt.Errorf("%s模式，position为必填项", config.AuthModeApiKey)
+			if req.Security.In != config.AuthPositionQuery && req.Security.In != config.AuthPositionHeader {
+				return nil, fmt.Errorf("%s模式，参数in不合法", config.AuthModeApiKey)
 			}
 			security.In = req.Security.In
 		}
+		securitySlice = append(securitySlice, security)
 
-		securityByte, err := json.Marshal(security)
+		securityByte, err := json.Marshal(securitySlice)
 		if err != nil {
 			m.log.ErrorWithContext(ctx, "UpdateMcpServerTool security json转换错误，err:%+v", err)
 			return nil, err
