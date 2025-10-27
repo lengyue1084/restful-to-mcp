@@ -58,19 +58,25 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
 		return
 	}
-	var header []map[string]string
+	var headers map[string]string
 	if mcpServerInfo.Header != "" {
-		err = json.Unmarshal([]byte(mcpServerInfo.Header), &header)
+		err = json.Unmarshal([]byte(mcpServerInfo.Header), &headers)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	var securitySlice []*config.Security
 	var security config.Security
-	if err := json.Unmarshal([]byte(mcpServerInfo.Security), &security); err != nil {
-		// 处理错误，例如记录日志或返回错误
-		m.log.ErrorWithContext(ctx, "Failed to unmarshal security info: %v", err)
-		return nil, err
+	if mcpServerInfo.Security == "" {
+		if err := json.Unmarshal([]byte(mcpServerInfo.Security), &securitySlice); err != nil {
+			// 处理错误，例如记录日志或返回错误
+			m.log.ErrorWithContext(ctx, "Failed to unmarshal security info: %v", err)
+			return nil, err
+		}
+		if len(securitySlice) > 0 && securitySlice[0] != nil {
+			security = *securitySlice[0]
+		}
 	}
 
 	resp = &api.GetMcpServerInfoByUUIDResponse{
@@ -83,10 +89,10 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 			Description:   mcpServerInfo.Description,
 			Urls:          urls,
 			Version:       mcpServerInfo.Version,
-			IsAuth:        _const.AuthTypeStatus(mcpServerInfo.IsAuth),
+			IsAuth:        mcpServerInfo.IsAuth,
 			PlatformToken: mcpServerInfo.PlatformToken,
 			ServiceToken:  mcpServerInfo.ServiceToken,
-			Header:        header,
+			Headers:       headers,
 			Security:      security,
 		},
 	}
@@ -183,13 +189,16 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 			return nil, fmt.Errorf("生成序列号失败")
 		}
 	}
-	var headerJson string
-	if req.Header != nil && len(req.Header) > 0 {
-		headerBytes, err := json.Marshal(req.Header)
-		if err != nil {
-			return nil, fmt.Errorf("header json error: %v", err)
+	var headers = make(map[string]string)
+	headers["Content-Type"] = "application/json"
+	if req.Headers != nil && len(req.Headers) > 0 {
+		for key, value := range req.Headers {
+			headers[key] = value
 		}
-		headerJson = string(headerBytes)
+	}
+	headerBytes, err := json.Marshal(headers)
+	if err != nil {
+		return nil, fmt.Errorf("header json error: %v", err)
 	}
 
 	securityStr := "[]"
@@ -247,7 +256,7 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 		Status:        _const.ServerHadSetToken,
 		SerialNumber:  serialNumber,
 		Source:        _const.SourceTypeForm,
-		Header:        headerJson,
+		Header:        string(headerBytes),
 	}
 	mcpServerInfo, err = m.msRepo.CreateMcpServerByForm(ctx, mcpServerInfo)
 	if err != nil {
@@ -276,14 +285,19 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 		m.log.ErrorWithContext(ctx, "CreateMcpServerByForm error: %+v", err)
 		return nil, err
 	}
-	var headerJson string
-	if req.Header != nil && len(req.Header) > 0 {
-		headerBytes, err := json.Marshal(req.Header)
-		if err != nil {
-			return nil, fmt.Errorf("header json error: %v", err)
+
+	var headers = make(map[string]string)
+	headers["Content-Type"] = "application/json"
+	if req.Headers != nil && len(req.Headers) > 0 {
+		for key, value := range req.Headers {
+			headers[key] = value
 		}
-		headerJson = string(headerBytes)
 	}
+	headerBytes, err := json.Marshal(headers)
+	if err != nil {
+		return nil, fmt.Errorf("header json error: %v", err)
+	}
+
 	securityStr := "[]"
 	if req.IsAuth == _const.IsAuthServiceAuth {
 		var securitySlice []*config.Security
@@ -335,7 +349,7 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 		IsAuth:        req.IsAuth,
 		ServiceToken:  req.ServiceToken,
 		PlatformToken: req.PlatformToken,
-		Header:        headerJson,
+		Header:        string(headerBytes),
 		Security:      securityStr,
 	}
 	mcpServerInfo, err = m.msRepo.UpdateMcpServerByForm(ctx, mcpServerInfo)

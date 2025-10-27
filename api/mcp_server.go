@@ -47,7 +47,7 @@ type CommonMcpServerByForm struct {
 	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required"` //0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权'
 	PlatformToken string                `json:"platformToken"`
 	ServiceToken  string                `json:"serviceToken"`
-	Header        []map[string]string   `json:"header"`
+	Headers       map[string]string     `json:"headers"`
 	Security      config.Security       `json:"security"`
 }
 
