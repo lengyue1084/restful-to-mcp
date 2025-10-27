@@ -58,48 +58,47 @@ type GetMcpServerToolsByUUIDResponse struct {
 }
 
 type CreateMcpServerToolRequest struct {
-	McpServerUUID  string            `json:"mcpServerUUID" binding:"required"`
-	Name           string            `json:"name" binding:"required"`
-	Description    string            `json:"description" binding:"required"`
-	Method         string            `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
-	Path           string            `json:"path" binding:"required"`
-	IsPlatformAuth _const.AuthStatus `json:"isAuth" binding:"required"`
-	IsAuth         _const.AuthStatus `json:"isPlatformAuth" binding:"required"`
-	InputArgs      []*InputArgs      `json:"inputArgs"`
+	McpServerUUID  string              `json:"mcpServerUUID" binding:"required"`
+	Name           string              `json:"name" binding:"required"`
+	Description    string              `json:"description" binding:"required"`
+	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
+	Path           string              `json:"path" binding:"required"`
+	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
+	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
+	Item           []*config.ArgConfig `json:"items"`
 }
 
-type InputArgs struct {
-	Name        string      `json:"name" binding:"required"`
-	Position    string      `json:"position" binding:"required,oneof=header query path body"`
-	Required    bool        `json:"required" binding:"required"`
-	Type        string      `json:"type" binding:"required,oneof=string number boolean object array array[string] array[number] array[boolean] array[object]"`
-	Description string      `json:"description,omitempty"`
-	Default     string      `json:"default,omitempty"`
-	Enum        []string    `json:"enum,omitempty"`
-	Explode     bool        `json:"explode"`
-	Properties  []InputArgs `json:"properties,omitempty"`
-	//Items       ItemsConfig `json:"items,omitempty" yaml:"items,omitempty"` // 数组类型参数的子项配置
-
-}
+//type Item struct {
+//	Name        string   `json:"name" binding:"required"`
+//	Position    string   `json:"position" binding:"required,oneof=header query path body"`
+//	Required    bool     `json:"required" binding:"required"`
+//	Type        string   `json:"type" binding:"required,oneof=string number boolean object array array[string] array[number] array[boolean] array[object]"`
+//	Description string   `json:"description,omitempty"`
+//	Default     string   `json:"default,omitempty"`
+//	Enum        []string `json:"enum,omitempty"`
+//	Explode     bool     `json:"explode"`
+//	Items       []*Item  `json:"items,omitempty"`
+//}
 
 type CreateMcpServerToolResponse struct {
 	UUID string `json:"uuid"`
 }
 
 type UpdateMcpServerToolRequest struct {
-	UUID           string             `json:"uuid" binding:"required"`
-	Name           *string            `json:"name,omitempty"`
-	Description    *string            `json:"description,omitempty"`
-	Method         *string            `json:"method,omitempty"` //binding:"oneof= GET POST PUT DELETE"
-	Path           *string            `json:"path,omitempty"`
-	IsShow         *_const.Status     `json:"isShow,omitempty"`
-	IsPlatformAuth *_const.AuthStatus `json:"isPlatformAuth,omitempty"`
-	IsAuth         *_const.AuthStatus `json:"isAuth,omitempty"`
+	UUID           string              `json:"uuid" binding:"required"`
+	Name           string              `json:"name" binding:"required"`
+	Description    string              `json:"description,omitempty"`
+	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"` //binding:"oneof= GET POST PUT DELETE"
+	Path           string              `json:"path" binding:"required"`
+	IsShow         _const.Status       `json:"isShow" binding:"required"`
+	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
+	IsAuth         _const.AuthStatus   `json:"isAuth" binding:"required"`
+	Item           []*config.ArgConfig `json:"items"`
 }
 
-func ValidMethods(method *string) error {
-	if method == nil {
-		return nil
+func ValidMethods(method string) error {
+	if method == "" {
+		return fmt.Errorf("method is required")
 	}
 	var methods = map[string]bool{
 		"GET":    true,
@@ -107,21 +106,21 @@ func ValidMethods(method *string) error {
 		"PUT":    true,
 		"DELETE": true,
 	}
-	if _, ok := methods[*method]; !ok {
+	if _, ok := methods[method]; !ok {
 		return fmt.Errorf("method is not valid")
 	}
 	return nil
 }
 
-func ValidAuthMode(authMode *config.AuthMode) error {
-	if authMode == nil {
+func ValidAuthMode(authMode config.AuthMode) error {
+	if authMode == "" {
 		return nil
 	}
 	var authModeMap = map[config.AuthMode]bool{
 		config.AuthModeApiKey: true,
 		config.AuthModeHttp:   true,
 	}
-	if _, ok := authModeMap[*authMode]; !ok {
+	if _, ok := authModeMap[authMode]; !ok {
 		return fmt.Errorf("authMode is not valid")
 	}
 	return nil

@@ -57,7 +57,7 @@ func (m *McpToosService) GetMcpServerToolsByUUID(c *gin.Context) {
 
 func (m *McpToosService) CreateMcpServerTool(c *gin.Context) {
 	var req *api.CreateMcpServerToolRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
 		return
 	}
