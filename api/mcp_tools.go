@@ -68,18 +68,6 @@ type CreateMcpServerToolRequest struct {
 	Items          []*config.ArgConfig `json:"items"`
 }
 
-//type Item struct {
-//	Name        string   `json:"name" binding:"required"`
-//	Position    string   `json:"position" binding:"required,oneof=header query path body"`
-//	Required    bool     `json:"required" binding:"required"`
-//	Type        string   `json:"type" binding:"required,oneof=string number boolean object array array[string] array[number] array[boolean] array[object]"`
-//	Description string   `json:"description,omitempty"`
-//	Default     string   `json:"default,omitempty"`
-//	Enum        []string `json:"enum,omitempty"`
-//	Explode     bool     `json:"explode"`
-//	Items       []*Item  `json:"items,omitempty"`
-//}
-
 type CreateMcpServerToolResponse struct {
 	UUID string `json:"uuid"`
 }

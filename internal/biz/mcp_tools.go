@@ -155,7 +155,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		argsSlice = args
 	}
 	// 解析入参的InputArgs,直接从前端获取，py层负责转换，这里就直接获取即可
-	var inputArgs = req.Item
+	var inputArgs = req.Items
 
 	argsSlice = append(argsSlice, inputArgs...)
 
@@ -176,8 +176,23 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 			security = &securitySlice[0]
 		}
 	}
-	var headers = mcpServerInfo.Header
 	// 是否从参数中解析 header部分填充到header中，不需要，请求端已经添加了
+	var headers = mcpServerInfo.Header
+	var toolConfig = &config.ToolConfig{
+		Args: args,
+	}
+	var inputSchema = toolConfig.ArgsToInputSchema()
+	var toolSchema = &config.ToolSchema{
+		Name:        req.Name,
+		Description: req.Description,
+		InputSchema: *inputSchema,
+		Annotations: nil,
+	}
+	toolSchemaJson, err := json.Marshal(toolSchema)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "toolSchema json转换错误，err:%+v", err)
+		return nil, err
+	}
 
 	tools := &model.McpTools{
 		UUID:           tool.NewUUID(),
@@ -195,6 +210,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		AuthMode:       security.Mode.String(),
 		Security:       mcpServerInfo.Security,
 		IsRepeat:       isRepeat,
+		ToolSchema:     string(toolSchemaJson),
 		RequestBody:    "{}",                 //暂时该字段没有使用，这里就不用构建了
 		ResponseBody:   "{{.Response.Body}}", //暂时该字段没有使用，这里就不用构建了
 		Annotations:    string(annotationsJson),
