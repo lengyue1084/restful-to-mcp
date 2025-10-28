@@ -65,7 +65,7 @@ type CreateMcpServerToolRequest struct {
 	Path           string              `json:"path" binding:"required"`
 	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
 	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
-	Item           []*config.ArgConfig `json:"items"`
+	Items          []*config.ArgConfig `json:"items"`
 }
 
 //type Item struct {
