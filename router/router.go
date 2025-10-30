@@ -30,6 +30,7 @@ func NewRouter(
 		// 基于openapi文档创建mcpServer
 		// OpenAPI文档相关
 		apiV1.POST("/openapi/upload", openapiService.Upload)
+		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
 		apiV1.POST("/openapi/updateForAuth", openapiService.UpdateForAuth)
 
 		// MCP Server管理相关
@@ -37,7 +38,6 @@ func NewRouter(
 		// 获取MCP Server的工具 符合mcp tools/list的返回结构,也可以可以通过连接mcp之后获取tools/list
 		apiV1.POST("/mcpServer/getMcpConnectTokenByUUID", mcpServerService.GetMcpConnectTokenByUUID)
 		apiV1.POST("/mcpServer/deleteMcpServerByUUID", mcpServerService.DeleteMcpServerByUUID)
-		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
 		apiV1.POST("/mcpServer/getMcpServerTools", mcpToolsService.GetMcpServerTools)
 
 		// 表单创建MCP Server
@@ -46,6 +46,8 @@ func NewRouter(
 		apiV1.POST("/mcpServer/getMcpServerToolsByUUID", mcpToolsService.GetMcpServerToolsByUUID)
 		apiV1.POST("/mcpServer/createMcpServerTool", mcpToolsService.CreateMcpServerTool)
 		apiV1.POST("/mcpServer/updateMcpServerTool", mcpToolsService.UpdateMcpServerTool)
+		apiV1.POST("/mcpServer/getToolsInfoByUUID", mcpToolsService.GetToolsInfoByUUID)
+		apiV1.POST("/mcpServer/testMcpServerTool", mcpToolsService.TestMcpServerTool)
 
 	}
 	app.app.NoRoute(func(c *gin.Context) {
