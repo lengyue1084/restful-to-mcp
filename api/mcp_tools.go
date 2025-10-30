@@ -58,14 +58,14 @@ type GetMcpServerToolsByUUIDResponse struct {
 }
 
 type CreateMcpServerToolRequest struct {
-	McpServerUUID  string              `json:"mcpServerUUID" binding:"required"`
-	Name           string              `json:"name" binding:"required"`
-	Description    string              `json:"description" binding:"required"`
-	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
-	Path           string              `json:"path" binding:"required"`
-	IsPlatformAuth _const.AuthStatus   `json:"isAuth" binding:"required"`
-	IsAuth         _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
-	Items          []*config.ArgConfig `json:"items"`
+	McpServerUUID  string             `json:"mcpServerUUID" binding:"required"`
+	Name           string             `json:"name" binding:"required"`
+	Description    string             `json:"description" binding:"required"`
+	Method         string             `json:"method" binding:"required,oneof=GET POST PUT DELETE"`
+	Path           string             `json:"path" binding:"required"`
+	IsPlatformAuth _const.AuthStatus  `json:"isAuth" binding:"required"`
+	IsAuth         _const.AuthStatus  `json:"isPlatformAuth" binding:"required"`
+	Args           []config.ArgConfig `json:"args"`
 }
 
 type CreateMcpServerToolResponse struct {
@@ -73,15 +73,15 @@ type CreateMcpServerToolResponse struct {
 }
 
 type UpdateMcpServerToolRequest struct {
-	UUID           string              `json:"uuid" binding:"required"`
-	Name           string              `json:"name" binding:"required"`
-	Description    string              `json:"description,omitempty"`
-	Method         string              `json:"method" binding:"required,oneof=GET POST PUT DELETE"` //binding:"oneof= GET POST PUT DELETE"
-	Path           string              `json:"path" binding:"required"`
-	IsShow         _const.Status       `json:"isShow" binding:"required"`
-	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth" binding:"required"`
-	IsAuth         _const.AuthStatus   `json:"isAuth" binding:"required"`
-	Item           []*config.ArgConfig `json:"items"`
+	UUID        string `json:"uuid" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description,omitempty"`
+	Method      string `json:"method" binding:"required,oneof=GET POST PUT DELETE"` //binding:"oneof= GET POST PUT DELETE"
+	Path        string `json:"path" binding:"required"`
+	//IsShow         _const.Status      `json:"isShow" binding:"required"`
+	IsPlatformAuth _const.AuthStatus  `json:"isPlatformAuth" binding:"required"`
+	IsAuth         _const.AuthStatus  `json:"isAuth" binding:"required"`
+	Args           []config.ArgConfig `json:"args"`
 }
 
 func ValidMethods(method string) error {
@@ -115,4 +115,34 @@ func ValidAuthMode(authMode config.AuthMode) error {
 }
 
 type UpdateMcpServerToolResponse struct {
+}
+
+type GetToolsInfoByUUIDRequest struct {
+	UUID string `json:"uuid" binding:"required"`
+}
+type GetToolsInfoByUUIDResponse struct {
+	ID            uint                       `json:"id"`
+	UUID          string                     `json:"uuid"`
+	CreatedAt     string                     `json:"createdAt"`
+	UpdatedAt     string                     `json:"updatedAt"`
+	McpServerId   int64                      `json:"mcpServerId"`
+	McpServerUUID string                     `json:"mcpServerUUID"`
+	Name          string                     `json:"name"`
+	Description   string                     `json:"description"`
+	McpServerType _const.McpServerTypeStatus `json:"mcpServerType"`
+	Method        string                     `json:"method"`
+	Endpoint      string                     `json:"endpoint"`
+	Headers       string                     `json:"headers"`
+	Args          []config.ArgConfig         `json:"args"`
+	//RequestBody   string                     `json:"requestBody"`
+	//ResponseBody  string                     `json:"responseBody"`
+	//ToolSchema     string                     `json:"toolSchema"`
+	//Annotations    string                     `json:"annotations"`
+	Security       string              `json:"security"`
+	IsAuth         _const.AuthStatus   `json:"isAuth"`
+	AuthMode       string              `json:"authMode"`
+	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth"`
+	IsShow         _const.Status       `json:"isShow"`
+	SerialNumber   string              `json:"serialNumber"`
+	IsRepeat       _const.CommonStatus `json:"isRepeat"`
 }
