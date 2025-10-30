@@ -110,7 +110,7 @@ func (m *McpServerRepo) GetMcpServerInfoByUUID(ctx context.Context, id string) (
 	return
 }
 
-func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthTypeStatus, serviceToken, platformToken string) (err error) {
+func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string) (err error) {
 	db, err := m.data.GetDb(ctx)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get tx error: %v", err)
@@ -126,14 +126,9 @@ func (m *McpServerRepo) UpdateMcpServerForAuthWithTx(ctx context.Context, uuid s
 		return fmt.Errorf("没有查询到该server信息")
 	}
 	err = db.WithContext(ctx).
+		Model(&model.McpServer{}).
 		Where("uuid = ?", uuid).
-		Select("ServiceToken", "PlatformToken", "IsAuth", "Status").
-		Updates(model.McpServer{
-			ServiceToken:  serviceToken,
-			PlatformToken: platformToken,
-			IsAuth:        isAuth,
-			Status:        _const.ServerHadSetToken,
-		}).Error
+		Update("Status", _const.ServerTokenIsWorking).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "update mcp server error: %v", err)
 		return

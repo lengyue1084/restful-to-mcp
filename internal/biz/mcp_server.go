@@ -19,7 +19,7 @@ type McpServerRepo interface {
 	CreateWithTx(ctx context.Context, serverInfo *model.McpServer) (id int64, err error)
 	GetMcpServerInfoByID(ctx context.Context, id int64) (mcpServerInfo *model.McpServer, err error)
 	GetMcpServerInfoByUUID(ctx context.Context, id string) (mcpServerInfo *model.McpServer, err error)
-	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string, isAuth _const.AuthTypeStatus, serviceToken, platformToken string) (err error)
+	UpdateMcpServerForAuthWithTx(ctx context.Context, uuid string) (err error)
 	UpdateMcpServerByUUID(ctx context.Context, uuid, name, description string) (resp *api.UpdateMcpServerByUUIDResponse, err error)
 	DeleteMcpServerByUUID(ctx context.Context, uuid string) (err error)
 	GetCountMcpServerInfoBySerialNumber(ctx context.Context, serialNumber string) (count int64, err error)
@@ -58,7 +58,12 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoByUUID error: %v", err)
 		return
 	}
-	var headers map[string]string
+
+	var (
+		headers       = make(map[string]string)
+		securitySlice = make([]*config.Security, 0)
+		security      config.Security
+	)
 	if mcpServerInfo.Header != "" {
 		err = json.Unmarshal([]byte(mcpServerInfo.Header), &headers)
 		if err != nil {
@@ -66,11 +71,7 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		}
 	}
 
-	var (
-		securitySlice []*config.Security
-		security      config.Security
-	)
-	if mcpServerInfo.Security == "" {
+	if mcpServerInfo.Security != "" {
 		if err := json.Unmarshal([]byte(mcpServerInfo.Security), &securitySlice); err != nil {
 			// 处理错误，例如记录日志或返回错误
 			m.log.ErrorWithContext(ctx, "Failed to unmarshal security info: %v", err)
