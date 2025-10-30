@@ -111,7 +111,7 @@ type ToolConfig struct {
 	// 请求头键值对
 	Headers map[string]string `json:"headers,omitempty"`
 	// 参数配置列表
-	Args []*ArgConfig `json:"args,omitempty"`
+	Args []ArgConfig `json:"args,omitempty"`
 	// 请求体内容
 	RequestBody string `json:"requestBody"`
 	// 响应模式, 目前只支持 application/json
@@ -237,7 +237,7 @@ func (t *ToolConfig) ArgsToInputSchema() *protocol.InputSchema {
 
 	// 遍历所有参数，构建属性映射
 	for _, arg := range t.Args {
-		property := t.ConvertArgToProperty(*arg)
+		property := t.ConvertArgToProperty(arg)
 		schema.Properties[arg.Name] = property
 
 		// 如果参数是必填的，将其名称添加到必填列表中

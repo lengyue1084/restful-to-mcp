@@ -17,10 +17,10 @@ const (
 	IsAuthNo  AuthStatus = 1
 	IsAuthYes AuthStatus = 2
 
-	// IsAuthNoAuth 0未知，1 不开启，2开启service授权，3开启平台授权，4开启所有的授权'
+	// IsAuthNoAuth 0未知，1 不开启，2开启平台授权，3开启service授权，4开启所有的授权'
 	IsAuthNoAuth       AuthTypeStatus = 1
-	IsAuthServiceAuth  AuthTypeStatus = 2
-	IsAuthPlatformAuth AuthTypeStatus = 3
+	IsAuthPlatformAuth AuthTypeStatus = 2
+	IsAuthServiceAuth  AuthTypeStatus = 3
 	IsAuthAllAuth      AuthTypeStatus = 4
 
 	HaveToolsNo          HaveToolsStatus     = 1

@@ -744,14 +744,14 @@ func SomeLetterList(letter bool, start, end int) (letterList [26]string) {
 }
 
 // ExtractArgsFromPath 提取路径中的参数 /{{.Config.url}}/api-backup/user/{{.Args.userid}}/order/{{.Args.orderId}}/list"
-func ExtractArgsFromPath(path string) []*config.ArgConfig {
+func ExtractArgsFromPath(path string) []config.ArgConfig {
 	// 使用预编译的正则表达式匹配 {{.Args.param}} 格式
 	matches := argsPlaceholderRegex.FindAllStringSubmatch(path, -1)
 
-	var args []*config.ArgConfig
+	var args []config.ArgConfig
 	for _, match := range matches {
 		if len(match) >= 2 {
-			arg := &config.ArgConfig{
+			arg := config.ArgConfig{
 				Name:        strings.TrimSpace(match[1]),
 				Position:    "path",
 				Required:    true,
