@@ -60,10 +60,12 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 			}
 		}
 		var toolSchema = &protocol.InputSchema{}
-		err = json.Unmarshal([]byte(tool.ToolSchema), toolSchema)
-		if err != nil {
-			m.log.ErrorWithContext(ctx, "tool.ToolSchema json转换错误，err:%+v", err)
-			return nil, err
+		if tool.ToolSchema != "" {
+			err = json.Unmarshal([]byte(tool.ToolSchema), toolSchema)
+			if err != nil {
+				m.log.ErrorWithContext(ctx, "tool.ToolSchema json转换错误，err:%+v", err)
+				return nil, err
+			}
 		}
 		tmpTool := &protocol.Tool{
 			Name:        tool.Name,
@@ -148,18 +150,16 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		return nil, err
 	}
 
-	var argsSlice []*config.ArgConfig
+	var argsSlice []config.ArgConfig
 	// 从path中提取参数
 	args := tool.ExtractArgsFromPath(path)
 	if len(args) > 0 {
 		argsSlice = args
 	}
 	// 解析入参的InputArgs,直接从前端获取，py层负责转换，这里就直接获取即可
-	var inputArgs = req.Items
-
+	var inputArgs = req.Args
 	argsSlice = append(argsSlice, inputArgs...)
-
-	argsJson, err := json.Marshal(args)
+	argsJson, err := json.Marshal(argsSlice)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "args json转换错误，err:%+v", err)
 		return nil, err
@@ -175,6 +175,11 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		if len(securitySlice) > 0 {
 			security = &securitySlice[0]
 		}
+	}
+	securityJson, err := json.Marshal(security)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
+		return nil, err
 	}
 	// 是否从参数中解析 header部分填充到header中，不需要，请求端已经添加了
 	var headers = mcpServerInfo.Header
@@ -208,7 +213,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		IsPlatformAuth: req.IsPlatformAuth,
 		IsAuth:         req.IsAuth,
 		AuthMode:       security.Mode.String(),
-		Security:       mcpServerInfo.Security,
+		Security:       string(securityJson),
 		IsRepeat:       isRepeat,
 		ToolSchema:     string(toolSchemaJson),
 		RequestBody:    "{}",                 //暂时该字段没有使用，这里就不用构建了
@@ -281,15 +286,15 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	}
 
 	// 组装参数，从path中提取参数,并合并前端入参的参数
-	var argsSlice []*config.ArgConfig
+	var argsSlice []config.ArgConfig
 	args := tool.ExtractArgsFromPath(path)
 	if len(args) > 0 {
 		argsSlice = args
 	}
 	// 解析入参的InputArgs,直接从前端获取，py层负责转换，这里就直接获取即可
-	var inputArgs = req.Item
+	var inputArgs = req.Args
 	argsSlice = append(argsSlice, inputArgs...)
-	argsJson, err := json.Marshal(args)
+	argsJson, err := json.Marshal(argsSlice)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "args json转换错误，err:%+v", err)
 		return nil, err
@@ -327,6 +332,11 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 			security = &securitySlice[0]
 		}
 	}
+	securityJson, err := json.Marshal(security)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "security json转换错误，err:%+v", err)
+		return nil, err
+	}
 
 	var toolInfoModel = &model.McpTools{
 		UUID:           req.UUID,
@@ -336,6 +346,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
 		Headers:        mcpServerInfo.Header,
 		Args:           string(argsJson),
+		Security:       string(securityJson),
 		ToolSchema:     "", // todo 需要组装一下
 		Annotations:    string(annotationsJson),
 		IsShow:         _const.StatusHidden,
@@ -353,4 +364,35 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	resp = &api.UpdateMcpServerToolResponse{}
 	return
 
+}
+
+func (m *McpToolsUserCase) GetToolsInfoByUUID(ctx context.Context, uuid string) (resp *api.GetToolsInfoByUUIDResponse, err error) {
+
+	toolInfo, err := m.mtRepo.GetMcpServerToolInfoByUUID(ctx, uuid)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+		return nil, err
+	}
+	resp = &api.GetToolsInfoByUUIDResponse{
+		ID:            toolInfo.ID,
+		UUID:          toolInfo.UUID,
+		CreatedAt:     toolInfo.CreatedAt.String(),
+		UpdatedAt:     toolInfo.UpdatedAt.String(),
+		McpServerId:   toolInfo.McpServerId,
+		McpServerUUID: toolInfo.McpServerUUID,
+		Name:          toolInfo.Name,
+		Description:   toolInfo.Description,
+		McpServerType: toolInfo.McpServerType,
+		Method:        toolInfo.Method,
+		Endpoint:      "",
+		Headers:       "",
+		Args:          nil,
+		//Security:       ,
+		IsAuth:       0,
+		AuthMode:     "",
+		IsShow:       0,
+		SerialNumber: "",
+		IsRepeat:     0,
+	}
+	return
 }

@@ -167,7 +167,7 @@ func (m *McpToolsRepo) UpdateMcpServerTool(ctx context.Context, tool *model.McpT
 			"Args",
 			"ToolSchema",
 			"Annotations",
-			"IsShow",
+			"security",
 			"IsPlatformAuth",
 			"IsAuth",
 			"AuthMode",

@@ -92,3 +92,25 @@ func (m *McpToosService) UpdateMcpServerTool(c *gin.Context) {
 	response.Success(c, "更新成功", resp)
 
 }
+
+func (m *McpToosService) GetToolsInfoByUUID(c *gin.Context) {
+	var req *api.GetToolsInfoByUUIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
+	}
+	resp, err := m.mtUc.GetToolsInfoByUUID(c, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(c, "查询工具失败,err:%+v", err)
+		response.Error(c, fmt.Sprintf("查询工具失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "查询成功", resp)
+}
+func (m *McpToosService) TestMcpServerTool(c *gin.Context) {
+	//var req *api.TestMcpServerToolRequest
+	//if err := c.ShouldBindJSON(&req); err != nil {
+	//	response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
+	//	return
+	//}
+
+}
