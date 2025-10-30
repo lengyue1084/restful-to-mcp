@@ -57,30 +57,48 @@ func NewOpenapiUserCase(
 func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadRequest) (resp *api.OpenapiUploadResponse, err error) {
 
 	var decodeString []byte
-	uuidStr := req.UUID
-	if uuidStr == "" {
+	uuid := req.UUID
+	if uuid == "" {
 		return nil, fmt.Errorf("UUID不能为空")
 	}
-	//IsAuth        _const.AuthStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
-	//ServiceToken  string            `json:"serviceToken" binding:"omitempty,min=1"`
-	//PlatformToken string            `json:"platformToken" binding:"omitempty,min=1"`
+	ctx = context.WithValue(ctx, "uuid", uuid)
 
+	// 验证鉴权开关
+	var (
+		IsAuthPlatformAuth = _const.IsAuthNo // 平台鉴权那会影响tools的鉴权开关
+		//IsAuthServiceAuth  = _const.IsAuthNo // 接口类型的鉴权会依赖openapi解析结果，服务开关不会影响tools的服务鉴权开关
+	)
 	switch req.IsAuth {
 	case _const.IsAuthServiceAuth:
 		if req.ServiceToken == "" {
 			return nil, fmt.Errorf("ServiceToken不能为空")
 		}
+		//IsAuthServiceAuth = _const.IsAuthYes
 	case _const.IsAuthPlatformAuth:
 		if req.PlatformToken == "" {
 			return nil, fmt.Errorf("PlatformToken不能为空")
 		}
+		IsAuthPlatformAuth = _const.IsAuthYes
 	case _const.IsAuthAllAuth:
-		if req.ServiceToken == "" || req.PlatformToken == "" {
-			return nil, fmt.Errorf("ServiceToken和PlatformToken不能为空")
+		if req.ServiceToken == "" {
+			return nil, fmt.Errorf("ServiceToken不能为空")
+		}
+		if req.PlatformToken == "" {
+			return nil, fmt.Errorf("PlatformToken不能为空")
+		}
+		IsAuthPlatformAuth = _const.IsAuthYes
+		//IsAuthServiceAuth = _const.IsAuthYes
+	default:
+		if req.IsAuth != _const.IsAuthNoAuth {
+			return nil, fmt.Errorf("授权状态非法")
 		}
 	}
 
-	ctx = context.WithValue(ctx, "uuid", uuidStr)
+	// 验证文件格式
+	if req.Suffix != "json" && req.Suffix != "yaml" && req.Suffix != "yml" {
+		req.Suffix = "txt"
+	}
+
 	cleanedContent := tool.CleanBase64String(req.FileContent)
 	if err := tool.ValidateBase64String(cleanedContent); err != nil {
 		o.log.ErrorWithContext(ctx, "Base64字符串验证失败: %+v", err)
@@ -150,7 +168,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "mcpConfig.Tools allowedTools json转换错误，err:%+v", err)
 		return nil, err
 	}
-	security := ""
+	security := "[]"
 	if mcpInfo.SecurityList != nil {
 		securityByte, err := json.Marshal(mcpInfo.SecurityList)
 		if err != nil {
@@ -196,7 +214,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			AllTools:      string(allTools),
 			Version:       mcpInfo.Version,
 			HaveTools:     haveTools,
-			IsAuth:        req.IsAuth, //默认不开启权限控制，这里只是只平台的授权，接口的不需要开启
+			IsAuth:        req.IsAuth, //根据实际情况开启，会影响工具的状态
 			ServiceToken:  req.ServiceToken,
 			PlatformToken: req.PlatformToken,
 			Security:      security,
@@ -277,7 +295,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				Security:       toolSecurity,
 				IsAuth:         isAuth,
 				AuthMode:       val.SecurityMode.String(),
-				IsPlatformAuth: _const.IsAuthNo, //默认不启用平台权限控制
+				IsPlatformAuth: IsAuthPlatformAuth, //默认不启用平台权限控制
 				IsShow:         isShow,
 				SerialNumber:   serialNumber,
 				IsRepeat:       _const.CommonStatusNo,
@@ -306,6 +324,16 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	if err != nil {
 		o.log.ErrorWithContext(ctx, "mcpServerInfo.Urls json转换错误，err:%+v", err)
 		return nil, err
+	}
+	var (
+		headers = make(map[string]string)
+	)
+	if mcpServerInfo.Header != "" {
+		err := json.Unmarshal([]byte(mcpServerInfo.Header), &headers)
+		if err != nil {
+			o.log.ErrorWithContext(ctx, "mcpServerInfo.Header json转换错误，err:%+v", err)
+			return nil, err
+		}
 	}
 	var toolsList []*api.ToolInfo
 	for _, val := range mcpServerInfo.Tools {
@@ -351,6 +379,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		CreatedAt:   mcpServerInfo.CreatedAt,
 		UpdatedAt:   mcpServerInfo.UpdatedAt,
 		Status:      mcpServerInfo.Status,
+		Headers:     headers,
 	}
 	return resp, nil
 }
@@ -360,13 +389,13 @@ func (o *OpenapiUseCase) UpdateForAuth(ctx context.Context, req *api.OpenapiUpda
 	//更新老的接口到缓存
 	o.UpdateToolsForOldCache(ctx)
 	err = o.Tx.ExecTx(ctx, func(ctx context.Context) error {
-		err = o.mcpServerRepo.UpdateMcpServerForAuthWithTx(ctx, req.UUID, req.IsAuth, req.ServiceToken, req.PlatformToken)
+		err = o.mcpServerRepo.UpdateMcpServerForAuthWithTx(ctx, req.UUID)
 		if err != nil {
 			o.log.ErrorWithContext(ctx, "更新server token 失败,err:%+v", err)
 			return fmt.Errorf("更新失败，err:%+v", err)
 		}
 		if len(req.Tools) == 0 {
-			return nil
+			return fmt.Errorf("授权的接口为空")
 		}
 		err = o.mcpToolsRepo.UpdateToolsForAuthWithTx(ctx, req.UUID, req.Tools)
 		if err != nil {

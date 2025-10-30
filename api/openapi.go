@@ -11,8 +11,8 @@ type OpenapiUploadRequest struct {
 	Name          string                `json:"name" binding:"required,min=1,max=200"`
 	FileContent   string                `json:"fileContent" binding:"required"`
 	Description   string                `json:"description"`
-	Suffix        string                `json:"suffix" binding:"required"`
-	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
+	Suffix        string                `json:"suffix"`
+	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required,oneof=1 2 3 4"` //是否授权状态，这个状态是针对平台授权
 	ServiceToken  string                `json:"serviceToken" binding:"omitempty,min=1"`
 	PlatformToken string                `json:"platformToken" binding:"omitempty,min=1"`
 }
@@ -29,6 +29,7 @@ type OpenapiUploadResponse struct {
 	Version     string              `json:"version"`
 	AllTools    []string            `json:"allTools"`
 	Status      _const.ServerStatus `json:"status"`
+	Headers     map[string]string   `json:"headers"`
 }
 
 type ToolInfo struct {
@@ -56,11 +57,8 @@ type ToolInfo struct {
 }
 
 type OpenapiUpdateForAuthRequest struct {
-	UUID          string                `json:"uuid" binding:"required"`
-	IsAuth        _const.AuthTypeStatus `json:"isAuth" binding:"required"` //是否授权状态，这个状态是针对平台授权
-	ServiceToken  string                `json:"serviceToken" binding:"omitempty,min=1"`
-	PlatformToken string                `json:"platformToken" binding:"omitempty,min=1"`
-	Tools         []*Tools              `json:"tools"`
+	UUID  string   `json:"uuid" binding:"required"`
+	Tools []*Tools `json:"tools"`
 }
 type OpenapiUpdateForAuthResponse struct {
 }
