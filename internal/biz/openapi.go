@@ -218,7 +218,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 			ServiceToken:  req.ServiceToken,
 			PlatformToken: req.PlatformToken,
 			Security:      security,
-			Status:        _const.ServerNotSetToken,
+			Status:        _const.ServerHadSetToken,
 			SerialNumber:  serialNumber,
 			McpServerType: _const.McpServerTypeOpenapi,
 			Source:        _const.SourceTypeFile,
