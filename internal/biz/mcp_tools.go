@@ -208,13 +208,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		Args: args,
 	}
 	var inputSchema = toolConfig.ArgsToInputSchema()
-	var toolSchema = &config.ToolSchema{
-		Name:        req.Name,
-		Description: req.Description,
-		InputSchema: *inputSchema,
-		Annotations: nil,
-	}
-	toolSchemaJson, err := json.Marshal(toolSchema)
+	toolSchemaJson, err := json.Marshal(inputSchema)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "toolSchema json转换错误，err:%+v", err)
 		return nil, err
@@ -382,6 +376,16 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		return nil, err
 	}
 
+	var toolConfig = &config.ToolConfig{
+		Args: args,
+	}
+	var inputSchema = toolConfig.ArgsToInputSchema()
+	toolSchemaJson, err := json.Marshal(inputSchema)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "toolSchema json转换错误，err:%+v", err)
+		return nil, err
+	}
+
 	var toolInfoModel = &model.McpTools{
 		UUID:           req.UUID,
 		Name:           req.Name,
@@ -391,7 +395,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		Headers:        string(headersJson),
 		Args:           string(argsJson),
 		Security:       string(securityJson),
-		ToolSchema:     "", // todo 需要组装一下
+		ToolSchema:     string(toolSchemaJson),
 		Annotations:    string(annotationsJson),
 		IsShow:         _const.StatusHidden,
 		IsPlatformAuth: req.IsPlatformAuth,
