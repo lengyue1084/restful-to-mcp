@@ -12,6 +12,7 @@ import (
 	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+	"strconv"
 )
 
 type McpToolsRepo interface {
@@ -79,6 +80,11 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 			Description: tool.Description,
 			InputSchema: *toolSchema,
 			Annotations: annotations,
+		}
+		if tool.IsRepeat == _const.CommonStatusYes {
+			toolName := tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
+			tmpTool.Name = toolName
+			tmpTool.Annotations.Title = toolName
 		}
 		toolsList = append(toolsList, tmpTool)
 	}
