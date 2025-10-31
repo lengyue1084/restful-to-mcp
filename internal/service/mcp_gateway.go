@@ -52,9 +52,9 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 		ctx = context.WithValue(ctx, _const.SpanId, spanId)
 	}
 
-	serverToken := c.Param(_const.ServerToken)
+	serverToken := c.Param(_const.ServerPathToken)
 	if serverToken != "" {
-		ctx = context.WithValue(ctx, _const.ServerToken, serverToken)
+		ctx = context.WithValue(ctx, _const.ServerPathToken, serverToken)
 	}
 
 	c.Request = c.Request.WithContext(ctx)
