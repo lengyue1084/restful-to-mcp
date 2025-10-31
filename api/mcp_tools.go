@@ -16,6 +16,8 @@ type GetMcpServerToolsResponse struct {
 	Tools []*ToolProtocolInfo `json:"tools"`
 }
 type ToolProtocolInfo struct {
+	ID             uint              `json:"id"`
+	UUID           string            `json:"uuid"`
 	IsAuth         _const.AuthStatus `json:"isAuth"`
 	AuthMode       string            `json:"authMode"`
 	IsPlatformAuth _const.AuthStatus `json:"isPlatformAuth"`
@@ -145,14 +147,16 @@ type GetToolsInfoByUUIDResponse struct {
 	Description   string                     `json:"description"`
 	McpServerType _const.McpServerTypeStatus `json:"mcpServerType"`
 	Method        string                     `json:"method"`
-	Endpoint      string                     `json:"endpoint"`
-	Headers       string                     `json:"headers"`
-	Args          []config.ArgConfig         `json:"args"`
+	//Endpoint      string                     `json:"endpoint"`
+	BaseUrl string             `json:"baseUrl"`
+	Path    string             `json:"path"`
+	Headers map[string]string  `json:"headers"`
+	Args    []config.ArgConfig `json:"args"`
 	//RequestBody   string                     `json:"requestBody"`
 	//ResponseBody  string                     `json:"responseBody"`
 	//ToolSchema     string                     `json:"toolSchema"`
 	//Annotations    string                     `json:"annotations"`
-	Security       string              `json:"security"`
+	Security       config.Security     `json:"security"`
 	IsAuth         _const.AuthStatus   `json:"isAuth"`
 	AuthMode       string              `json:"authMode"`
 	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth"`

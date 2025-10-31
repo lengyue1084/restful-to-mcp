@@ -68,6 +68,8 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 			}
 		}
 		tmpTool := &api.ToolProtocolInfo{
+			ID:             tool.ID,
+			UUID:           tool.UUID,
 			IsAuth:         tool.IsAuth,
 			AuthMode:       tool.AuthMode,
 			IsPlatformAuth: tool.IsPlatformAuth,
@@ -426,6 +428,50 @@ func (m *McpToolsUserCase) GetToolsInfoByUUID(ctx context.Context, uuid string) 
 		m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
 		return nil, err
 	}
+	if toolInfo.ID == 0 {
+		return nil, fmt.Errorf("没有查询到该工具的信息")
+	}
+	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, toolInfo.McpServerUUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+		return nil, err
+	}
+	var urls []string
+	err = json.Unmarshal([]byte(mcpServerInfo.Urls), &urls)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+		return nil, err
+	}
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("请配置服务地址")
+	}
+	var headersMap = make(map[string]string)
+	if toolInfo.Headers != "" {
+		err = json.Unmarshal([]byte(toolInfo.Headers), &headersMap)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+			return nil, err
+		}
+	}
+
+	var args []config.ArgConfig
+	if toolInfo.Args != "" {
+		err = json.Unmarshal([]byte(toolInfo.Args), &args)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+			return nil, err
+		}
+	}
+
+	var security = config.Security{}
+	if toolInfo.Security != "" {
+		err = json.Unmarshal([]byte(toolInfo.Security), &security)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "GetToolsInfoByUUID error: %v", err)
+			return nil, err
+		}
+	}
+
 	resp = &api.GetToolsInfoByUUIDResponse{
 		ID:            toolInfo.ID,
 		UUID:          toolInfo.UUID,
@@ -437,15 +483,15 @@ func (m *McpToolsUserCase) GetToolsInfoByUUID(ctx context.Context, uuid string) 
 		Description:   toolInfo.Description,
 		McpServerType: toolInfo.McpServerType,
 		Method:        toolInfo.Method,
-		Endpoint:      "",
-		Headers:       "",
-		Args:          nil,
-		//Security:       ,
-		IsAuth:       0,
-		AuthMode:     "",
-		IsShow:       0,
-		SerialNumber: "",
-		IsRepeat:     0,
+		BaseUrl:       urls[0],
+		Headers:       headersMap,
+		Args:          args,
+		Security:      security,
+		IsAuth:        toolInfo.IsAuth,
+		AuthMode:      toolInfo.AuthMode,
+		IsShow:        toolInfo.IsShow,
+		SerialNumber:  toolInfo.SerialNumber,
+		IsRepeat:      toolInfo.IsRepeat,
 	}
 	return
 }
