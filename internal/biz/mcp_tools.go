@@ -49,7 +49,7 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 		return nil, fmt.Errorf("查询工具列表失败,err:%+v", err)
 	}
 
-	var toolsList = make([]*protocol.Tool, 0)
+	var toolsList = make([]*api.ToolProtocolInfo, 0)
 	for _, tool := range tools {
 		var annotations *protocol.ToolAnnotations
 		if tool.Annotations != "" {
@@ -67,7 +67,12 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 				return nil, err
 			}
 		}
-		tmpTool := &protocol.Tool{
+		tmpTool := &api.ToolProtocolInfo{
+			IsAuth:         tool.IsAuth,
+			AuthMode:       tool.AuthMode,
+			IsPlatformAuth: tool.IsPlatformAuth,
+			IsShow:         tool.IsShow,
+
 			Name:        tool.Name,
 			Description: tool.Description,
 			InputSchema: *toolSchema,

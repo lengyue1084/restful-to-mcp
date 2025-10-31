@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"flow-bridge-mcp/internal/mcp/config"
 	_const "flow-bridge-mcp/pkg/const"
 	"fmt"
@@ -12,7 +13,20 @@ type GetMcpServerToolsRequest struct {
 }
 
 type GetMcpServerToolsResponse struct {
-	Tools []*protocol.Tool `json:"tools"`
+	Tools []*ToolProtocolInfo `json:"tools"`
+}
+type ToolProtocolInfo struct {
+	IsAuth         _const.AuthStatus `json:"isAuth"`
+	AuthMode       string            `json:"authMode"`
+	IsPlatformAuth _const.AuthStatus `json:"isPlatformAuth"`
+	IsShow         _const.Status     `json:"isShow"`
+	// Name is the unique identifier of the tool
+	Name           string                    `json:"name"`
+	Description    string                    `json:"description,omitempty"`
+	InputSchema    protocol.InputSchema      `json:"inputSchema"`
+	OutputSchema   protocol.OutputSchema     `json:"outputSchema"`
+	Annotations    *protocol.ToolAnnotations `json:"annotations,omitempty"`
+	RawInputSchema json.RawMessage           `json:"-"`
 }
 
 type ToolItemInfo struct {
