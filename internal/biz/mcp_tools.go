@@ -182,7 +182,28 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		return nil, err
 	}
 	// 是否从参数中解析 header部分填充到header中，不需要，请求端已经添加了
-	var headers = mcpServerInfo.Header
+	var (
+		headersMap  = make(map[string]string)
+		headersJson []byte
+	)
+	if mcpServerInfo.Header != "" {
+		err := json.Unmarshal([]byte(mcpServerInfo.Header), &headersMap)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "mcpServerInfo.Header json转换错误，err:%+v", err)
+			return nil, err
+		}
+	}
+	if len(headersMap) == 0 {
+		if _, ok := headersMap["Content-Type"]; !ok {
+			headersMap["Content-Type"] = "application/json"
+		}
+	}
+	headersJson, err = json.Marshal(headersMap)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "headers json转换错误，err:%+v", err)
+		return nil, err
+	}
+
 	var toolConfig = &config.ToolConfig{
 		Args: args,
 	}
@@ -205,7 +226,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		Description:    req.Description,
 		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
 		Method:         req.Method,
-		Headers:        headers,
+		Headers:        string(headersJson),
 		McpServerUUID:  req.McpServerUUID,
 		McpServerId:    int64(mcpServerInfo.ID),
 		SerialNumber:   mcpServerInfo.SerialNumber,
@@ -338,13 +359,36 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		return nil, err
 	}
 
+	// 是否从参数中解析 header部分填充到header中，不需要，请求端已经添加了
+	var (
+		headersMap  = make(map[string]string)
+		headersJson []byte
+	)
+	if mcpServerInfo.Header != "" {
+		err := json.Unmarshal([]byte(mcpServerInfo.Header), &headersMap)
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "mcpServerInfo.Header json转换错误，err:%+v", err)
+			return nil, err
+		}
+	}
+	if len(headersMap) == 0 {
+		if _, ok := headersMap["Content-Type"]; !ok {
+			headersMap["Content-Type"] = "application/json"
+		}
+	}
+	headersJson, err = json.Marshal(headersMap)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "headers json转换错误，err:%+v", err)
+		return nil, err
+	}
+
 	var toolInfoModel = &model.McpTools{
 		UUID:           req.UUID,
 		Name:           req.Name,
 		Description:    req.Description,
 		Method:         req.Method,
 		Endpoint:       fmt.Sprintf("{{.Config.url}}%s", path),
-		Headers:        mcpServerInfo.Header,
+		Headers:        string(headersJson),
 		Args:           string(argsJson),
 		Security:       string(securityJson),
 		ToolSchema:     "", // todo 需要组装一下
