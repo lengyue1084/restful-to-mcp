@@ -164,3 +164,8 @@ type GetToolsInfoByUUIDResponse struct {
 	SerialNumber   string              `json:"serialNumber"`
 	IsRepeat       _const.CommonStatus `json:"isRepeat"`
 }
+
+type TestMcpServerToolRequest struct {
+}
+type TestMcpServerToolResponse struct {
+}

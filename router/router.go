@@ -47,6 +47,7 @@ func NewRouter(
 		apiV1.POST("/mcpServer/createMcpServerTool", mcpToolsService.CreateMcpServerTool)
 		apiV1.POST("/mcpServer/updateMcpServerTool", mcpToolsService.UpdateMcpServerTool)
 		apiV1.POST("/mcpServer/getToolsInfoByUUID", mcpToolsService.GetToolsInfoByUUID)
+		//测试表单创建的连通性，如果联通则显示测试通过
 		apiV1.POST("/mcpServer/testMcpServerTool", mcpToolsService.TestMcpServerTool)
 
 	}
