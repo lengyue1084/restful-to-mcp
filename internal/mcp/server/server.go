@@ -78,7 +78,7 @@ func (m *McpServerManager) FilterToolsByServer(ctx context.Context, tools []*pro
 	filterTools := make([]*protocol.Tool, 0)
 	var mcpServerTools []*model.McpTools
 	if mcpServerList, ok := m.cache.LoadMcpServer(cache.NewMcpValue); ok {
-		if value, ok := ctx.Value(_const.ServerToken).(string); ok {
+		if value, ok := ctx.Value(_const.ServerPathToken).(string); ok {
 			for _, mcpServer := range mcpServerList {
 				if mcpServer.UUID == value {
 					mcpServerTools = mcpServer.Tools
@@ -240,7 +240,7 @@ func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
 								m.log.WithContext(ctx).Errorf("隐藏方法%s", req.Name)
 								return nil, fmt.Errorf("该方法%s不可用,请核对后再试", req.Name)
 							}
-							break
+							return next(ctx, req)
 						}
 					}
 				}
