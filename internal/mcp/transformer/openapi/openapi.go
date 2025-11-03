@@ -162,26 +162,29 @@ func (c *Converter) Convert(ctx context.Context, specData []byte) (*config.MCPSe
 		return nil, fmt.Errorf("paths is nil")
 	}
 	components = doc.Components
-	securitySchemes = components.SecuritySchemes
 	var authSecuritySchemes []*config.Security
-	for key, scheme := range securitySchemes {
-		val := scheme.Value
-		if val == nil {
-			continue
+	if components != nil {
+		securitySchemes = components.SecuritySchemes
+		for key, scheme := range securitySchemes {
+			val := scheme.Value
+			if val == nil {
+				continue
+			}
+			if val.Type == config.AuthModeApiKey.String() && val.Name == "" {
+				c.log.ErrorWithContext(ctx, "security scheme name is empty", "key", key)
+				return nil, fmt.Errorf("security scheme name is empty")
+			}
+			authSecuritySchemes = append(authSecuritySchemes, &config.Security{
+				SecurityKey:  key,
+				Name:         val.Name,
+				Mode:         config.AuthMode(val.Type),
+				Description:  val.Description,
+				In:           config.AuthPosition(val.In),
+				Scheme:       val.Scheme,
+				BearerFormat: val.BearerFormat,
+			})
+
 		}
-		if val.Type == config.AuthModeApiKey.String() && val.Name == "" {
-			c.log.ErrorWithContext(ctx, "security scheme name is empty", "key", key)
-			return nil, fmt.Errorf("security scheme name is empty")
-		}
-		authSecuritySchemes = append(authSecuritySchemes, &config.Security{
-			SecurityKey:  key,
-			Name:         val.Name,
-			Mode:         config.AuthMode(val.Type),
-			Description:  val.Description,
-			In:           config.AuthPosition(val.In),
-			Scheme:       val.Scheme,
-			BearerFormat: val.BearerFormat,
-		})
 
 	}
 
