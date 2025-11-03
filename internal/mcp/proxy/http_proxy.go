@@ -80,26 +80,26 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 	// 获取工具参数配置
 	argsSlice, err := h.getToolArgs(toolInfo)
 	if err != nil {
-		return nil, fmt.Errorf("获取工具参数配置失败: %w", err)
+		return nil, fmt.Errorf("获取工具参数配置失败: %+v", err)
 	}
 
 	// 获取工具元数据
 	toolMetadata, err := h.getToolMetadata(toolInfo)
 	if err != nil {
-		return nil, fmt.Errorf("获取工具元数据失败: %w", err)
+		return nil, fmt.Errorf("获取工具元数据失败: %+v", err)
 	}
 	var security *config.Security
 	if toolInfo.IsAuth == _const.IsAuthYes && toolInfo.Security != "" {
 		err := json.Unmarshal([]byte(toolInfo.Security), &security)
 		if err != nil {
-			return nil, fmt.Errorf("解析工具安全配置失败: %w", err)
+			return nil, fmt.Errorf("解析工具安全配置失败: %+v", err)
 		}
 	}
 
 	// 构建HTTP请求参数
 	requestParams, err := h.buildRequestParams(req.Arguments, argsSlice, toolMetadata, security, serviceToken)
 	if err != nil {
-		return nil, fmt.Errorf("构建请求参数失败: %w", err)
+		return nil, fmt.Errorf("构建请求参数失败: %+v", err)
 	}
 
 	var (
@@ -193,7 +193,7 @@ func (h *HttpProxy) findToolInfo(toolName string) (*model.McpTools, error) {
 			}
 		}
 	}
-
+	h.log.Errorf("未找到工具: %s", toolName)
 	return nil, fmt.Errorf("未找到工具: %s", toolName)
 }
 
@@ -412,8 +412,9 @@ func (h *HttpProxy) sendHttpRequest(ctx context.Context, params *RequestParams) 
 	}
 
 	// 检查响应状态
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("HTTP请求失败，状态码: %d，响应: %s", resp.StatusCode, string(respBody))
+	if resp.StatusCode != 200 {
+		h.log.Errorf("HTTP请求失败，状态码: %d，响应: %s", resp.StatusCode, string(respBody))
+		return respBody, fmt.Errorf("HTTP请求失败，状态码: %d，响应: %s", resp.StatusCode, string(respBody))
 	}
 
 	return respBody, nil
