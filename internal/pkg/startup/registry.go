@@ -29,11 +29,11 @@ func NewRegistry(conf *conf.Conf, log *logger.Logger) *Registry {
 				BeatInterval:        int64(conf.Conf.GetInt("registry.nacos.beatInterval")),  //心跳时间
 				AppName:             conf.Conf.GetString("server.name"),                      //程序名称
 				NotLoadCacheAtStart: conf.Conf.GetBool("registry.nacos.notLoadCacheAtStart"), //启动时不加载缓存
-				LogDir:              conf.Conf.GetString("registry.nacos.logDir"),            //日志
-				CacheDir:            conf.Conf.GetString("registry.nacos.cacheDir"),          //持久化Nacos服务信息的目录,                                     //持久化Nacos服务信息的目录
-				LogLevel:            conf.Conf.GetString("registry.nacos.logLevel"),          //可选值：debug, info, warn, error
-				Username:            conf.Conf.GetString("registry.nacos.username"),
-				Password:            conf.Conf.GetString("registry.nacos.password"),
+				//LogDir:              conf.Conf.GetString("registry.nacos.logDir"),            //日志
+				//CacheDir:            conf.Conf.GetString("registry.nacos.cacheDir"),          //持久化Nacos服务信息的目录,                                     //持久化Nacos服务信息的目录
+				LogLevel: conf.Conf.GetString("registry.nacos.logLevel"), //可选值：debug, info, warn, error
+				Username: conf.Conf.GetString("registry.nacos.username"),
+				Password: conf.Conf.GetString("registry.nacos.password"),
 				//Endpoint:            "", // 非直连模式 ServerConfigs不配置，通过Endpoint动态获取
 				//TLSCfg:              constant.TLSConfig{},
 				//UpdateThreadNum:      0, //更新Nacos服务信息的goroutine数量默认值：20
