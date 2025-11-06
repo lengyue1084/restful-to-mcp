@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&flagConf, "conf", "./configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagConf, "conf", "./configs", "config dir, eg: -conf /configs")
 }
 func main() {
 	flag.Parse()
