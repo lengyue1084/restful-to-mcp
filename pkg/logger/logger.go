@@ -18,7 +18,7 @@ import (
 
 var ProviderSet = wire.NewSet(NewLogger, NewGormLogger)
 
-// Interface Logger 定义了应用日志记录器的标准接口
+// LoggerInterface Interface Logger 定义了应用日志记录器的标准接口
 type LoggerInterface interface {
 	Debug(args ...interface{})
 	Info(args ...interface{})
@@ -54,6 +54,7 @@ type Logger struct {
 	*zap.SugaredLogger
 }
 
+// WithContext 创建新的 Logger 实例，避免重复添加字段
 func (l *Logger) WithContext(ctx context.Context) *Logger {
 	var fields []interface{}
 	if traceIdValue := ctx.Value(_const.TraceId); traceIdValue != nil {
@@ -66,8 +67,15 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 			fields = append(fields, _const.SpanId, spanId)
 		}
 	}
-	l.SugaredLogger = l.SugaredLogger.With(fields...)
-	return l
+
+	if len(fields) == 0 {
+		return l // 如果没有上下文字段，返回原logger
+	}
+
+	// 创建新的 Logger 实例，而不是修改原有的
+	return &Logger{
+		SugaredLogger: l.SugaredLogger.With(fields...),
+	}
 }
 
 // NewLogger 生产环境推荐配置
@@ -156,11 +164,7 @@ func NewLogger(conf *conf.Conf) *Logger {
 		zap.AddCallerSkip(1),
 		zap.Fields(zap.String("server", conf.Conf.GetString("server.name"))),
 	)
-	// 添加服务名称字段
-	//serviceName := conf.Conf.GetString("service.name")
-	//if serviceName != "" {
-	//	logger = logger.With(zap.String("service", serviceName))
-	//}
+
 	return &Logger{
 		SugaredLogger: logger.Sugar(),
 	}
@@ -169,79 +173,95 @@ func NewLogger(conf *conf.Conf) *Logger {
 func (l *Logger) With(args ...interface{}) *zap.SugaredLogger {
 	return l.SugaredLogger.With(args...)
 }
+
 func (l *Logger) Error(args ...interface{}) {
 	l.SugaredLogger.Error(args...)
 }
+
 func (l *Logger) Info(args ...interface{}) {
 	l.SugaredLogger.Info(args...)
 }
+
 func (l *Logger) Warn(args ...interface{}) {
 	l.SugaredLogger.Warn(args...)
 }
+
 func (l *Logger) Debug(args ...interface{}) {
 	l.SugaredLogger.Debug(args...)
 }
+
 func (l *Logger) Fatal(args ...interface{}) {
 	l.SugaredLogger.Fatal(args...)
 }
+
 func (l *Logger) Panic(args ...interface{}) {
 	l.SugaredLogger.Panic(args...)
 }
+
 func (l *Logger) WithError(err error) *Logger {
-	l.SugaredLogger = l.SugaredLogger.With("error", err)
-	return l
+	return &Logger{
+		SugaredLogger: l.SugaredLogger.With("error", err),
+	}
 }
+
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
-	l.SugaredLogger = l.SugaredLogger.With(fields)
-	return l
+	return &Logger{
+		SugaredLogger: l.SugaredLogger.With(fields),
+	}
 }
 
 func (l *Logger) WithField(key string, value interface{}) *Logger {
-	l.SugaredLogger = l.SugaredLogger.With(key, value)
-	return l
+	return &Logger{
+		SugaredLogger: l.SugaredLogger.With(key, value),
+	}
 }
+
 func (l *Logger) InfoF(template string, args ...interface{}) {
 	l.SugaredLogger.Infof(template, args...)
 }
+
 func (l *Logger) InfoWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Infof(template, args...)
+	l.WithContext(ctx).SugaredLogger.Infof(template, args...)
 }
+
 func (l *Logger) ErrorF(template string, args ...interface{}) {
 	l.SugaredLogger.Errorf(template, args...)
 }
+
 func (l *Logger) ErrorWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Errorf(template, args...)
+	l.WithContext(ctx).SugaredLogger.Errorf(template, args...)
 }
 
 func (l *Logger) WarnF(template string, args ...interface{}) {
 	l.SugaredLogger.Warnf(template, args...)
 }
+
 func (l *Logger) WarnWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Warnf(template, args...)
+	l.WithContext(ctx).SugaredLogger.Warnf(template, args...)
 }
+
 func (l *Logger) DebugF(template string, args ...interface{}) {
 	l.SugaredLogger.Debugf(template, args...)
 }
+
 func (l *Logger) DebugWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Debugf(template, args...)
+	l.WithContext(ctx).SugaredLogger.Debugf(template, args...)
 }
+
 func (l *Logger) FatalF(template string, args ...interface{}) {
 	l.SugaredLogger.Fatalf(template, args...)
 }
+
 func (l *Logger) FatalWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Fatalf(template, args...)
+	l.WithContext(ctx).SugaredLogger.Fatalf(template, args...)
 }
+
 func (l *Logger) PanicF(template string, args ...interface{}) {
 	l.SugaredLogger.Panicf(template, args...)
 }
+
 func (l *Logger) PanicWithContext(ctx context.Context, template string, args ...interface{}) {
-	l.WithContext(ctx)
-	l.SugaredLogger.Panicf(template, args...)
+	l.WithContext(ctx).SugaredLogger.Panicf(template, args...)
 }
 
 var _ logger2.Interface = (*GormLogger)(nil)
@@ -261,17 +281,17 @@ func (g *GormLogger) LogMode(level logger2.LogLevel) logger2.Interface {
 
 // Info print info
 func (g *GormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
-	g.log.InfoWithContext(ctx, msg, data)
+	g.log.WithContext(ctx).InfoF(msg, data...)
 }
 
 // Warn print warn messages
 func (g *GormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
-	g.log.WarnWithContext(ctx, msg, data)
+	g.log.WithContext(ctx).WarnF(msg, data...)
 }
 
 // Error print error messages
 func (g *GormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
-	g.log.ErrorWithContext(ctx, msg, data)
+	g.log.WithContext(ctx).ErrorF(msg, data...)
 }
 
 // Trace print sql message
@@ -279,7 +299,10 @@ func (g *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 
-	g.log.With(
+	// 使用 WithContext 创建带上下文的临时 logger
+	logger := g.log.WithContext(ctx)
+
+	logger.With(
 		zap.String("sql", sql),
 		zap.Duration("elapsed", elapsed),
 		zap.Int64("rows", rows),
