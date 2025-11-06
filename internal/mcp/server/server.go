@@ -229,11 +229,11 @@ func (m *McpServerManager) authenticationMiddleware() server.ToolMiddleware {
 						}
 						if req.Name == toolName {
 							if tool.IsPlatformAuth == _const.IsAuthYes && serverInfo.PlatformToken != platformToken {
-								m.log.WithContext(ctx).Errorf("授权平台token,%s:%s无效,方法:%s", _const.PlatformToken, platformToken, req.Name)
+								m.log.WithContext(ctx).Errorf("授权平台token,%s:%s:%s无效,方法:%s", serverInfo.PlatformToken, _const.PlatformToken, platformToken, req.Name)
 								return nil, fmt.Errorf("授权平台token,%s无效", _const.PlatformToken)
 							}
 							if tool.IsAuth == _const.IsAuthYes && serverInfo.ServiceToken != serviceToken {
-								m.log.WithContext(ctx).Errorf("授权服务token,%s:%s无效,方法:%s", _const.ServiceToken, serviceToken, req.Name)
+								m.log.WithContext(ctx).Errorf("授权服务token,%s:%s:%s无效,方法:%s", serverInfo.ServiceToken, _const.ServiceToken, serviceToken, req.Name)
 								return nil, fmt.Errorf("授权服务token,%s无效", _const.ServiceToken)
 							}
 							if tool.IsShow == _const.StatusHidden {
