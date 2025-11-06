@@ -40,7 +40,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 		return
 	}
 
-	// 1、批量删除本次没有包含的工具
+	// 1、批量删除本次没有包含的工具，如果已经存在了
 	err = db.WithContext(ctx).Where("mcp_server_id = ? and mcp_server_uuid = ? and name not in ?", mcpServerId, uuid, allTools).
 		Delete(&model.McpTools{}).Error
 	if err != nil {
@@ -50,6 +50,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 	// 2、查询工具是否存在，如果不存在的插入、如果存在的更新
 	// 然后单独更新已存在的记录
 	for _, tool := range mcpToolInfo {
+		// 2.1同一个服务是否有同名的工具,如果有同名的则更新
 		var mcpTool model.McpTools
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
 			Where("mcp_server_id = ? AND mcp_server_uuid = ? AND name = ?",
@@ -59,17 +60,17 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find error: %v", err)
 			return
 		}
+		var toolInfo model.McpTools
+		err = db.WithContext(ctx).Where("name = ?", tool.Name).Find(&toolInfo).Error
+		if err != nil {
+			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find serial_number error: %v", err)
+			return
+		}
+		if toolInfo.ID > 0 {
+			tool.IsRepeat = _const.CommonStatusYes //重复
+		}
 		if mcpTool.ID == 0 {
-			// 插入
-			var toolInfo model.McpTools
-			err = db.WithContext(ctx).Where("name = ?", tool.Name).Find(&toolInfo).Error
-			if err != nil {
-				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find serial_number error: %v", err)
-				return
-			}
-			if toolInfo.ID > 0 {
-				tool.IsRepeat = _const.CommonStatusYes //重复
-			}
+			// 如果
 			err = db.WithContext(ctx).Create(tool).Error
 			if err != nil {
 				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)
@@ -77,8 +78,10 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 			}
 			continue
 		}
+		// 2.2 更新工具,更新也应该考虑同名问题
 		err = db.WithContext(ctx).Model(&model.McpTools{}).
-			Where("id = ?", mcpTool.ID).Select("*").
+			Where("id = ?", mcpTool.ID).
+			Select("*").
 			Omit("SerialNumber", "McpServerId", "McpServerType", "McpServerUUID", "ID", "uuid", "CreatedAt", "DeletedAt").
 			Updates(tool).Error
 		if err != nil {
@@ -108,7 +111,7 @@ func (m *McpToolsRepo) UpdateToolsForAuthWithTx(ctx context.Context, uuid string
 }
 
 func (m *McpToolsRepo) GetMcpServerToolsByServerUUID(ctx context.Context, uuid string) (mcpTools []*model.McpTools, err error) {
-	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Find(&mcpTools).Error
+	err = m.data.Db.WithContext(ctx).Where("mcp_server_uuid = ?", uuid).Order("ID ASC").Find(&mcpTools).Error
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "get mcp server tools by uuid error: %v", err)
 		return
