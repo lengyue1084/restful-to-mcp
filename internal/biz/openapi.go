@@ -298,7 +298,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 				IsPlatformAuth: IsAuthPlatformAuth, //默认不启用平台权限控制
 				IsShow:         isShow,
 				SerialNumber:   serialNumber,
-				IsRepeat:       _const.CommonStatusNo,
+				IsRepeat:       _const.CommonStatusNo, //默认，实际更新的时候会排查是否重复
 			}
 			mcpTools = append(mcpTools, toolInfo)
 
@@ -381,6 +381,15 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		Status:      mcpServerInfo.Status,
 		Headers:     headers,
 	}
+	go func(ctx2 context.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				o.log.ErrorWithContext(ctx2, "panic: %+v", err)
+			}
+		}()
+		o.UpdateToolsForCache(ctx2)
+		o.mcpServerManager.RegisterToolFromCache()
+	}(ctx)
 	return resp, nil
 }
 
