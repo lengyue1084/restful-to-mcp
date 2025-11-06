@@ -260,11 +260,11 @@ func (m *McpServerManager) createContextAwareHandler() func(context.Context, *pr
 func (m *McpServerManager) UnRegisterToolFromCache() {
 	serverInfoList, ok := m.cache.LoadMcpServer(cache.OldMcpValue)
 	if !ok {
-		m.log.Errorf("UnRegisterToolFromCache error: %v", "加载内存Old cache serverInfoList缓存信息失败")
+		m.log.Errorf("UnRegisterToolFromCache error: %v", "加载内存Old cache 缓存信息失败，OldMcpServer serverInfoList可能为空")
 		return
 	}
 	if len(serverInfoList) == 0 {
-		m.log.Errorf("UnRegisterToolFromCache error: %v", "没有获取到serverInfoList信息")
+		m.log.Infof("UnRegisterToolFromCache error: %v", "Old cache serverInfoList为空")
 		return
 	}
 	for _, serverInfo := range serverInfoList {
