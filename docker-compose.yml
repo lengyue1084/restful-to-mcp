@@ -1,0 +1,47 @@
+services:
+  # 主应用服务
+  flow-bridge-mcp:
+    #build: .
+    #image: flow-bridge-mcp:latest
+    image: your-registry/restful-to-mcp:latest
+    container_name: flow-bridge-mcp
+    #network_mode: "host"
+    restart: always
+    ports:
+      - "9002:9002"  # HTTP 端口
+      #- "9005:9005"  # GRPC 端口
+    environment:
+      # 服务器配置
+      - MCP_SERVER_HTTP_PORT=9002
+      - MCP_SERVER_GRPC_PORT=9005
+
+      # 数据库配置
+      - MCP_DATA_DATABASE_PG_SOURCE=host=172.16.1.13 user=postgres password=button dbname=flow_bridge_mcp port=5432 sslmode=disable TimeZone=Asia/Shanghai
+
+      # Redis 配置
+      - MCP_DATA_REDIS_ADDR=172.16.1.13
+      - MCP_DATA_REDIS_PORT=17507
+      - MCP_DATA_REDIS_USERNAME=
+      - MCP_DATA_REDIS_PASSWORD=
+      - MCP_DATA_REDIS_DEFAULT_DB=0
+
+      # Nacos 配置
+      - MCP_REGISTRY_NACOS_IPADDR=172.16.1.28
+      - MCP_REGISTRY_NACOS_PORT=8848
+      - MCP_REGISTRY_NACOS_NAMESPACE=public
+      - MCP_REGISTRY_NACOS_USERNAME=NACOS
+      - MCP_REGISTRY_NACOS_PASSWORD=NACOS
+
+      # 日志配置
+      - MCP_LOG_LEVEL=info
+      - MCP_LOG_PATH=./logs/log.log
+    volumes:
+      - ./logs:/app/logs:Z
+      - ./tmp:/app/tmp:Z
+    networks:
+      - mcp-bridge
+
+networks:
+  mcp-bridge:
+    driver: bridge
+    name: mcp-bridge
