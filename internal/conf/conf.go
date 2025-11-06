@@ -14,9 +14,7 @@ type Conf struct {
 
 func NewConf(confFile string) *Conf {
 	if ok, err := tool.FileExists(confFile); err != nil || !ok {
-		if ok, err = tool.FileExists(fmt.Sprintf("%s%s", confFile, "/config.yaml")); err != nil || !ok {
-			panic("请检查配置文件" + confFile + "是否存在")
-		}
+		panic("请检查配置文件" + confFile + "是否存在")
 	}
 
 	configViper := viper.New()
