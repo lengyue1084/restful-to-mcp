@@ -141,13 +141,26 @@ func (m *Middleware) LoggerMiddleware() gin.HandlerFunc {
 		//responseFields = append(baseFields, zap.String("response_body", responseBody.String()))
 
 		// 根据状态码记录不同级别的日志
-		if status >= 500 {
-			m.log.Errorf("server error:%+v", baseFields)
-		} else if status >= 400 {
-			m.log.Warnf("client error:%+v", baseFields)
-		} else {
-			m.log.Infof("request completed:%+v", baseFields)
+		//if status >= 500 {
+		//	m.log.Errorf("server error:%+v", baseFields)
+		//} else if status >= 400 {
+		//	m.log.Warnf("client error:%+v", baseFields)
+		//} else {
+		//	m.log.Infof("request completed:%+v", baseFields)
+		//}
+
+		logMsg := "request completed"
+		switch {
+		case status >= 500:
+			logMsg = "server error"
+			m.log.WithZapFields(baseFields...).Error(logMsg)
+		case status >= 400:
+			logMsg = "client error"
+			m.log.WithZapFields(baseFields...).Warn(logMsg)
+		default:
+			m.log.WithZapFields(baseFields...).Info(logMsg)
 		}
+
 	}
 }
 

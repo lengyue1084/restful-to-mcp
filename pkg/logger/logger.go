@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	_const "flow-bridge-mcp/pkg/const"
+	"flow-bridge-mcp/pkg/tool"
 
 	"flow-bridge-mcp/internal/conf"
 
@@ -172,6 +173,10 @@ func NewLogger(conf *conf.Conf) *Logger {
 
 func (l *Logger) With(args ...interface{}) *zap.SugaredLogger {
 	return l.SugaredLogger.With(args...)
+}
+
+func (l *Logger) WithZapFields(args ...zap.Field) *zap.SugaredLogger {
+	return l.SugaredLogger.With(tool.ToInterfaceSlice(args)...)
 }
 
 func (l *Logger) Error(args ...interface{}) {
