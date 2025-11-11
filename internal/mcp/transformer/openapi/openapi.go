@@ -262,7 +262,7 @@ func (c *Converter) isAllNotAllowed(security openapi3.SecurityRequirements, secu
 				securityMap[name] = v
 				if v.Mode != config.AuthModeHttp && v.Mode != config.AuthModeApiKey {
 					isAllNotAllowed = true
-					return isAllNotAllowed, fmt.Errorf("api only support:%s and%s  methods，", config.AuthModeHttp, config.AuthModeApiKey)
+					return isAllNotAllowed, fmt.Errorf("api only support:%s and %s  methods，", config.AuthModeHttp, config.AuthModeApiKey)
 				}
 			}
 
