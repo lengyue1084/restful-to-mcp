@@ -16,12 +16,14 @@ type GetMcpServerToolsResponse struct {
 	Tools []*ToolProtocolInfo `json:"tools"`
 }
 type ToolProtocolInfo struct {
-	ID             uint              `json:"id"`
-	UUID           string            `json:"uuid"`
-	IsAuth         _const.AuthStatus `json:"isAuth"`
-	AuthMode       string            `json:"authMode"`
-	IsPlatformAuth _const.AuthStatus `json:"isPlatformAuth"`
-	IsShow         _const.Status     `json:"isShow"`
+	ID             uint                `json:"id"`
+	UUID           string              `json:"uuid"`
+	IsAuth         _const.AuthStatus   `json:"isAuth"`
+	AuthMode       string              `json:"authMode"`
+	IsPlatformAuth _const.AuthStatus   `json:"isPlatformAuth"`
+	IsShow         _const.Status       `json:"isShow"`
+	IsRepeat       _const.CommonStatus `json:"isRepeat"`
+	FullName       string              `json:"fullName"`
 	// Name is the unique identifier of the tool
 	Name           string                    `json:"name"`
 	Description    string                    `json:"description,omitempty"`

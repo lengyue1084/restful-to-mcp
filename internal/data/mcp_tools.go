@@ -57,7 +57,8 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 				tool.McpServerId, tool.McpServerUUID, tool.Name).
 			Find(&mcpTool).Error
 		if err != nil {
-			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find error: %v", err)
+			m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch find error for tool %s, serverId %d: %v",
+				tool.Name, tool.McpServerId, err)
 			return
 		}
 		var toolInfo model.McpTools
@@ -70,7 +71,7 @@ func (m *McpToolsRepo) CreateMcpToolsBatch(ctx context.Context, mcpServerId int6
 			tool.IsRepeat = _const.CommonStatusYes //重复
 		}
 		if mcpTool.ID == 0 {
-			// 如果
+			// 如果不存在则新增工具
 			err = db.WithContext(ctx).Create(tool).Error
 			if err != nil {
 				m.log.ErrorWithContext(ctx, "CreateMcpToolsBatch create error: %v", err)

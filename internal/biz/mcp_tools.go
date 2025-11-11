@@ -75,17 +75,20 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 			AuthMode:       tool.AuthMode,
 			IsPlatformAuth: tool.IsPlatformAuth,
 			IsShow:         tool.IsShow,
+			IsRepeat:       tool.IsRepeat,
 
 			Name:        tool.Name,
 			Description: tool.Description,
 			InputSchema: *toolSchema,
 			Annotations: annotations,
+			FullName:    tool.Name,
 		}
 		if tool.IsRepeat == _const.CommonStatusYes {
 			toolName := tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
-			tmpTool.Name = toolName
 			tmpTool.Annotations.Title = toolName
+			tmpTool.FullName = toolName
 		}
+
 		toolsList = append(toolsList, tmpTool)
 	}
 	resp = &api.GetMcpServerToolsResponse{
