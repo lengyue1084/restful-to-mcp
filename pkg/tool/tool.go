@@ -770,9 +770,6 @@ func ExtractArgsFromPath(path string) []config.ArgConfig {
 
 // ToInterfaceSlice 任意类型转成interface
 func ToInterfaceSlice[T any](args []T) []any {
-	if slice, ok := interface{}(args).([]any); ok {
-		return slice
-	}
 	if len(args) == 0 {
 		return nil
 	}
