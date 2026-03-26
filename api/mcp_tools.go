@@ -2,10 +2,10 @@ package api
 
 import (
 	"encoding/json"
-	"flow-bridge-mcp/internal/mcp/config"
-	_const "flow-bridge-mcp/pkg/const"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+	"restful-to-mcp/internal/mcp/config"
+	_const "restful-to-mcp/pkg/const"
 )
 
 type GetMcpServerToolsRequest struct {

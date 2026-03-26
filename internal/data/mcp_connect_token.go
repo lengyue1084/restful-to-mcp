@@ -2,10 +2,10 @@ package data
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/data/database"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/pkg/logger"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/data/database"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/pkg/logger"
 )
 
 type McpConnectToken struct {

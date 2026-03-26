@@ -1,12 +1,12 @@
 package service
 
 import (
-	"flow-bridge-mcp/api"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/pkg/response"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"restful-to-mcp/api"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/pkg/response"
+	"restful-to-mcp/pkg/logger"
 )
 
 type McpToosService struct {
@@ -97,6 +97,7 @@ func (m *McpToosService) GetToolsInfoByUUID(c *gin.Context) {
 	var req *api.GetToolsInfoByUUIDRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
+		return
 	}
 	resp, err := m.mtUc.GetToolsInfoByUUID(c, req.UUID)
 	if err != nil {

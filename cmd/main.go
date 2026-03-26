@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"flow-bridge-mcp/internal/conf"
 	"fmt"
+	"restful-to-mcp/internal/conf"
 	//"gorm.io/gorm/logger"
 )
 

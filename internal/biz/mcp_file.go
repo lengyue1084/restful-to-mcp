@@ -2,9 +2,9 @@ package biz
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/pkg/tool"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/pkg/tool"
 )
 
 type McpFileRepo interface {

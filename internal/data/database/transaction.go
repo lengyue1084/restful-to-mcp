@@ -2,9 +2,9 @@ package database
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/pkg/const"
 	"gorm.io/gorm"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/pkg/const"
 )
 
 type transaction struct {

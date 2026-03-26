@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/biz"
-	mcpServer "flow-bridge-mcp/internal/mcp/server"
-	"flow-bridge-mcp/internal/pkg/cache"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"restful-to-mcp/internal/biz"
+	mcpServer "restful-to-mcp/internal/mcp/server"
+	"restful-to-mcp/internal/pkg/cache"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
 )
 
 type McpGatewayService struct {
@@ -38,13 +38,10 @@ func NewMcpGatewayService(msUc *biz.McpGatewayUseCase, mcpServerUseCase *biz.Mcp
 func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 
 	ctx := c.Request.Context()
-	// 只处理需要的 header
-	if platformToken := c.GetHeader(_const.PlatformToken); platformToken != "" {
-		ctx = context.WithValue(ctx, _const.PlatformToken, platformToken)
-	}
-	if serviceToken := c.GetHeader(_const.ServiceToken); serviceToken != "" {
-		ctx = context.WithValue(ctx, _const.ServiceToken, serviceToken)
-	}
+	// 添加请求头信息
+	ctx = context.WithValue(ctx, _const.PlatformToken, c.GetHeader(_const.PlatformToken))
+	ctx = context.WithValue(ctx, _const.ServiceToken, c.GetHeader(_const.ServiceToken))
+
 	if traceId := c.Value(_const.TraceId); traceId != "" {
 		ctx = context.WithValue(ctx, _const.TraceId, traceId)
 	}

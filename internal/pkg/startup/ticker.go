@@ -2,9 +2,9 @@ package startup
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/biz"
-	mcpServer "flow-bridge-mcp/internal/mcp/server"
-	_const "flow-bridge-mcp/pkg/const"
+	"restful-to-mcp/internal/biz"
+	mcpServer "restful-to-mcp/internal/mcp/server"
+	_const "restful-to-mcp/pkg/const"
 	"time"
 )
 

@@ -3,17 +3,17 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/internal/mcp/proxy"
-	"flow-bridge-mcp/internal/pkg/cache"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"log"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/internal/mcp/proxy"
+	"restful-to-mcp/internal/pkg/cache"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
 	"strconv"
 )
 

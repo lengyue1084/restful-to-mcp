@@ -1,13 +1,13 @@
 package startup
 
 import (
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/pkg/logger"
 	"sync"
 )
 

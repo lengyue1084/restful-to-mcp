@@ -1,6 +1,6 @@
 package biz
 
-import "flow-bridge-mcp/pkg/logger"
+import "restful-to-mcp/pkg/logger"
 
 type McpGatewayRepo interface {
 }

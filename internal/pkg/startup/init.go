@@ -2,11 +2,11 @@ package startup
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/conf"
-	mcpServer "flow-bridge-mcp/internal/mcp/server"
-	"flow-bridge-mcp/pkg/logger"
 	"github.com/google/wire"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/conf"
+	mcpServer "restful-to-mcp/internal/mcp/server"
+	"restful-to-mcp/pkg/logger"
 	"sync"
 )
 

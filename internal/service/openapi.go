@@ -1,12 +1,12 @@
 package service
 
 import (
-	"flow-bridge-mcp/api"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/pkg/response"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"restful-to-mcp/api"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/pkg/response"
+	"restful-to-mcp/pkg/logger"
 )
 
 type OpenapiService struct {

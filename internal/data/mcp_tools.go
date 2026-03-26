@@ -2,12 +2,12 @@ package data
 
 import (
 	"context"
-	"flow-bridge-mcp/api"
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/data/database"
-	"flow-bridge-mcp/internal/data/model"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
+	"restful-to-mcp/api"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/data/database"
+	"restful-to-mcp/internal/data/model"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
 )
 
 var _ biz.McpToolsRepo = (*McpToolsRepo)(nil)

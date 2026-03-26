@@ -12,7 +12,7 @@ services:
       - MCP_SERVER_GRPC_PORT=9005
 
       # PostgreSQL
-      - MCP_DATA_DATABASE_PG_SOURCE=host=postgres user=postgres password=your_password dbname=flow_bridge_mcp port=5432 sslmode=disable TimeZone=Asia/Shanghai
+      - MCP_DATA_DATABASE_PG_SOURCE=host=postgres user=postgres password=your_password dbname=restful_to_mcp port=5432 sslmode=disable TimeZone=Asia/Shanghai
 
       # Redis
       - MCP_DATA_REDIS_ADDR=redis
@@ -47,7 +47,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: your_password
-      POSTGRES_DB: flow_bridge_mcp
+      POSTGRES_DB: restful_to_mcp
     ports:
       - "5432:5432"
     volumes:

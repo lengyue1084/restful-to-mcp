@@ -3,15 +3,15 @@ package biz
 import (
 	"context"
 	"encoding/json"
-	"flow-bridge-mcp/api"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/internal/mcp/config"
-	"flow-bridge-mcp/internal/pkg/cache"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+	"restful-to-mcp/api"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/internal/mcp/config"
+	"restful-to-mcp/internal/pkg/cache"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/pkg/tool"
 	"strconv"
 )
 

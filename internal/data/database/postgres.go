@@ -2,12 +2,12 @@ package database
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/pkg/logger"
 )
 
 // NewPgClient 创建 PostgreSQL 数据库连接

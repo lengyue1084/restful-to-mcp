@@ -2,10 +2,10 @@ package logger
 
 import (
 	"context"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/tool"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/tool"
 
-	"flow-bridge-mcp/internal/conf"
+	"restful-to-mcp/internal/conf"
 
 	logger2 "gorm.io/gorm/logger"
 

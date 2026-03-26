@@ -2,12 +2,12 @@ package cache
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/pkg/logger"
 	"sync/atomic"
 )
 

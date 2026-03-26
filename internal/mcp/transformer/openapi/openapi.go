@@ -6,12 +6,12 @@ package openapi
 import (
 	"context"
 	"encoding/json"
-	"flow-bridge-mcp/internal/mcp/config"
-	"flow-bridge-mcp/internal/mcp/transformer"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/google/wire"
+	"restful-to-mcp/internal/mcp/config"
+	"restful-to-mcp/internal/mcp/transformer"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/pkg/tool"
 	"strings"
 	"time"
 
@@ -458,7 +458,7 @@ func (c *Converter) PathsToTools(paths *openapi3.Paths, components *openapi3.Com
 				//requestBodyRequired := operation.RequestBody.Value.Required
 				// 遍历请求体支持的内容类型
 				for contentType, contentValue := range operation.RequestBody.Value.Content {
-					if contentType == "application/json" { //只处理application/json，过滤其他类型包括二进制文件的类型
+					if strings.Contains(contentType, "application/json") { //只处理application/json，过滤其他类型包括二进制文件的类型
 						toolInfo.RequestBody = contentType
 						toolInfo.ContentType = contentType
 						toolInfo.IsShow = true

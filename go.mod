@@ -1,4 +1,4 @@
-module flow-bridge-mcp
+module restful-to-mcp
 
 go 1.24.5
 

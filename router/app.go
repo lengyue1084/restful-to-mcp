@@ -1,10 +1,10 @@
 package router
 
 import (
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/pkg/startup"
-	"flow-bridge-mcp/middleware"
 	"github.com/gin-gonic/gin"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/internal/pkg/startup"
+	"restful-to-mcp/middleware"
 )
 
 type App struct {

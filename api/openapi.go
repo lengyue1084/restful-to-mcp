@@ -1,9 +1,9 @@
 package api
 
 import (
-	"flow-bridge-mcp/internal/pkg/gormtype"
-	"flow-bridge-mcp/pkg/const"
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+	"restful-to-mcp/internal/pkg/gormtype"
+	"restful-to-mcp/pkg/const"
 )
 
 type OpenapiUploadRequest struct {

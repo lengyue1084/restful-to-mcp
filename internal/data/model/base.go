@@ -1,8 +1,8 @@
 package model
 
 import (
-	"flow-bridge-mcp/internal/pkg/gormtype"
 	"gorm.io/gorm"
+	"restful-to-mcp/internal/pkg/gormtype"
 )
 
 type BaseModel struct {

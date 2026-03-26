@@ -3,13 +3,13 @@ package biz
 import (
 	"context"
 	"encoding/json"
-	"flow-bridge-mcp/api"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/internal/mcp/config"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/pkg/tool"
 	"fmt"
+	"restful-to-mcp/api"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/internal/mcp/config"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/pkg/tool"
 )
 
 type McpServerRepo interface {

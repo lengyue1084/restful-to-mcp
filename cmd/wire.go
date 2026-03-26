@@ -6,21 +6,21 @@
 package main
 
 import (
-	"flow-bridge-mcp/internal/biz"
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/internal/data"
-	"flow-bridge-mcp/internal/data/database"
-	"flow-bridge-mcp/internal/mcp/proxy"
-	"flow-bridge-mcp/internal/mcp/server"
-	"flow-bridge-mcp/internal/mcp/transformer/openapi"
-	"flow-bridge-mcp/internal/pkg/cache"
-	"flow-bridge-mcp/internal/pkg/startup"
-	"flow-bridge-mcp/internal/service"
-	"flow-bridge-mcp/middleware"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/router"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"restful-to-mcp/internal/biz"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/internal/data"
+	"restful-to-mcp/internal/data/database"
+	"restful-to-mcp/internal/mcp/proxy"
+	"restful-to-mcp/internal/mcp/server"
+	"restful-to-mcp/internal/mcp/transformer/openapi"
+	"restful-to-mcp/internal/pkg/cache"
+	"restful-to-mcp/internal/pkg/startup"
+	"restful-to-mcp/internal/service"
+	"restful-to-mcp/middleware"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/router"
 )
 
 // initApp init gin application.

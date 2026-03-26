@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"flow-bridge-mcp/pkg/logger"
 	"github.com/ThinkInAIXYZ/go-mcp/transport"
+	"restful-to-mcp/pkg/logger"
 )
 
 type StreamableHttpTransprot struct {

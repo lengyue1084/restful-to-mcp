@@ -1,11 +1,11 @@
 package database
 
 import (
-	"flow-bridge-mcp/internal/conf"
-	"flow-bridge-mcp/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"restful-to-mcp/internal/conf"
+	"restful-to-mcp/pkg/logger"
 )
 
 // NewMysqlClient 创建 Mysql 数据库连接

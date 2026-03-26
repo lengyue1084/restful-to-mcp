@@ -2,11 +2,11 @@ package database
 
 import (
 	"context"
-	"flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
+	"restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
 )
 
 type Data struct {

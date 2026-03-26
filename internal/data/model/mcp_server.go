@@ -1,6 +1,6 @@
 package model
 
-import "flow-bridge-mcp/pkg/const"
+import "restful-to-mcp/pkg/const"
 
 type McpServer struct {
 	BaseModel

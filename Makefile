@@ -10,8 +10,8 @@ run:
 
 .PHONY: build
 build:
-	GOOS=windows GOARCH=amd64 go build -o ./bin/flow-bridge-mcp.exe ./cmd
+	GOOS=windows GOARCH=amd64 go build -o ./bin/restful-to-mcp.exe ./cmd
 
 .PHONY: build-linux
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o ./bin/flow-bridge-mcp ./cmd
+	GOOS=linux GOARCH=amd64 go build -o ./bin/restful-to-mcp ./cmd

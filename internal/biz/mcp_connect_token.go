@@ -2,7 +2,7 @@ package biz
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/data/model"
+	"restful-to-mcp/internal/data/model"
 )
 
 type McpConnectTokenRepo interface {

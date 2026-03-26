@@ -1,10 +1,10 @@
 package conf
 
 import (
-	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"restful-to-mcp/pkg/tool"
 	"strings"
 )
 

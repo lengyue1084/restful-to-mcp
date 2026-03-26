@@ -2,7 +2,7 @@ package transformer
 
 import (
 	"context"
-	"flow-bridge-mcp/internal/mcp/config"
+	"restful-to-mcp/internal/mcp/config"
 	"time"
 )
 

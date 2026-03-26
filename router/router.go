@@ -1,9 +1,9 @@
 package router
 
 import (
-	"flow-bridge-mcp/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"restful-to-mcp/internal/service"
 )
 
 var ProviderSet = wire.NewSet(NewApp, NewRouter)
@@ -51,6 +51,7 @@ func NewRouter(
 		apiV1.POST("/mcpServer/testMcpServerTool", mcpToolsService.TestMcpServerTool)
 
 	}
+
 	app.app.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{"message": "404 not found"})
 	})

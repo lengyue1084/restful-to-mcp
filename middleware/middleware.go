@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"bytes"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,6 +9,8 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
 	"time"
 )
 

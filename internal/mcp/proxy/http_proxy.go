@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flow-bridge-mcp/internal/data/model"
-	"flow-bridge-mcp/internal/mcp/config"
-	"flow-bridge-mcp/internal/pkg/cache"
-	_const "flow-bridge-mcp/pkg/const"
-	"flow-bridge-mcp/pkg/logger"
-	"flow-bridge-mcp/pkg/tool"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"restful-to-mcp/internal/data/model"
+	"restful-to-mcp/internal/mcp/config"
+	"restful-to-mcp/internal/pkg/cache"
+	_const "restful-to-mcp/pkg/const"
+	"restful-to-mcp/pkg/logger"
+	"restful-to-mcp/pkg/tool"
 	"strconv"
 	"strings"
 	"time"
@@ -397,6 +397,8 @@ func (h *HttpProxy) sendHttpRequest(ctx context.Context, params *RequestParams) 
 	for key, value := range params.Headers {
 		httpReq.Header.Set(key, value)
 	}
+	//打印日志http请求的、url、method、header、body
+	h.log.WithContext(ctx).Infof("HTTP请求: method:%s url:%s header:%s body:%s", params.Method, params.URL, params.Headers, params.Body)
 
 	// 发送请求
 	resp, err := h.httpClient.Do(httpReq)
@@ -410,6 +412,7 @@ func (h *HttpProxy) sendHttpRequest(ctx context.Context, params *RequestParams) 
 	if err != nil {
 		return nil, fmt.Errorf("读取响应体失败: %w", err)
 	}
+	h.log.WithContext(ctx).Infof("HTTP响应: %d %s", resp.StatusCode, string(respBody))
 
 	// 检查响应状态
 	if resp.StatusCode != 200 {

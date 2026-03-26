@@ -1,8 +1,8 @@
 package api
 
 import (
-	"flow-bridge-mcp/internal/mcp/config"
-	_const "flow-bridge-mcp/pkg/const"
+	"restful-to-mcp/internal/mcp/config"
+	_const "restful-to-mcp/pkg/const"
 )
 
 type GetMcpServerInfoByUUIDRequest struct {

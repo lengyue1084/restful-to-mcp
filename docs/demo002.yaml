@@ -16,17 +16,11 @@ info:
     - 用于用户身份认证
     - 使用标准头：`Authorization: Bearer <token>`
     - 适用于用户相关的操作
-    
-    ## 3. OAuth 2.0 认证
-    - 用于第三方应用授权
-    - 支持多种授权流程：授权码、客户端凭证、密码模式
-    - 使用标准头：`Authorization: Bearer <access-token>`
-    
+  
     ## 使用场景
     - **公开数据**: 无需认证
     - **应用级操作**: 使用 API Key
-    - **用户级操作**: 使用 JWT Token 或 OAuth 2.0
-    - **第三方集成**: 使用 OAuth 2.0
+    - **用户级操作**: 使用 JWT Token 
     - **高安全操作**: 可组合多种认证方式
 
 servers:
