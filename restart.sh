@@ -1,6 +1,9 @@
 #!/bin/bash
 
-docker pull your-registry/restful-to-mcp:latest
+# Replace with your own image registry address
+IMAGE="your-registry/restful-to-mcp:latest"
+
+docker pull $IMAGE
 
 docker-compose down
 

@@ -1,11 +1,11 @@
 # 构建阶段
 FROM golang:alpine AS builder
 
-# 设置 Go 代理
-ENV GOPROXY=https://goproxy.cn,direct
+# Uncomment below if you need a Go proxy (e.g. in China)
+# ENV GOPROXY=https://goproxy.cn,direct
 
-# 替换 Alpine 镜像源为阿里云
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+# Uncomment below to use Alibaba Cloud mirror for Alpine
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # 构建阶段只安装必要依赖
 RUN apk add --no-cache gcc musl-dev
@@ -29,7 +29,7 @@ RUN go install github.com/google/wire/cmd/wire@latest
 RUN wire ./cmd/wire.go
 
 # 构建应用
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o flow-bridge-mcp ./cmd
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o restful-to-mcp ./cmd
 
 # 清理构建缓存
 RUN go clean -cache -modcache
@@ -37,8 +37,8 @@ RUN go clean -cache -modcache
 # 运行阶段
 FROM alpine:3.19
 
-# 替换 Alpine 镜像源为阿里云
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+# Uncomment below to use Alibaba Cloud mirror for Alpine
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # 安装 ca-certificates、时区数据、SSL 支持和网络工具
 RUN apk --no-cache add ca-certificates tzdata curl wget net-tools iputils
@@ -56,7 +56,7 @@ WORKDIR /app
 RUN mkdir -p /app/logs /app/tmp /app/configs
 
 # 从构建阶段复制二进制文件
-COPY --from=builder /app/flow-bridge-mcp .
+COPY --from=builder /app/restful-to-mcp .
 
 # 复制本地 configs 目录到容器
 COPY configs /app/configs
@@ -69,5 +69,5 @@ RUN ls -la /app/configs/
 EXPOSE 9002
 
 # 运行应用，使用 configs 目录下的默认配置
-ENTRYPOINT ["./flow-bridge-mcp"]
+ENTRYPOINT ["./restful-to-mcp"]
 CMD ["-conf", "./configs"]

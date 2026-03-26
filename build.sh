@@ -1,10 +1,10 @@
 #!/bin/bash
-# 构建镜像
-#docker build -t flow-bridge-mcp:latest .
-docker build -t your-registry/restful-to-mcp:latest .
 
+# Replace with your own image registry address
+IMAGE="your-registry/restful-to-mcp:latest"
 
-#docker login your-registry
+# Build
+docker build -t $IMAGE .
 
- # 推送镜像到阿里云容器镜像仓库
-docker push your-registry/restful-to-mcp:latest
+# Push (login first: docker login your-registry)
+docker push $IMAGE
