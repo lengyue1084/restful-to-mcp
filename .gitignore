@@ -22,6 +22,7 @@ build/
 # 开发工具
 .vscode/
 .idea/
+.trae/
 *.swp
 *.swo
 *~
@@ -35,12 +36,18 @@ Desktop.ini
 .LSOverride
 
 # 项目特定文件
+configs/config.yaml
+docker-compose-prod.yml
 *.cert
 *.key
 *.log
-/log/*
 *.pid
 *.cursor
+*.sql
+
+# 运行时目录
+logs/
+tmp/
 
 # Emacs
 \#*\#

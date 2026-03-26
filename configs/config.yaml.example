@@ -1,0 +1,72 @@
+server:
+  name: "flow-bridge-gateway"
+  dev: true
+  timeout: "10s"
+  http:
+    version: "v1.0.0"
+    addr: "0.0.0.0"
+    port: 9002
+    timeout: "10s"
+  grpc:
+    addr: "127.0.0.1"
+    port: 9005
+    timeout: "10s"
+data:
+  database:
+    log_sql: true
+
+    # PostgresSQL
+    pg_source: "host=127.0.0.1 user=postgres password=your_password dbname=flow_bridge_mcp port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+    pg_max_idle_conn: 10
+    pg_max_open_conn: 100
+    pg_conn_max_lifetime: "1h"
+    pg_conn_max_idle_time: "30m"
+
+    # MySQL
+    driver: "mysql"
+    source: "root:your_password@tcp(127.0.0.1:3306)/flow_bridge_mcp?charset=utf8mb4&parseTime=True&loc=Local"
+    max_idle_conn: 50
+    max_open_conn: 100
+
+  redis:
+    addr: "127.0.0.1"
+    port: 6379
+    default_db: 0
+    username: ""
+    password: ""
+    dial_timeout: "5s"
+    read_timeout: "5s"
+    write_timeout: "5s"
+    pool_size: 20
+    min_idle_conns: 5
+    max_retries: 3
+log:
+  path: "./logs/log.log"
+  max_size: 10
+  max_backups: 30
+  max_age: 30
+  level: "info"
+  compress: false
+  format: "json"
+  localtime: true
+file:
+  path: "./tmp"
+registry:
+  nacos:
+    ipAddr: "127.0.0.1"
+    port: 8848
+    namespace: "public"
+    timeout: 10000
+    beatInterval: 5
+    notLoadCacheAtStart: true
+    logLevel: "info"
+    username: ""
+    password: ""
+    contextPath: "/nacos"
+    scheme: "http"
+    weight: 10
+    enable: true
+    healthy: true
+    clusterName: "DEFAULT"
+    groupName: "DEFAULT_GROUP"
+    ephemeral: true
