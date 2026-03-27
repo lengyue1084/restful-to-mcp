@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -100,6 +101,12 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 	}
 
 	cleanedContent := tool.CleanBase64String(req.FileContent)
+	if err := tool.ValidateBase64String(cleanedContent); err != nil {
+		// 兼容前端直接上传原始 OpenAPI 文本。
+		req.FileContent = base64.StdEncoding.EncodeToString([]byte(req.FileContent))
+	}
+
+	cleanedContent = tool.CleanBase64String(req.FileContent)
 	if err := tool.ValidateBase64String(cleanedContent); err != nil {
 		o.log.ErrorWithContext(ctx, "Base64字符串验证失败: %+v", err)
 		return nil, err

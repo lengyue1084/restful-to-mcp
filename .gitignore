@@ -50,5 +50,8 @@ docker-compose-prod.yml
 logs/
 tmp/
 
+# Frontend dependencies
+web/node_modules/
+
 # Emacs
 \#*\#
