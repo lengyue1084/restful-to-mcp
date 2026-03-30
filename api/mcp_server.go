@@ -9,11 +9,34 @@ type GetMcpServerInfoByUUIDRequest struct {
 	UUID string `json:"uuid" binding:"required"`
 }
 
+type ListMcpServersRequest struct {
+}
+
 type GetMcpServerInfoByUUIDResponse struct {
-	ID        uint   `json:"id"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID        uint                `json:"id"`
+	CreatedAt string              `json:"createdAt"`
+	UpdatedAt string              `json:"updatedAt"`
+	Status    _const.ServerStatus `json:"status"`
+	Source    _const.SourceType   `json:"source"`
 	CommonMcpServerByForm
+}
+
+type McpServerListItem struct {
+	ID          uint                  `json:"id"`
+	UUID        string                `json:"uuid"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Version     string                `json:"version"`
+	Status      _const.ServerStatus   `json:"status"`
+	Source      _const.SourceType     `json:"source"`
+	IsAuth      _const.AuthTypeStatus `json:"isAuth"`
+	ToolCount   int                   `json:"toolCount"`
+	CreatedAt   string                `json:"createdAt"`
+	UpdatedAt   string                `json:"updatedAt"`
+}
+
+type ListMcpServersResponse struct {
+	Items []*McpServerListItem `json:"items"`
 }
 
 type UpdateMcpServerByUUIDRequest struct {

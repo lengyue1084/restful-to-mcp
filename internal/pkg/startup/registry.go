@@ -61,6 +61,14 @@ func NewRegistry(conf *conf.Conf, log *logger.Logger) *Registry {
 }
 
 func (r *Registry) register() {
+	if !r.conf.Conf.GetBool("registry.nacos.enable") {
+		r.log.Info("nacos registry disabled, skip register")
+		return
+	}
+	if r.namingClient == nil {
+		r.log.Info("nacos naming client unavailable, skip register")
+		return
+	}
 	r.Lock()
 	ok, err := r.namingClient.RegisterInstance(vo.RegisterInstanceParam{
 		Ip:          r.conf.Conf.GetString("server.http.ip"),

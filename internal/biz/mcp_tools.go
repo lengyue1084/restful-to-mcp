@@ -8,11 +8,13 @@ import (
 	"restful-to-mcp/api"
 	"restful-to-mcp/internal/data/model"
 	"restful-to-mcp/internal/mcp/config"
+	"restful-to-mcp/internal/mcp/proxy"
 	"restful-to-mcp/internal/pkg/cache"
 	_const "restful-to-mcp/pkg/const"
 	"restful-to-mcp/pkg/logger"
 	"restful-to-mcp/pkg/tool"
 	"strconv"
+	"strings"
 )
 
 type McpToolsRepo interface {
@@ -32,14 +34,16 @@ type McpToolsUserCase struct {
 	msRepo McpServerRepo
 	log    *logger.Logger
 	cache  *cache.MemoryCache
+	proxy  *proxy.HttpProxy
 }
 
-func NewMcpToolsUserCase(mtRepo McpToolsRepo, msRepo McpServerRepo, log *logger.Logger, cache *cache.MemoryCache) *McpToolsUserCase {
+func NewMcpToolsUserCase(mtRepo McpToolsRepo, msRepo McpServerRepo, log *logger.Logger, cache *cache.MemoryCache, httpProxy *proxy.HttpProxy) *McpToolsUserCase {
 	return &McpToolsUserCase{
 		mtRepo: mtRepo,
 		msRepo: msRepo,
 		log:    log,
 		cache:  cache,
+		proxy:  httpProxy,
 	}
 }
 
@@ -82,6 +86,9 @@ func (m *McpToolsUserCase) GetMcpServerTools(ctx context.Context, uuid string) (
 			InputSchema: *toolSchema,
 			Annotations: annotations,
 			FullName:    tool.Name,
+		}
+		if tmpTool.Annotations == nil {
+			tmpTool.Annotations = &protocol.ToolAnnotations{}
 		}
 		if tool.IsRepeat == _const.CommonStatusYes {
 			toolName := tool.Name + "_" + strconv.Itoa(int(tool.McpServerId)) + tool.SerialNumber
@@ -174,7 +181,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 	}
 	// 解析入参的InputArgs,直接从前端获取，py层负责转换，这里就直接获取即可
 	var inputArgs = req.Args
-	argsSlice = append(argsSlice, inputArgs...)
+	argsSlice = mergeArgs(argsSlice, inputArgs)
 	argsJson, err := json.Marshal(argsSlice)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "args json转换错误，err:%+v", err)
@@ -221,7 +228,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 	}
 
 	var toolConfig = &config.ToolConfig{
-		Args: args,
+		Args: argsSlice,
 	}
 	var inputSchema = toolConfig.ArgsToInputSchema()
 	toolSchemaJson, err := json.Marshal(inputSchema)
@@ -240,7 +247,7 @@ func (m *McpToolsUserCase) CreateMcpServerTool(ctx context.Context, req *api.Cre
 		McpServerUUID:  req.McpServerUUID,
 		McpServerId:    int64(mcpServerInfo.ID),
 		SerialNumber:   mcpServerInfo.SerialNumber,
-		IsShow:         _const.StatusHidden,
+		IsShow:         _const.StatusDisplay,
 		IsPlatformAuth: req.IsPlatformAuth,
 		IsAuth:         req.IsAuth,
 		AuthMode:       security.Mode.String(),
@@ -324,7 +331,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	}
 	// 解析入参的InputArgs,直接从前端获取，py层负责转换，这里就直接获取即可
 	var inputArgs = req.Args
-	argsSlice = append(argsSlice, inputArgs...)
+	argsSlice = mergeArgs(argsSlice, inputArgs)
 	argsJson, err := json.Marshal(argsSlice)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "args json转换错误，err:%+v", err)
@@ -393,7 +400,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 	}
 
 	var toolConfig = &config.ToolConfig{
-		Args: args,
+		Args: argsSlice,
 	}
 	var inputSchema = toolConfig.ArgsToInputSchema()
 	toolSchemaJson, err := json.Marshal(inputSchema)
@@ -413,7 +420,7 @@ func (m *McpToolsUserCase) UpdateMcpServerTool(ctx context.Context, req *api.Upd
 		Security:       string(securityJson),
 		ToolSchema:     string(toolSchemaJson),
 		Annotations:    string(annotationsJson),
-		IsShow:         _const.StatusHidden,
+		IsShow:         _const.StatusDisplay,
 		IsPlatformAuth: req.IsPlatformAuth,
 		IsAuth:         req.IsAuth,
 		AuthMode:       security.Mode.String(),
@@ -482,25 +489,126 @@ func (m *McpToolsUserCase) GetToolsInfoByUUID(ctx context.Context, uuid string) 
 	}
 
 	resp = &api.GetToolsInfoByUUIDResponse{
-		ID:            toolInfo.ID,
-		UUID:          toolInfo.UUID,
-		CreatedAt:     toolInfo.CreatedAt.String(),
-		UpdatedAt:     toolInfo.UpdatedAt.String(),
-		McpServerId:   toolInfo.McpServerId,
-		McpServerUUID: toolInfo.McpServerUUID,
-		Name:          toolInfo.Name,
-		Description:   toolInfo.Description,
-		McpServerType: toolInfo.McpServerType,
-		Method:        toolInfo.Method,
-		BaseUrl:       urls[0],
-		Headers:       headersMap,
-		Args:          args,
-		Security:      security,
-		IsAuth:        toolInfo.IsAuth,
-		AuthMode:      toolInfo.AuthMode,
-		IsShow:        toolInfo.IsShow,
-		SerialNumber:  toolInfo.SerialNumber,
-		IsRepeat:      toolInfo.IsRepeat,
+		ID:             toolInfo.ID,
+		UUID:           toolInfo.UUID,
+		CreatedAt:      toolInfo.CreatedAt.String(),
+		UpdatedAt:      toolInfo.UpdatedAt.String(),
+		McpServerId:    toolInfo.McpServerId,
+		McpServerUUID:  toolInfo.McpServerUUID,
+		Name:           toolInfo.Name,
+		Description:    toolInfo.Description,
+		McpServerType:  toolInfo.McpServerType,
+		Method:         toolInfo.Method,
+		BaseUrl:        urls[0],
+		Path:           endpointToPath(toolInfo.Endpoint),
+		Headers:        headersMap,
+		Args:           args,
+		Security:       security,
+		IsAuth:         toolInfo.IsAuth,
+		AuthMode:       toolInfo.AuthMode,
+		IsPlatformAuth: toolInfo.IsPlatformAuth,
+		IsShow:         toolInfo.IsShow,
+		SerialNumber:   toolInfo.SerialNumber,
+		IsRepeat:       toolInfo.IsRepeat,
 	}
 	return
+}
+
+func (m *McpToolsUserCase) TestMcpServerTool(ctx context.Context, req *api.TestMcpServerToolRequest) (resp *api.TestMcpServerToolResponse, err error) {
+	toolInfo, err := m.mtRepo.GetMcpServerToolInfoByUUID(ctx, req.UUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "TestMcpServerTool GetMcpServerToolInfoByUUID error: %v", err)
+		return nil, err
+	}
+	if toolInfo.ID == 0 {
+		return nil, fmt.Errorf("没有查询到该工具信息")
+	}
+	if toolInfo.IsShow != _const.StatusDisplay {
+		return nil, fmt.Errorf("当前工具未展示，不能测试")
+	}
+
+	serverInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, toolInfo.McpServerUUID)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "TestMcpServerTool GetMcpServerInfoByUUID error: %v", err)
+		return nil, err
+	}
+	if serverInfo.ID == 0 {
+		return nil, fmt.Errorf("没有查询到该server信息")
+	}
+
+	var urls []string
+	if err := json.Unmarshal([]byte(serverInfo.Urls), &urls); err != nil {
+		return nil, err
+	}
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("请先配置服务地址")
+	}
+
+	serviceToken := serverInfo.ServiceToken
+	if toolInfo.IsAuth == _const.IsAuthYes && serviceToken == "" {
+		return nil, fmt.Errorf("当前工具需要服务鉴权，但 server 没有配置 serviceToken")
+	}
+
+	execResult, err := m.proxy.ExecuteTool(ctx, toolInfo, urls, req.Arguments, serviceToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp = &api.TestMcpServerToolResponse{
+		Name:          toolInfo.Name,
+		RequestURL:    execResult.Request.URL,
+		RequestMethod: execResult.Request.Method,
+		RequestBody:   execResult.Request.Body,
+		ResponseText:  string(execResult.Response),
+	}
+
+	var responseJSON map[string]interface{}
+	if err := json.Unmarshal(execResult.Response, &responseJSON); err == nil {
+		resp.ResponseJSON = responseJSON
+	}
+
+	return resp, nil
+}
+
+func mergeArgs(pathArgs []config.ArgConfig, inputArgs []config.ArgConfig) []config.ArgConfig {
+	if len(pathArgs) == 0 && len(inputArgs) == 0 {
+		return nil
+	}
+
+	merged := make([]config.ArgConfig, 0, len(pathArgs)+len(inputArgs))
+	indexByKey := make(map[string]int, len(pathArgs)+len(inputArgs))
+
+	upsert := func(arg config.ArgConfig) {
+		key := fmt.Sprintf("%s:%s", arg.Position, arg.Name)
+		if idx, ok := indexByKey[key]; ok {
+			merged[idx] = arg
+			return
+		}
+		indexByKey[key] = len(merged)
+		merged = append(merged, arg)
+	}
+
+	for _, arg := range pathArgs {
+		upsert(arg)
+	}
+	for _, arg := range inputArgs {
+		upsert(arg)
+	}
+
+	return merged
+}
+
+func endpointToPath(endpoint string) string {
+	const prefix = "{{.Config.url}}"
+	if strings.HasPrefix(endpoint, prefix) {
+		path := strings.TrimPrefix(endpoint, prefix)
+		if path == "" {
+			return "/"
+		}
+		if strings.HasPrefix(path, "/") {
+			return path
+		}
+		return "/" + path
+	}
+	return endpoint
 }

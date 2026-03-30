@@ -28,3 +28,16 @@ func (m *McpConnectToken) Create(ctx context.Context, mcpConnectToken *model.Mcp
 	}
 	return
 }
+
+func (m *McpConnectToken) GetByConnectToken(ctx context.Context, connectToken string) (tokenInfo *model.McpConnectToken, err error) {
+	tokenInfo = &model.McpConnectToken{}
+	err = m.data.Db.WithContext(ctx).
+		Where("connect_token = ?", connectToken).
+		Order("id DESC").
+		Find(tokenInfo).Error
+	if err != nil {
+		m.log.Error("get mcp connect token error: %v", err)
+		return nil, err
+	}
+	return tokenInfo, nil
+}

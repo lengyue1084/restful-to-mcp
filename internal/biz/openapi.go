@@ -116,7 +116,7 @@ func (o *OpenapiUseCase) Create(ctx context.Context, req *api.OpenapiUploadReque
 		o.log.ErrorWithContext(ctx, "Base64解析失败，err:%+v", err)
 		return nil, fmt.Errorf("base64 decode failed: %w", err)
 	}
-	contentMd5Str := tool.MD5(req.FileContent)
+	contentMd5Str := tool.MD5(string(decodeString))
 
 	//创建McpFile记录
 	mcpFileInfo, err := o.mfUc.GetMcpFileInfoByMd5(ctx, contentMd5Str)

@@ -168,6 +168,14 @@ type GetToolsInfoByUUIDResponse struct {
 }
 
 type TestMcpServerToolRequest struct {
+	UUID      string                 `json:"uuid" binding:"required"`
+	Arguments map[string]interface{} `json:"arguments"`
 }
 type TestMcpServerToolResponse struct {
+	Name          string                 `json:"name"`
+	RequestURL    string                 `json:"requestUrl"`
+	RequestMethod string                 `json:"requestMethod"`
+	RequestBody   interface{}            `json:"requestBody,omitempty"`
+	ResponseText  string                 `json:"responseText"`
+	ResponseJSON  map[string]interface{} `json:"responseJson,omitempty"`
 }

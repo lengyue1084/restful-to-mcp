@@ -7,4 +7,5 @@ import (
 
 type McpConnectTokenRepo interface {
 	Create(ctx context.Context, serverInfo *model.McpConnectToken) (err error)
+	GetByConnectToken(ctx context.Context, connectToken string) (tokenInfo *model.McpConnectToken, err error)
 }

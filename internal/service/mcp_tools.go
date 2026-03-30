@@ -5,24 +5,33 @@ import (
 	"github.com/gin-gonic/gin"
 	"restful-to-mcp/api"
 	"restful-to-mcp/internal/biz"
+	mcpServer "restful-to-mcp/internal/mcp/server"
 	"restful-to-mcp/internal/pkg/response"
 	"restful-to-mcp/pkg/logger"
 )
 
 type McpToosService struct {
-	mtUc *biz.McpToolsUserCase
-	log  *logger.Logger
+	mtUc             *biz.McpToolsUserCase
+	oaUc             *biz.OpenapiUseCase
+	mcpServerManager *mcpServer.McpServerManager
+	log              *logger.Logger
 }
 
-func NewMcpToosService(mtUc *biz.McpToolsUserCase, log *logger.Logger) *McpToosService {
+func NewMcpToosService(mtUc *biz.McpToolsUserCase, oaUc *biz.OpenapiUseCase, mcpServerManager *mcpServer.McpServerManager, log *logger.Logger) *McpToosService {
 	return &McpToosService{
-		mtUc: mtUc,
-		log:  log,
+		mtUc:             mtUc,
+		oaUc:             oaUc,
+		mcpServerManager: mcpServerManager,
+		log:              log,
 	}
 }
 
-func (m *McpToosService) GetMcpServerTools(c *gin.Context) {
+func (m *McpToosService) refreshTools(c *gin.Context) {
+	m.oaUc.UpdateToolsForCache(c)
+	m.mcpServerManager.RegisterToolFromCache()
+}
 
+func (m *McpToosService) GetMcpServerTools(c *gin.Context) {
 	var req *api.GetMcpServerToolsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
@@ -35,8 +44,6 @@ func (m *McpToosService) GetMcpServerTools(c *gin.Context) {
 		return
 	}
 	response.Success(c, "查询成功", resp.Tools)
-	return
-
 }
 
 func (m *McpToosService) GetMcpServerToolsByUUID(c *gin.Context) {
@@ -52,7 +59,6 @@ func (m *McpToosService) GetMcpServerToolsByUUID(c *gin.Context) {
 		return
 	}
 	response.Success(c, "查询成功", resp)
-	return
 }
 
 func (m *McpToosService) CreateMcpServerTool(c *gin.Context) {
@@ -67,30 +73,30 @@ func (m *McpToosService) CreateMcpServerTool(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("创建工具失败,err:%+v", err), nil)
 		return
 	}
+	m.refreshTools(c)
 	response.Success(c, "创建成功", resp)
-	return
 }
 
 func (m *McpToosService) UpdateMcpServerTool(c *gin.Context) {
 	var req *api.UpdateMcpServerToolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, fmt.Sprintf("UpdateMcpServerTool 参数错误,err:%+v", err), nil)
+		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), nil)
 		return
 	}
-	// 验证method是否符合规则
 	if err := api.ValidMethods(req.Method); err != nil {
-		response.Error(c, fmt.Sprintf("UpdateMcpServerTool 错误,method参数错误,err:%+v", err), nil)
+		response.Error(c, fmt.Sprintf("method参数错误,err:%+v", err), nil)
 		return
 	}
 
+	m.oaUc.UpdateToolsForOldCache(c)
 	resp, err := m.mtUc.UpdateMcpServerTool(c, req)
 	if err != nil {
 		m.log.ErrorWithContext(c, "更新工具失败,err:%+v", err)
 		response.Error(c, fmt.Sprintf("更新工具失败,err:%+v", err), nil)
 		return
 	}
+	m.refreshTools(c)
 	response.Success(c, "更新成功", resp)
-
 }
 
 func (m *McpToosService) GetToolsInfoByUUID(c *gin.Context) {
@@ -107,6 +113,7 @@ func (m *McpToosService) GetToolsInfoByUUID(c *gin.Context) {
 	}
 	response.Success(c, "查询成功", resp)
 }
+
 func (m *McpToosService) TestMcpServerTool(c *gin.Context) {
 	var req *api.TestMcpServerToolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -114,4 +121,12 @@ func (m *McpToosService) TestMcpServerTool(c *gin.Context) {
 		return
 	}
 
+	resp, err := m.mtUc.TestMcpServerTool(c, req)
+	if err != nil {
+		m.log.ErrorWithContext(c, "测试工具失败,err:%+v", err)
+		response.Error(c, fmt.Sprintf("测试工具失败,err:%+v", err), nil)
+		return
+	}
+
+	response.Success(c, "测试成功", resp)
 }

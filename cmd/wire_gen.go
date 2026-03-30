@@ -7,6 +7,7 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"restful-to-mcp/internal/biz"
 	"restful-to-mcp/internal/conf"
 	"restful-to-mcp/internal/data"
@@ -20,7 +21,6 @@ import (
 	"restful-to-mcp/middleware"
 	"restful-to-mcp/pkg/logger"
 	"restful-to-mcp/router"
-	"github.com/gin-gonic/gin"
 )
 
 // Injectors from wire.go:
@@ -76,9 +76,9 @@ func initApp(config *conf.Conf) (*gin.Engine, func(), error) {
 	openapiService := service.NewOpenapiService(openapiUseCase, loggerLogger)
 	mcpConnectTokenRepo := data.NewMcpConnectToken(databaseData, loggerLogger)
 	mcpServerUseCase := biz.NewMcpServerUseCase(mcpServerRepo, mcpConnectTokenRepo, loggerLogger)
-	mcpServerService := service.NewMcpServerService(mcpServerUseCase, loggerLogger)
-	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, mcpServerRepo, loggerLogger, memoryCache)
-	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, loggerLogger)
+	mcpServerService := service.NewMcpServerService(mcpServerUseCase, openapiUseCase, mcpServerManager, loggerLogger)
+	mcpToolsUserCase := biz.NewMcpToolsUserCase(mcpToolsRepo, mcpServerRepo, loggerLogger, memoryCache, httpProxy)
+	mcpToosService := service.NewMcpToosService(mcpToolsUserCase, openapiUseCase, mcpServerManager, loggerLogger)
 	mcpGatewayUseCase := biz.NewMcpGatewayUseCase(loggerLogger)
 	mcpGatewayService := service.NewMcpGatewayService(mcpGatewayUseCase, mcpServerUseCase, mcpServerManager, loggerLogger, memoryCache)
 	engine := router.NewRouter(app, openapiService, mcpServerService, mcpToosService, mcpGatewayService)

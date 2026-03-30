@@ -5,21 +5,42 @@ import (
 	"github.com/gin-gonic/gin"
 	"restful-to-mcp/api"
 	"restful-to-mcp/internal/biz"
+	mcpServer "restful-to-mcp/internal/mcp/server"
 	"restful-to-mcp/internal/pkg/response"
 	"restful-to-mcp/pkg/logger"
 )
 
 type McpServerService struct {
-	msUc *biz.McpServerUseCase
-	log  *logger.Logger
+	msUc             *biz.McpServerUseCase
+	oaUc             *biz.OpenapiUseCase
+	mcpServerManager *mcpServer.McpServerManager
+	log              *logger.Logger
 }
 
-func NewMcpServerService(msUc *biz.McpServerUseCase, log *logger.Logger) *McpServerService {
+func NewMcpServerService(msUc *biz.McpServerUseCase, oaUc *biz.OpenapiUseCase, mcpServerManager *mcpServer.McpServerManager, log *logger.Logger) *McpServerService {
 	return &McpServerService{
-		msUc: msUc,
-		log:  log,
+		msUc:             msUc,
+		oaUc:             oaUc,
+		mcpServerManager: mcpServerManager,
+		log:              log,
 	}
 }
+
+func (m *McpServerService) refreshTools(c *gin.Context) {
+	m.oaUc.UpdateToolsForCache(c)
+	m.mcpServerManager.RegisterToolFromCache()
+}
+
+func (m *McpServerService) ListMcpServers(c *gin.Context) {
+	resp, err := m.msUc.ListMcpServers(c)
+	if err != nil {
+		m.log.ErrorWithContext(c, "ListMcpServers error: %+v", err)
+		response.Error(c, fmt.Sprintf("获取列表失败,err:%+v", err), nil)
+		return
+	}
+	response.Success(c, "获取成功", resp)
+}
+
 func (m *McpServerService) GetMcpServerInfoByUUID(c *gin.Context) {
 	var req api.GetMcpServerInfoByUUIDRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -34,7 +55,6 @@ func (m *McpServerService) GetMcpServerInfoByUUID(c *gin.Context) {
 		return
 	}
 	response.Success(c, "获取成功", resp)
-
 }
 
 func (m *McpServerService) UpdateMcpServerByUUID(c *gin.Context) {
@@ -47,14 +67,13 @@ func (m *McpServerService) UpdateMcpServerByUUID(c *gin.Context) {
 	resp, err := m.msUc.UpdateMcpServerByUUID(c, req.UUID, req.Name, req.Description)
 	if err != nil {
 		m.log.ErrorWithContext(c, "UpdateMcpServerByUUID error: %+v", err)
-		response.Error(c, fmt.Sprintf("更新失败，err:%+v", err), nil)
+		response.Error(c, fmt.Sprintf("更新失败,err:%+v", err), nil)
 		return
 	}
 	response.Success(c, "更新成功", resp)
 }
 
 func (m *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
-
 	var req api.GetMcpConnectTokenByUUIDRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		m.log.ErrorWithContext(c, "GetMcpConnectTokenByUUID error: %+v", err)
@@ -71,7 +90,6 @@ func (m *McpServerService) GetMcpConnectTokenByUUID(c *gin.Context) {
 }
 
 func (m *McpServerService) CreateMcpServerByForm(c *gin.Context) {
-
 	var req *api.CreateMcpServerByFormRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		m.log.ErrorWithContext(c, "CreateMcpServerByForm error: %+v", err)
@@ -84,6 +102,7 @@ func (m *McpServerService) CreateMcpServerByForm(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("创建失败,err:%+v", err), nil)
 		return
 	}
+	m.refreshTools(c)
 	response.Success(c, "创建成功", resp)
 }
 
@@ -94,14 +113,15 @@ func (m *McpServerService) DeleteMcpServerByUUID(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
+	m.oaUc.UpdateToolsForOldCache(c)
 	err := m.msUc.DeleteMcpServerByUUID(c, req.UUID)
 	if err != nil {
 		m.log.ErrorWithContext(c, "DeleteMcpServerByUUID error: %+v", err)
 		response.Error(c, fmt.Sprintf("删除失败,err:%+v", err), nil)
 		return
 	}
+	m.refreshTools(c)
 	response.Success(c, "删除成功", nil)
-
 }
 
 func (m *McpServerService) UpdateMcpServerByForm(c *gin.Context) {
@@ -111,11 +131,13 @@ func (m *McpServerService) UpdateMcpServerByForm(c *gin.Context) {
 		response.Error(c, fmt.Sprintf("参数错误,err:%+v", err), err)
 		return
 	}
+	m.oaUc.UpdateToolsForOldCache(c)
 	resp, err := m.msUc.UpdateMcpServerByForm(c, req)
 	if err != nil {
 		m.log.ErrorWithContext(c, "UpdateMcpServerByForm error: %+v", err)
 		response.Error(c, fmt.Sprintf("更新失败,err:%+v", err), nil)
 		return
 	}
+	m.refreshTools(c)
 	response.Success(c, "更新成功", resp)
 }

@@ -29,6 +29,7 @@ func NewRouter(
 	{
 		// 基于openapi文档创建mcpServer
 		// OpenAPI文档相关
+		apiV1.POST("/mcpServer/list", mcpServerService.ListMcpServers)
 		apiV1.POST("/openapi/upload", openapiService.Upload)
 		apiV1.POST("/mcpServer/getMcpServerInfoByUUID", mcpServerService.GetMcpServerInfoByUUID)
 		apiV1.POST("/openapi/updateForAuth", openapiService.UpdateForAuth)

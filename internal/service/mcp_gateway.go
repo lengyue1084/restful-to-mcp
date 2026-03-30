@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"restful-to-mcp/internal/biz"
 	mcpServer "restful-to-mcp/internal/mcp/server"
 	"restful-to-mcp/internal/pkg/cache"
@@ -51,7 +52,16 @@ func (m *McpGatewayService) McpStreamable(c *gin.Context) {
 
 	serverToken := c.Param(_const.ServerPathToken)
 	if serverToken != "" {
-		ctx = context.WithValue(ctx, _const.ServerPathToken, serverToken)
+		resolvedServerUUID, err := m.mcpServerUseCase.ResolveServerToken(ctx, serverToken)
+		if err != nil {
+			m.log.ErrorWithContext(c, "resolve server token error: %v", err)
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"code":    http.StatusNotFound,
+				"message": "invalid server token",
+			})
+			return
+		}
+		ctx = context.WithValue(ctx, _const.ServerPathToken, resolvedServerUUID)
 	}
 
 	c.Request = c.Request.WithContext(ctx)

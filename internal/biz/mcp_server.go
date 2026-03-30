@@ -86,6 +86,8 @@ func (m *McpServerUseCase) GetMcpServerInfoByUUID(ctx context.Context, uuid stri
 		ID:        mcpServerInfo.ID,
 		CreatedAt: mcpServerInfo.CreatedAt.String(),
 		UpdatedAt: mcpServerInfo.UpdatedAt.String(),
+		Status:    mcpServerInfo.Status,
+		Source:    mcpServerInfo.Source,
 		CommonMcpServerByForm: api.CommonMcpServerByForm{
 			UUID:          mcpServerInfo.UUID,
 			Name:          mcpServerInfo.Name,
@@ -141,12 +143,69 @@ func (m *McpServerUseCase) GetMcpConnectTokenByUUID(ctx context.Context, uuid st
 	return
 }
 
+func (m *McpServerUseCase) ResolveServerToken(ctx context.Context, serverToken string) (serverUUID string, err error) {
+	if serverToken == "" {
+		return "", fmt.Errorf("server token is empty")
+	}
+
+	mcpServerInfo, err := m.msRepo.GetMcpServerInfoByUUID(ctx, serverToken)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "ResolveServerToken get server by uuid error: %v", err)
+		return "", err
+	}
+	if mcpServerInfo != nil && mcpServerInfo.ID > 0 {
+		return mcpServerInfo.UUID, nil
+	}
+
+	connectTokenInfo, err := m.mctRepo.GetByConnectToken(ctx, serverToken)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "ResolveServerToken get connect token error: %v", err)
+		return "", err
+	}
+	if connectTokenInfo == nil || connectTokenInfo.ID == 0 || connectTokenInfo.McpServerUUID == "" {
+		return "", fmt.Errorf("mcp server not found for token")
+	}
+
+	return connectTokenInfo.McpServerUUID, nil
+}
+
 func (m *McpServerUseCase) GetMcpServerInfoWithAllTools(ctx context.Context) (mcpServerInfo []*model.McpServer, err error) {
 	mcpServerInfo, err = m.msRepo.GetMcpServerInfoWithAllTools(ctx)
 	if err != nil {
 		m.log.ErrorWithContext(ctx, "GetMcpServerInfoWithTools error: %v", err)
 		return nil, err
 	}
+	return
+}
+
+func (m *McpServerUseCase) ListMcpServers(ctx context.Context) (resp *api.ListMcpServersResponse, err error) {
+	serverInfo, err := m.msRepo.GetMcpServerInfoWithAllTools(ctx)
+	if err != nil {
+		m.log.ErrorWithContext(ctx, "ListMcpServers error: %v", err)
+		return nil, err
+	}
+
+	items := make([]*api.McpServerListItem, 0, len(serverInfo))
+	for _, server := range serverInfo {
+		if server == nil {
+			continue
+		}
+		items = append(items, &api.McpServerListItem{
+			ID:          server.ID,
+			UUID:        server.UUID,
+			Name:        server.Name,
+			Description: server.Description,
+			Version:     server.Version,
+			Status:      server.Status,
+			Source:      server.Source,
+			IsAuth:      server.IsAuth,
+			ToolCount:   len(server.Tools),
+			CreatedAt:   server.CreatedAt.String(),
+			UpdatedAt:   server.UpdatedAt.String(),
+		})
+	}
+
+	resp = &api.ListMcpServersResponse{Items: items}
 	return
 }
 
@@ -221,10 +280,10 @@ func (m *McpServerUseCase) CreateMcpServerByForm(ctx context.Context, req *api.C
 			security.Scheme = req.Security.Scheme
 		case config.AuthModeApiKey:
 			// apiKey 模式下 name、in 必填
-			if req.Name == "" {
+			if req.Security.Name == "" {
 				return nil, fmt.Errorf("%s模式，name为必填项", config.AuthModeApiKey)
 			}
-			security.Name = req.Name
+			security.Name = req.Security.Name
 			if req.Security.In == "" {
 				return nil, fmt.Errorf("%s模式，position为必填项", config.AuthModeApiKey)
 			}
@@ -318,10 +377,10 @@ func (m *McpServerUseCase) UpdateMcpServerByForm(ctx context.Context, req *api.U
 			security.Scheme = req.Security.Scheme
 		case config.AuthModeApiKey:
 			// apiKey 模式下 name、in 必填
-			if req.Name == "" {
+			if req.Security.Name == "" {
 				return nil, fmt.Errorf("%s模式，name为必填项", config.AuthModeApiKey)
 			}
-			security.Name = req.Name
+			security.Name = req.Security.Name
 			if req.Security.In != config.AuthPositionQuery && req.Security.In != config.AuthPositionHeader {
 				return nil, fmt.Errorf("%s模式，参数in不合法", config.AuthModeApiKey)
 			}

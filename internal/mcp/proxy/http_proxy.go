@@ -64,6 +64,11 @@ type RequestParams struct {
 	Body    interface{}
 }
 
+type ExecuteToolResult struct {
+	Request  *RequestParams
+	Response []byte
+}
+
 func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
 	// 从上下文获取服务令牌
 	serviceToken, ok := ctx.Value(_const.ServiceToken).(string)
@@ -144,6 +149,40 @@ func (h *HttpProxy) HandleHttpProxy(ctx context.Context, req *protocol.CallToolR
 				Text: string(response),
 			},
 		},
+	}, nil
+}
+
+func (h *HttpProxy) ExecuteTool(ctx context.Context, toolInfo *model.McpTools, urls []string, inputArgs map[string]interface{}, serviceToken string) (*ExecuteToolResult, error) {
+	argsSlice, err := h.getToolArgs(toolInfo)
+	if err != nil {
+		return nil, fmt.Errorf("获取工具参数配置失败: %+v", err)
+	}
+
+	toolMetadata, err := h.getToolMetadataWithURLs(toolInfo, urls)
+	if err != nil {
+		return nil, fmt.Errorf("获取工具元数据失败: %+v", err)
+	}
+
+	var security *config.Security
+	if toolInfo.IsAuth == _const.IsAuthYes && toolInfo.Security != "" {
+		if err := json.Unmarshal([]byte(toolInfo.Security), &security); err != nil {
+			return nil, fmt.Errorf("解析工具安全配置失败: %+v", err)
+		}
+	}
+
+	requestParams, err := h.buildRequestParams(inputArgs, argsSlice, toolMetadata, security, serviceToken)
+	if err != nil {
+		return nil, fmt.Errorf("构建请求参数失败: %+v", err)
+	}
+
+	response, err := h.sendHttpRequest(ctx, requestParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExecuteToolResult{
+		Request:  requestParams,
+		Response: response,
 	}, nil
 }
 
@@ -250,6 +289,33 @@ func (h *HttpProxy) getToolMetadata(toolInfo *model.McpTools) (*ToolMetadata, er
 
 	// 解析URLs
 	// 这里假设URL存储在某个地方，需要根据实际情况调整
+	return metadata, nil
+}
+
+func (h *HttpProxy) getToolMetadataWithURLs(toolInfo *model.McpTools, urls []string) (*ToolMetadata, error) {
+	if len(urls) == 0 {
+		return nil, fmt.Errorf("工具URL为空")
+	}
+
+	metadata, err := h.getToolMetadata(toolInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	expandedUrls := make([]string, 0, len(urls))
+	for _, urlVal := range h.selectValidURL(urls) {
+		if strings.Contains(toolInfo.Endpoint, "{{.Config.url}}") {
+			expandedUrls = append(expandedUrls, strings.ReplaceAll(toolInfo.Endpoint, "{{.Config.url}}", urlVal))
+			continue
+		}
+		expandedUrls = append(expandedUrls, toolInfo.Endpoint)
+	}
+	if len(expandedUrls) == 0 {
+		expandedUrls = append(expandedUrls, toolInfo.Endpoint)
+	}
+
+	metadata.Urls = expandedUrls
+	metadata.Endpoint = expandedUrls[0]
 	return metadata, nil
 }
 
