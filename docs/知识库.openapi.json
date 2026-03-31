@@ -1,0 +1,762 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "知识库",
+    "description": "ID of pet that needs to be updated",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "KnowledgeGraphController"
+    }
+  ],
+  "paths": {
+    "/api/kg/build": {
+      "post": {
+        "summary": "构建知识图谱接口",
+        "deprecated": false,
+        "tags": [
+          "KnowledgeGraphController"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeGraphRequestDTO",
+                "description": "知识图谱构建请求参数"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityKnowledgeGraphCallbackDTO",
+                  "description": "响应结果"
+                },
+                "example": {
+                  "knowledgeBaseId": "",
+                  "documentId": "",
+                  "status": "",
+                  "message": "",
+                  "processTime": 0,
+                  "nodes": {
+                    "": {
+                      "name": "",
+                      "entityType": "",
+                      "description": "ID of pet that needs to be updated",
+                      "knowledgeId": "",
+                      "documentId": ""
+                    }
+                  },
+                  "edges": {
+                    "": {
+                      "srcName": "",
+                      "tgtName": "",
+                      "weight": 0,
+                      "description": "ID of pet that needs to be updated",
+                      "name": "",
+                      "knowledgeId": "",
+                      "documentId": ""
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/kg/nodes": {
+      "get": {
+        "summary": "查询知识图谱节点接口",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [
+          "KnowledgeGraphController"
+        ],
+        "parameters": [
+          {
+            "name": "knowledgeId",
+            "in": "query",
+            "description": "知识库ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "query",
+            "description": "文档ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "名称",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListMapObject"
+                  },
+                  "description": "节点列表"
+                },
+                "example": [
+                  {
+                    "": {}
+                  }
+                ]
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/knowledge-base-java/processDocument": {
+      "post": {
+        "summary": "提交处理文档任务",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "knowledge_base_id": {
+                    "type": "string",
+                    "description": "知识库id"
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "description": "文档id"
+                  },
+                  "document_url": {
+                    "type": "string",
+                    "description": "文档url"
+                  },
+                  "document_type": {
+                    "type": "string",
+                    "description": "文档类型(pdf,doc,docx,xls,xlsx,pptx,txt,md,csv)"
+                  },
+                  "callback": {
+                    "type": "object",
+                    "properties": {
+                      "callback_url": {
+                        "type": "string",
+                        "description": "回调url"
+                      },
+                      "state": {
+                        "type": "string",
+                        "description": "透传参数"
+                      }
+                    },
+                    "required": [
+                      "callback_url",
+                      "state"
+                    ],
+                    "description": "回调信息"
+                  }
+                },
+                "required": [
+                  "knowledge_base_id",
+                  "callback",
+                  "document_type",
+                  "document_url",
+                  "document_id"
+                ]
+              }
+              
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "错误码 0-成功 1-失败"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误信息"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {},
+                      "description": "此接口为null"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "data": {},
+                  "code": 0,
+                  "message": "加入处理队列成功"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/": {
+      "post": {
+        "summary": "回调处理文档任务结果",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "integer",
+                        "description": "错误码 0-成功 1-失败"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "错误信息"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "block_count": {
+                            "type": "integer",
+                            "description": "分块总数"
+                          }
+                        },
+                        "required": [
+                          "block_count"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "message",
+                      "data"
+                    ]
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "透传参数"
+                  }
+                },
+                "required": [
+                  "result",
+                  "state"
+                ]
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/knowledge-base-java/queryBlockPage": {
+      "post": {
+        "summary": "分页查询分块内容",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "knowledge_base_id": {
+                    "type": "string",
+                    "description": "知识库id"
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "description": "文档id"
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "页面大小(默认为10)"
+                  },
+                  "page_no": {
+                    "type": "integer",
+                    "description": "页面编号(从1开始; 默认为1)"
+                  }
+                },
+                "required": [
+                  "knowledge_base_id",
+                  "page_no",
+                  "page_size",
+                  "document_id"
+                ]
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "错误码 0-成功 1-失败"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误信息"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "分块id(long类型)"
+                          },
+                          "knowledge_base_id": {
+                            "type": "string",
+                            "description": "知识库id"
+                          },
+                          "document_id": {
+                            "type": "string",
+                            "description": "文档id"
+                          },
+                          "block_number": {
+                            "type": "integer",
+                            "description": "分块编号"
+                          },
+                          "block_state": {
+                            "type": "integer",
+                            "description": "分块状态(0:不启用; 1:启用)"
+                          },
+                          "block_content_length": {
+                            "type": "integer",
+                            "description": "分块内容长度"
+                          },
+                          "block_content": {
+                            "type": "string",
+                            "description": "分块内容"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "knowledge_base_id",
+                          "document_id",
+                          "block_number",
+                          "block_state",
+                          "block_content_length",
+                          "block_content"
+                        ]
+                      },
+                      "description": "分块列表"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/knowledge-base-java/searchBlock": {
+      "post": {
+        "summary": "语义搜索分块内容",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "knowledge_base_id": {
+                    "type": "string",
+                    "description": "知识库id"
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "description": "文档id"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "用于语义搜索的文本"
+                  },
+                  "topK": {
+                    "type": "integer",
+                    "description": "最大召回数量(默认为5)"
+                  }
+                },
+                "required": [
+                  "knowledge_base_id",
+                  "topK",
+                  "text",
+                  "document_id"
+                ]
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "错误码 0-成功 1-失败"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误信息"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "knowledge_base_id": {
+                            "type": "string"
+                          },
+                          "document_id": {
+                            "type": "string"
+                          },
+                          "block_number": {
+                            "type": "integer"
+                          },
+                          "block_state": {
+                            "type": "integer"
+                          },
+                          "block_content_length": {
+                            "type": "integer"
+                          },
+                          "block_content": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "knowledge_base_id",
+                          "document_id",
+                          "block_number",
+                          "block_state",
+                          "block_content_length",
+                          "block_content"
+                        ]
+                      },
+                      "description": "分块列表(说明 与 分页查询分块内容接口 相同)"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/knowledge-base-java/modifyBlockState": {
+      "post": {
+        "summary": "修改分块内容",
+        "deprecated": false,
+        "description": "ID of pet that needs to be updated",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "分块id"
+                  },
+                  "block_content": {
+                    "type": "string",
+                    "description": "分块内容"
+                  }
+                },
+                "required": [
+                  "id",
+                  "block_content"
+                ]
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ID of pet that needs to be updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "错误码 0-成功 1-失败"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误信息"
+                    },
+                    "data": {
+                      "type": "string",
+                      "description": "此接口为"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "code",
+                    "message"
+                  ]
+                },
+                "example": {
+                  "data": "",
+                  "code": 0,
+                  "message": "modify success"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "key": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "节点名称"
+          },
+          "entityType": {
+            "type": "string",
+            "description": "实体类型"
+          },
+          "description": {
+            "type": "string",
+            "description": "实体描述"
+          },
+          "knowledgeId": {
+            "type": "string",
+            "description": "知识库ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档ID"
+          }
+        }
+      },
+      "MapNodeEntity": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/key"
+          }
+        }
+      },
+      "key1": {
+        "type": "object",
+        "properties": {
+          "srcName": {
+            "type": "string",
+            "description": "源节点名称"
+          },
+          "tgtName": {
+            "type": "string",
+            "description": "目标节点名称"
+          },
+          "weight": {
+            "type": "number",
+            "description": "关系权重"
+          },
+          "description": {
+            "type": "string",
+            "description": "关系描述"
+          },
+          "name": {
+            "type": "string",
+            "description": "关系名称"
+          },
+          "knowledgeId": {
+            "type": "string",
+            "description": "知识库ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档ID"
+          }
+        }
+      },
+      "MapEdgeEntity": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/key1"
+          }
+        }
+      },
+      "ResponseEntityKnowledgeGraphCallbackDTO": {
+        "type": "object",
+        "properties": {
+          "knowledgeBaseId": {
+            "type": "string",
+            "description": "知识库ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "处理状态: SUCCESS, FAILED, PROCESSING"
+          },
+          "message": {
+            "type": "string",
+            "description": "处理消息"
+          },
+          "processTime": {
+            "type": "integer",
+            "description": "处理耗时(秒)",
+            "format": "int64"
+          },
+          "nodes": {
+            "$ref": "#/components/schemas/MapNodeEntity",
+            "description": "提取的节点信息"
+          },
+          "edges": {
+            "$ref": "#/components/schemas/MapEdgeEntity",
+            "description": "提取的边信息"
+          }
+        }
+      },
+      "KnowledgeGraphRequestDTO": {
+        "type": "object",
+        "properties": {
+          "knowledgeBaseId": {
+            "type": "string",
+            "description": "知识库ID"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "文档ID"
+          },
+          "entityType": {
+            "type": "string",
+            "description": "实体类型"
+          },
+          "callbackUrl": {
+            "type": "string",
+            "description": "回调URL"
+          }
+        }
+      },
+      "key2": {
+        "type": "object",
+        "properties": {}
+      },
+      "ListMapObject": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/key2"
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "servers": [],
+  "security": []
+}

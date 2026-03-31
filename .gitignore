@@ -49,9 +49,14 @@ docker-compose-prod.yml
 # 运行时目录
 logs/
 tmp/
+.gocache/
+.gotmp/
 
 # Frontend dependencies
 web/node_modules/
+web/dist/
+web/.env.development
+*.tsbuildinfo
 
 # Emacs
 \#*\#
